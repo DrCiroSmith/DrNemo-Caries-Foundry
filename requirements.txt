@@ -1,0 +1,10 @@
+python-dotenv
+requests
+torch
+transformers
+accelerate
+bitsandbytes
+huggingface_hub
+streamlit
+py3dmol
+# st-3dmol (Will install separately)

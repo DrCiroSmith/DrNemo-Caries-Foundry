@@ -1,0 +1,19 @@
+# Dr. Nemo Caries Vaccine Foundry - Git Ignore
+# Exclude transitory research data and large binaries
+
+# Research Outputs
+results/
+jobs/
+*.csv
+!targets.json
+!expansion_stats.json
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
