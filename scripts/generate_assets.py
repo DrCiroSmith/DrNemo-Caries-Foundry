@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-REPO_ROOT = Path("/home/drnemo/projects/portfolio_overhaul/DrNemo-Caries-Foundry")
+REPO_ROOT = Path(__file__).resolve().parent.parent
 ASSETS_DIR = REPO_ROOT / "assets"
 ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 
