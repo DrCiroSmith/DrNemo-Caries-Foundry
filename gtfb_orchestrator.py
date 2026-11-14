@@ -1,8 +1,49 @@
 import json
 import random
 from typing import TypedDict, List, Dict
-from langgraph.graph import StateGraph, END
 from solubility_shield import is_viable
+
+try:
+    from langgraph.graph import StateGraph, END
+    HAS_LANGGRAPH = True
+except ImportError:
+    HAS_LANGGRAPH = False
+    END = "__END__"
+
+    class StateGraph:
+        """Lightweight zero-dependency StateGraph fallback for offline environments."""
+        def __init__(self, state_schema):
+            self.state_schema = state_schema
+            self.nodes = {}
+            self.edges = []
+            self.entry_point = None
+
+        def add_node(self, name: str, func):
+            self.nodes[name] = func
+
+        def set_entry_point(self, name: str):
+            self.entry_point = name
+
+        def add_edge(self, src: str, dst: str):
+            self.edges.append((src, dst))
+
+        def compile(self):
+            return self
+
+        def invoke(self, state: dict) -> dict:
+            curr = self.entry_point
+            curr_state = dict(state)
+            while curr != END and curr in self.nodes:
+                updates = self.nodes[curr](curr_state)
+                if updates:
+                    curr_state.update(updates)
+                next_node = END
+                for src, dst in self.edges:
+                    if src == curr:
+                        next_node = dst
+                        break
+                curr = next_node
+            return curr_state
 
 # ==============================================================================
 # COMPUTATIONAL BIOLOGY MISSION: CARIES VACCINE FOUNDRY (Version 2.0)
@@ -105,8 +146,9 @@ def biosecurity_check_node(state: GtfBEvolutionState):
     """
     Ensures no D/E entrapment motifs or IGSC dangerous sequences survived.
     """
-    if not state['winning_candidate']:
-        return {"biosecurity_logs": state['biosecurity_logs'] + ["No candidate to screen."]}
+    if not state.get('winning_candidate'):
+        logs = state.get('biosecurity_logs', [])
+        return {"biosecurity_logs": logs + ["No candidate to screen."]}
 
     seq = state['winning_candidate']['sequence']
     print(f"🛡️ [Node: Biosecurity] Screening {seq} (Arg-Rich Matrix Repellent) against IGSC...")
@@ -115,7 +157,7 @@ def biosecurity_check_node(state: GtfBEvolutionState):
     anionic_risk = any(aa in seq for aa in "DE")
     
     log = "✅ Biosecurity cleared." if not anionic_risk else "⚠️ WARNING: Potential Anionic Salt-Bridge detected."
-    return {"biosecurity_logs": state['biosecurity_logs'] + [log]}
+    return {"biosecurity_logs": state.get('biosecurity_logs', []) + [log]}
 
 # --- NODE: Frugal Synthesis (PepSy + TPP Crosslinker Protocol) ---
 def synthesis_formatter_node(state: GtfBEvolutionState):

@@ -1,10 +1,10 @@
-python-dotenv
-requests
-torch
-transformers
-accelerate
-bitsandbytes
-huggingface_hub
-streamlit
-py3dmol
-# st-3dmol (Will install separately)
+python-dotenv>=1.0.0
+requests>=2.31.0
+pytest>=8.0.0
+biopython>=1.80
+streamlit>=1.30.0
+py3Dmol>=2.0.0
+langgraph>=0.0.30
+torch>=2.1.0
+transformers>=4.38.0
+accelerate>=0.27.0
