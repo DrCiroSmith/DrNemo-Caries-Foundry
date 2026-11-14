@@ -8,7 +8,7 @@ import subprocess
 import pytest
 from pathlib import Path
 import sys
-import pandas as pd
+import csv
 
 # Ensure repo root is on sys.path
 REPO_ROOT = Path(__file__).parent.parent
@@ -132,14 +132,16 @@ def test_demo_dataset_integrity():
     # 1. Master scores
     scores_file = demo_dir / "results" / "master_scores.csv"
     assert scores_file.exists(), "demo_data/results/master_scores.csv must exist"
-    df = pd.read_csv(scores_file)
-    assert len(df) >= 120, f"Expected >= 120 rows, got {len(df)}"
-    assert "Generation" in df.columns
-    assert df["Generation"].max() >= 20, "Must contain up to Generation 20"
-    assert "Job_ID" in df.columns
-    assert "pLDDT" in df.columns
-    assert "iPTM" in df.columns
-    assert "Composite_Score" in df.columns
+    with open(scores_file, "r", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    assert len(rows) >= 120, f"Expected >= 120 rows, got {len(rows)}"
+    max_gen = max(int(r["Generation"]) for r in rows if r.get("Generation") and r["Generation"].isdigit())
+    assert max_gen >= 20, "Must contain up to Generation 20"
+    cols = rows[0].keys()
+    assert "Job_ID" in cols
+    assert "pLDDT" in cols
+    assert "iPTM" in cols
+    assert "Composite_Score" in cols
 
     # 2. PDB files
     pdb_files = list((demo_dir / "results").glob("*.pdb"))
