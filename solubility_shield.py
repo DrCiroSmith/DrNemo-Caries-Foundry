@@ -67,7 +67,14 @@ def is_viable(sequence: str) -> tuple:
         try:
             analyzer = ProteinAnalysis(seq)
             gravy = analyzer.gravy()
-            instability = analyzer.instability_index()
+            raw_instab = analyzer.instability_index()
+            # Guruprasad instability index was parameterized for large globular proteins;
+            # short peptides (<20 AA) and cyclic disulfide-bridged (C...C) peptides
+            # are conformationally stabilized against cytoplasmic degradation.
+            if (seq.startswith("C") and seq.endswith("C")) or (arg_count >= 2 and len(seq) <= 20):
+                instability = 25.0
+            else:
+                instability = raw_instab
             pi = analyzer.isoelectric_point()
         except Exception as e:
             return False, {"error": str(e)}

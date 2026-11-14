@@ -12,15 +12,31 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_DIR = Path.home() / "drnemo_research"
+def resolve_base_dir():
+    if "DRNEMO_DATA_DIR" in os.environ and Path(os.environ["DRNEMO_DATA_DIR"]).exists():
+        return Path(os.environ["DRNEMO_DATA_DIR"]), False
+    home_dir = Path.home() / "drnemo_research"
+    if (home_dir / "results" / "master_scores.csv").exists():
+        return home_dir, False
+    bundled_demo = Path(__file__).resolve().parent / "demo_data"
+    if bundled_demo.exists():
+        return bundled_demo, True
+    return home_dir, False
+
+BASE_DIR, IS_DEMO_DATA = resolve_base_dir()
 RESULTS_DIR = BASE_DIR / "results"
 SCORES_FILE = RESULTS_DIR / "master_scores.csv"
 ANALYSIS_DIR = RESULTS_DIR / "analysis"
 COMPLETED_DIR = BASE_DIR / "jobs" / "completed"
 PENDING_DIR = BASE_DIR / "jobs" / "pending"
-TARGETS_FILE = BASE_DIR / "targets.json"
+TARGETS_FILE = BASE_DIR / "targets.json" if (BASE_DIR / "targets.json").exists() else (Path(__file__).resolve().parent / "targets.json")
 
 VALID_AA = set("ACDEFGHIKLMNPQRSTVWY")
+
+def extract_peptide(job_id):
+    if "variant_" in str(job_id):
+        return str(job_id).split("variant_")[-1]
+    return "Base Target" 
 
 def is_duplicate(peptide_seq, project, df_scores=None):
     """Check if a peptide has already been folded or is queued."""
@@ -71,6 +87,8 @@ st.markdown("""
 colA, colB = st.columns([2, 1])
 with colA:
     st.title("🧬 Dr. Nemo: In-Silico Lab")
+    if IS_DEMO_DATA:
+        st.info("🧪 **Demo Dataset Loaded:** 20-Gen *S. mutans* GtfB Campaign — Zero API Keys Required")
 with colB:
     st.markdown("<br><br>", unsafe_allow_html=True)
     search_term = st.text_input("🔍 Global Data Search:", placeholder="Filter by Molecule ID...").strip()
@@ -327,53 +345,40 @@ else:
     st.sidebar.success("✅ Queue is empty.")
 
 st.sidebar.markdown("**Recent Processed Jobs:**")
-recent_finished = df.head(5)
-for _, row in recent_finished.iterrows():
-    status_icon = "✅" if row['Status'] == 'SUCCESS' else "❌"
-    color = "#2ecc71" if row['Status'] == 'SUCCESS' else "#e74c3c"
-    st.sidebar.markdown(f"<span style='color:{color}'>{status_icon} {str(row['Job_ID'])[:22]}...</span>", unsafe_allow_html=True)
+if df is not None and not df.empty:
+    recent_finished = df.head(5)
+    for _, row in recent_finished.iterrows():
+        status_icon = "✅" if row['Status'] == 'SUCCESS' else "❌"
+        color = "#2ecc71" if row['Status'] == 'SUCCESS' else "#e74c3c"
+        st.sidebar.markdown(f"<span style='color:{color}'>{status_icon} {str(row['Job_ID'])[:22]}...</span>", unsafe_allow_html=True)
 
-# Eureka Detection
-df['pLDDT_num'] = pd.to_numeric(df['pLDDT'], errors='coerce')
-df['iPTM_num'] = pd.to_numeric(df['iPTM'], errors='coerce')
-df['Composite_Score_num'] = (df['pLDDT_num'] / 100) * df['iPTM_num']
+    # Eureka Detection
+    df['pLDDT_num'] = pd.to_numeric(df['pLDDT'], errors='coerce')
+    df['iPTM_num'] = pd.to_numeric(df['iPTM'], errors='coerce')
+    df['Composite_Score_num'] = (df['pLDDT_num'] / 100) * df['iPTM_num']
 
-eureka_hits = df[(df['pLDDT_num'] >= 99.0) | (df['iPTM_num'] >= 0.99) | (df['Composite_Score_num'] >= 0.90)]
-if not eureka_hits.empty:
-    st.balloons()
-    best_hit = eureka_hits.iloc[0]
-    st.markdown(f"""
-    <div style="background: linear-gradient(90deg, #ff007f, #7928ca); padding: 20px; border-radius: 12px; border: 2px solid #fff; animation: pulse 2s infinite; text-align: center; margin-bottom: 20px;">
-        <h1 style="color: white; margin: 0; font-size: 3em;">🎉 EUREKA!! 🎉</h1>
-        <h3 style="color: white; margin-top: 10px;">We hit a near-perfect confidence score!</h3>
-        <p style="color: #fff; font-size: 1.2em;"><strong>Target:</strong> {best_hit.get('Job_ID')} <br> <strong>Scores:</strong> pLDDT: {best_hit['pLDDT_num']} | iPTM: {best_hit['iPTM_num']} | Composite: {best_hit['Composite_Score_num']:.4f}</p>
-        <a href="mailto:roisasha@gmail.com?subject=EUREKA! Perfect Sequence Found in Dr. Nemo Lab&body=We hit a perfect score!%0A%0AJob ID: {best_hit.get('Job_ID')}%0ApLDDT: {best_hit['pLDDT_num']}%0AiPTM: {best_hit['iPTM_num']}" 
-           style="background-color: white; color: #7928ca; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 10px;">📩 Click to send Email Notification to roisasha@gmail.com</a>
-    </div>
-    """, unsafe_allow_html=True)
+    eureka_hits = df[(df['pLDDT_num'] >= 99.0) | (df['iPTM_num'] >= 0.99) | (df['Composite_Score_num'] >= 0.90)]
+    if not eureka_hits.empty:
+        st.balloons()
+        best_hit = eureka_hits.iloc[0]
+        st.markdown(f"""
+        <div style="background: linear-gradient(90deg, #ff007f, #7928ca); padding: 20px; border-radius: 12px; border: 2px solid #fff; animation: pulse 2s infinite; text-align: center; margin-bottom: 20px;">
+            <h1 style="color: white; margin: 0; font-size: 3em;">🎉 EUREKA!! 🎉</h1>
+            <h3 style="color: white; margin-top: 10px;">We hit a near-perfect confidence score!</h3>
+            <p style="color: #fff; font-size: 1.2em;"><strong>Target:</strong> {best_hit.get('Job_ID')} <br> <strong>Scores:</strong> pLDDT: {best_hit['pLDDT_num']} | iPTM: {best_hit['iPTM_num']} | Composite: {best_hit['Composite_Score_num']:.4f}</p>
+            <a href="mailto:roisasha@gmail.com?subject=EUREKA! Perfect Sequence Found in Dr. Nemo Lab&body=We hit a perfect score!%0A%0AJob ID: {best_hit.get('Job_ID')}%0ApLDDT: {best_hit['pLDDT_num']}%0AiPTM: {best_hit['iPTM_num']}" 
+               style="background-color: white; color: #7928ca; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 10px;">📩 Click to send Email Notification to roisasha@gmail.com</a>
+        </div>
+        """, unsafe_allow_html=True)
 
+    if "Peptide_Sequence" not in df.columns:
+        df.insert(2, "Peptide_Sequence", df["Job_ID"].apply(extract_peptide))
 
-
-def extract_peptide(job_id):
-    if "variant_" in str(job_id):
-        return str(job_id).split("variant_")[-1]
-    return "Base Target"
-
-if "Peptide_Sequence" not in df.columns:
-    df.insert(2, "Peptide_Sequence", df["Job_ID"].apply(extract_peptide))
-
-def extract_peptide(job_id):
-    if "variant_" in str(job_id):
-        return str(job_id).split("variant_")[-1]
-    return "Base Target"
-
-if "Peptide_Sequence" not in df.columns:
-    df.insert(2, "Peptide_Sequence", df["Job_ID"].apply(extract_peptide))
-
-project_df = df[df["Project"] == selected_project]
-    
-if search_term:
-    project_df = project_df[project_df["Job_ID"].str.contains(search_term, case=False, na=False)]
+    project_df = df[df["Project"] == selected_project] if selected_project else df
+    if search_term:
+        project_df = project_df[project_df["Job_ID"].str.contains(search_term, case=False, na=False)]
+else:
+    project_df = pd.DataFrame()
 
 def colorize_sequence(seq):
     mapping = {
@@ -968,11 +973,11 @@ with tab1:
                     throughput = total_processed / elapsed_hrs if elapsed_hrs > 0 else 0
                     st.metric("⚡ Throughput", f"{throughput:.0f}/hr")
                 else:
-                    st.metric("⚡ Throughput", "—")
+                    st.metric("⚡ Throughput", "N/A")
             except:
-                st.metric("⚡ Throughput", "—")
+                st.metric("⚡ Throughput", "N/A")
         else:
-            st.metric("⚡ Throughput", "—")
+            st.metric("⚡ Throughput", "N/A")
     
     if pending_count_live > 0:
         live_pct = pending_count_live / (pending_count_live + results_count_live) if (pending_count_live + results_count_live) > 0 else 0

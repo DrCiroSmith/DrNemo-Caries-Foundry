@@ -1,0 +1,130 @@
+{
+    "S_mutans_SpaP_Baseline": {
+        "name": "Streptococcus mutans SpaP/P1 Adhesin",
+        "category": "Tier 1: Primary Cariogenic Adhesion",
+        "description": "Primary virulence factor enabling S. mutans adhesion to salivary-coated enamel. UniProt P23504.",
+        "uniprot": "P23504",
+        "sequence": "APTKPTYETEKPLKPAPVAPNYEKEPTPPTRTPDQAEPNKPTPPTYETEKPLEPAPVEPSYEAEPTPPTRTPDQAEPNKPVEPNKPTPPTYETEKPLEPAPVEPSYEAEPTPPTPTPDQPEPNKPVEPTYEVIPTPPTDPVYQDLPTPPSVPTVHFHYFKLAVQPQQVNKEIRNNNDINIDRTLVAKQSVVKFQLKTADLPAGRDETT",
+        "base_peptide": "LKKLLKWL"
+    },
+    "S_mutans_GtfB_Insoluble": {
+        "name": "Streptococcus mutans Glucosyltransferase-B (GtfB)",
+        "category": "Tier 2: Matrix Formation",
+        "description": "Synthesizes water-insoluble glucans (mutan) that form the structural backbone of EPS. UniProt P08987.",
+        "uniprot": "P08987",
+        "sequence": "MSSQDNKAQVDTSRKPDTGSSGSAQDNKANQDASTGSGTKASQGENTGNKTESEQKSQSGSTGSNTSQVSSSQSSSDTAKNQSAKDSGTGSKTNSETQKASQSSSGTGSKTGSEQKASAN",
+        "base_peptide": "YRRKKWWRF"
+    },
+    "S_mutans_GtfC_Bridge": {
+        "name": "Streptococcus mutans Glucosyltransferase-C (GtfC)",
+        "category": "Tier 2: Matrix Formation",
+        "description": "Synthesizes mixed glucans for the adhesive bridge coupling the biofilm locally. UniProt P13470.",
+        "uniprot": "P13470",
+        "sequence": "MDSQDNKAQADTSQKPDTSGSSGSAQDNKASQDASTGSGSKASQGENTGNKTESEQKSQSGSGSSSTSQVSSSNSSSDTAKNQSDKDSGTGSKTNSETQKASQSSSGTGSKTGSEQKASAN",
+        "base_peptide": "YRRKKWWRF"
+    },
+    "S_mutans_GtfD_Primer": {
+        "name": "Streptococcus mutans Glucosyltransferase-D (GtfD)",
+        "category": "Tier 2: Matrix Formation",
+        "description": "Produces soluble glucans (dextran) that prime the other Gtf enzymes. UniProt P49331.",
+        "uniprot": "P49331",
+        "sequence": "MSNQANKADAQTSQKPDTSGSNGSAQANKAAQDASTGSGSKASQGENTGNKTESEQKSQAGSGSSSTSQVSSSNSSSDTAKNQSDKDSGTGSKTNSETQKASQSSSGTGSKTGSEQKASAN",
+        "base_peptide": "KKLLKWLL"
+    },
+    "S_mutans_Ftf_Energy": {
+        "name": "Streptococcus mutans Fructosyltransferase (Ftf/fruA)",
+        "category": "Tier 3: Structural & Metabolic",
+        "description": "Produces fructans for extracellular energy storage in the biofilm. UniProt Q03174.",
+        "uniprot": "Q03174",
+        "sequence": "MVNNKKEITFTTTLLALGGVAVTPIVAAAQNNNDDTVADNTVSNVTNQPQTTDEANSSVVDDTQSTASTVDTTVAQQAANNTTSATANQVQSAATDTTQQVQSAATDTTQQAADTAETQSTVSTVTKQK",
+        "base_peptide": "RKFKKWLL"
+    },
+    "S_sobrinus_GtfS_Matrix": {
+        "name": "Streptococcus sobrinus Glucosyltransferase-S (GtfS)",
+        "category": "Tier 1: Primary Cariogenic Specialists",
+        "description": "Rapidly converts sucrose to extracellular glucans, accelerating biofilm thickness in rampant caries. UniProt P29336.",
+        "uniprot": "P29336",
+        "sequence": "MNTNKIKLSLFATSLVSLCLSSASVFAADSQVTKVNNDSQVTKVNNDSQVTKVNNDSQVTKVNNDSQVTKVNNDSQVTKVNNDSQVTKVNNDSQVTKVNNDSQVTKVNNDSQV",
+        "base_peptide": "KVRKKWWRF"
+    },
+    "L_casei_LDH_Acid": {
+        "name": "Lacticaseibacillus casei L-lactate dehydrogenase (LDH)",
+        "category": "Tier 1: Aciduric Progressors",
+        "description": "The metabolic engine of lactic acid production, driving the local pH drop to decalcify enamel. UniProt P00343.",
+        "uniprot": "P00343",
+        "sequence": "MATKPHKPKVLVLGDGAVGSAYAVALVNQGIAEEIGIVDIFKERGNGDLDDLSFNDALPVNVVAIKGNPDVVLHNGLDAEIKLVDADLVVITAAPAKPKTDRSRLNLVGKKL",
+        "base_peptide": "RRKKWWRKK"
+    },
+    "A_naeslundii_FimA_Adhesion": {
+        "name": "Actinomyces naeslundii FimA Fimbriae",
+        "category": "Tier 5: Early Colonizers",
+        "description": "Critical for pioneer colonization of the tooth pellicle and binding to GalNAc\u03b2 structures. UniProt O68212.",
+        "uniprot": "O68212",
+        "sequence": "MTKKSLALALASAVLALALVACSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGSGGGGS",
+        "base_peptide": "WRRKKWWRW"
+    },
+    "F_nucleatum_FadA_Adhesin": {
+        "name": "Fusobacterium nucleatum FadA Adhesin",
+        "category": "Tier 5: Bridge Organisms",
+        "description": "The master key that bridges early streptococci with late periodontal pathogens. UniProt Q5I6B0.",
+        "uniprot": "Q5I6B0",
+        "sequence": "MKLKRLIIATFLIVLAAGTGLSSAEVKKKLNTENYQELLKTQEELDKYLDKYKSVEAQNAAAEEALAAIEKSQNELKEKLNKVDN",
+        "base_peptide": "RRWWKYLL"
+    },
+    "P_gingivalis_RgpB_Gingipain": {
+        "name": "Porphyromonas gingivalis Gingipain-R2 (RgpB)",
+        "category": "Tier 6: Periodontal Pathogens",
+        "description": "Arg-specific protease that wrecks host tissue. UniProt P95493.",
+        "uniprot": "P95493",
+        "sequence": "YTPVEEKENGRMIVIVPKKYEEDIEDFVDWKNQRGLRTEVKVAEDIASPVTANAIQQFVKQEYEKEGNDLTYVLLVGDHKDIPAKITPGIKSDQVYGQIVGNDHYNEVFIGR",
+        "base_peptide": "VVALGYPK"
+    },
+    "T_denticola_Dentilisin_Protease": {
+        "name": "Treponema denticola Dentilisin (PrtP)",
+        "category": "Tier 6: Periodontal Pathogens",
+        "description": "Major surface protease involved in tight-junction destruction. Chymotrypsin-like.",
+        "uniprot": "Q8G5X5",
+        "sequence": "MKALKSVLFTMLLGTALAAPATSAKDKTKSVQEEFVQKQQAIDETRQQLEEEKSKLAAEQDKEAAKEALEAAEQEAK",
+        "base_peptide": "FRWKYVL"
+    },
+    "T_forsythia_BspA_Antigen": {
+        "name": "Tannerella forsythia BspA Surface Antigen",
+        "category": "Tier 6: Periodontal Pathogens",
+        "description": "Red-complex surface antigen driving coaggregation and atherosclerosis links. UniProt O68831.",
+        "uniprot": "O68831",
+        "sequence": "MKKKVLILSLALAALSGCSSDSNSKSKKKGKKRNSGEVKAGKTTLDELTEQIKQELNAKTKS",
+        "base_peptide": "RKKWKLL"
+    },
+    "C_albicans_Als3_Synergy": {
+        "name": "Candida albicans Als3 (Agglutinin-like protein)",
+        "category": "Tier 7: Fungal Synergists",
+        "description": "Fungal cell surface adhesion protein that supercharges bacterial biofilm virulence and cross-kingdom anchoring. UniProt Q59L12.",
+        "uniprot": "Q59L12",
+        "sequence": "MLQYIILIILSLILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILILIL",
+        "base_peptide": "KRRKKWWRF"
+    },
+    "S_mutans_GtfB_Scaffold": {
+        "name": "GtfB Inhibitory Scaffold (Residues 1176-1194)",
+        "category": "Seed: Structural Scaffold",
+        "description": "Naturally derived 19-mer peptide that acts as a specific, noncompetitive inhibitor of glucan transfer. Base for de novo refinement.",
+        "uniprot": "P08987-fragment",
+        "sequence": "DGQVQYFDEMGYQAKGKFV",
+        "base_peptide": "YRRKKWWRF"
+    },
+    "C_albicans_Mannan_Receptor": {
+        "name": "Candida albicans O/N-Mannan Receptor",
+        "category": "Tier 7: Cross-Kingdom Adhesion",
+        "description": "Specific fungal mannan structures that provide 'Velcro' binding for GtfB (1-2 nN strength). Essential for matrix docking.",
+        "uniprot": "MANNAN-001",
+        "sequence": "MAN-MAN-MAN-GLC-GLC",
+        "base_peptide": "RRKKWWRR"
+    },
+    "S_wiggsiae_Acid_Progressor": {
+        "name": "Scardovia wiggsiae Acid Engine",
+        "category": "Tier 1: High-Risk Cariogens",
+        "description": "Emerging secondary cariogen that drives rampant early childhood caries (ECC). UniProt A9ZDY9.",
+        "uniprot": "A9ZDY9",
+        "sequence": "MTKVTKVLGDGAVGSAYAVALVNQGIAEEIGIVDIFKERGNGDLDDLSFNDALPVNVVAIKGNPDVVLHNGLDAEIKLVDADLVVITAAPAKPKTDRSRLNLVGKKL",
+        "base_peptide": "RRKKWWRKK"
+    }
+}
