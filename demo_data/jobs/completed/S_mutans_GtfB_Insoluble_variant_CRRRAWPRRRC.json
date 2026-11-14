@@ -1,0 +1,23 @@
+{
+    "job_id": "S_mutans_GtfB_Insoluble_variant_CRRRAWPRRRC",
+    "project": "S_mutans_GtfB_Insoluble",
+    "peptide_sequence": "CRRRAWPRRRC",
+    "target_uniprot": "P08987",
+    "generation": 10,
+    "status": "SUCCESS",
+    "metrics": {
+        "pLDDT": 85.2,
+        "iPTM": 0.78,
+        "composite_score": 0.665,
+        "diffdock_rmsd_angstrom": 2.45,
+        "binding_affinity_kcal_mol": -9.28,
+        "gravy_hydropathy": -1.65,
+        "net_cationic_charge": 5.0,
+        "chitosan_safe": true
+    },
+    "synthesis_protocol": {
+        "platform": "PepSy_SPPS_v2.1",
+        "crosslinker": "Sodium_Tripolyphosphate_TPP",
+        "cyclization": "Disulfide_C1_C11"
+    }
+}

@@ -1,10 +1,14 @@
 # Dr. Nemo Caries Vaccine Foundry - Git Ignore
 # Exclude transitory research data and large binaries
 
-# Research Outputs
-results/
-jobs/
+# Research Outputs (root runtime directories)
+/results/
+/jobs/
 *.csv
+
+# Allow bundled demo dataset explicitly
+!demo_data/
+!demo_data/**
 !targets.json
 !expansion_stats.json
 
