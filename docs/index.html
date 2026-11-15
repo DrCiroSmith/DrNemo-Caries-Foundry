@@ -1279,9 +1279,9 @@
       let isChitosanSafe = true;
       let failureReason = '';
 
-      if (anionicCount > 2) {
+      if (anionicCount > 0) {
         isChitosanSafe = false;
-        failureReason = `Failed: High anionic charge (${anionicCount} D/E). Irreversible salt-bridge crosslinking with polycationic chitosan.`;
+        failureReason = `FAIL · High anionic charge (${anionicCount} D/E). Irreversible salt-bridge precipitation with polycationic chitosan.`;
       } else if (entrapDensity > 0.30) {
         isChitosanSafe = false;
         failureReason = `Failed: High entrapment density (${(entrapDensity * 100).toFixed(0)}% I/K). Entraps peptide inside polymer matrix.`;
@@ -1294,7 +1294,7 @@
       const cardChitosan = document.getElementById('card-chitosan');
       const valChitosan = document.getElementById('val-chitosan');
       cardChitosan.className = `audit-card ${isChitosanSafe ? 'pass' : 'fail'}`;
-      valChitosan.innerText = isChitosanSafe ? 'PASS (Native)' : 'REJECTED';
+      valChitosan.innerText = isChitosanSafe ? 'PASS (Native)' : 'FAIL (Anionic D/E)';
 
       const cardCharge = document.getElementById('card-charge');
       const valCharge = document.getElementById('val-charge');
