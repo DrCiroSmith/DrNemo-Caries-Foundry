@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480" role="img" aria-labelledby="t4 d4">
+  <title id="t4">LangGraph Multi-Agent Closed-Loop Pipeline</title>
+  <desc id="d4">Autonomous multi-agent architecture showing CycleDesigner, Chitosan Shield, OpenFold3, IGSC biosecurity screen, and MedGemma IRB with retry loopbacks.</desc>
+  <style>
+    .bg { fill: #0B111A; }
+    .panel { fill: #131B26; stroke: #233142; stroke-width: 1.2; }
+    .node-card { fill: #1A2536; stroke: #2A3B50; stroke-width: 1.5; }
+    .txt-main { fill: #F1F5F9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .txt-sub { fill: #94A3B8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .txt-mono { fill: #38BDF8; font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .fwd-edge { stroke: #38BDF8; stroke-width: 2; stroke-dasharray: 6 6; animation: flowFwd 10s linear infinite; }
+    .retry-edge { stroke: #F59E0B; stroke-width: 2; stroke-dasharray: 6 6; animation: flowBack 12s linear infinite; }
+    
+    @keyframes flowFwd { to { stroke-dashoffset: -120; } }
+    @keyframes flowBack { to { stroke-dashoffset: 120; } }
+
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #F8FAFC; }
+      .panel { fill: #FFFFFF; stroke: #CBD5E1; }
+      .node-card { fill: #F1F5F9; stroke: #E2E8F0; }
+      .txt-main { fill: #0F172A; }
+      .txt-sub { fill: #475569; }
+      .txt-mono { fill: #0284C7; }
+      .fwd-edge { stroke: #0284C7; }
+      .retry-edge { stroke: #D97706; }
+    }
+  </style>
+
+  <rect width="1200" height="480" rx="16" class="bg"/>
+  <rect x="0.5" y="0.5" width="1199" height="479" rx="15.5" fill="none" stroke="#334155" stroke-opacity="0.3"/>
+
+  <!-- Header -->
+  <g transform="translate(50, 24)">
+    <text x="0" y="24" class="txt-main" font-size="18" font-weight="700">AUTONOMOUS CLOSED-LOOP MULTI-AGENT STATE MACHINE</text>
+    <text x="0" y="44" class="txt-sub" font-size="12">LangGraph State Graph · Cyclic Disulfide Generation · Deterministic In-Silico Verification</text>
+  </g>
+
+  <!-- Edge Lines -->
+  <g fill="none">
+    <path d="M 240 185 L 290 185" class="fwd-edge"/>
+    <path d="M 470 185 L 520 185" class="fwd-edge"/>
+    <path d="M 700 185 L 750 185" class="fwd-edge"/>
+    <path d="M 930 185 L 980 185" class="fwd-edge"/>
+    
+    <path d="M 380 250 C 380 340, 610 340, 610 250" class="retry-edge"/>
+    <path d="M 380 340 C 250 340, 150 300, 150 250" class="retry-edge"/>
+  </g>
+
+  <!-- Multi-Agent Nodes (5 Primary Nodes) -->
+  <!-- Node 1: CycleDesigner -->
+  <g transform="translate(60, 120)">
+    <rect width="180" height="130" rx="10" class="node-card"/>
+    <rect x="12" y="12" width="156" height="24" rx="4" fill="#0284C7" fill-opacity="0.15"/>
+    <text x="20" y="28" fill="#38BDF8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="700">AGENT 1</text>
+    <text x="14" y="60" class="txt-main" font-size="13" font-weight="600">CycleDesigner</text>
+    <text x="14" y="80" class="txt-sub" font-size="11">De novo cyclic backbone</text>
+    <text x="14" y="100" class="txt-mono" font-size="10" fill="#38BDF8">Cys2-Cys11 loop generator</text>
+  </g>
+
+  <!-- Node 2: Chitosan Shield Filter -->
+  <g transform="translate(290, 120)">
+    <rect width="180" height="130" rx="10" class="node-card"/>
+    <rect x="12" y="12" width="156" height="24" rx="4" fill="#10B981" fill-opacity="0.15"/>
+    <text x="20" y="28" fill="#10B981" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="700">GATE 2</text>
+    <text x="14" y="60" class="txt-main" font-size="13" font-weight="600">Chitosan Shield</text>
+    <text x="14" y="80" class="txt-sub" font-size="11">I/K/D/E Rule Validation</text>
+    <text x="14" y="100" class="txt-mono" font-size="10" fill="#10B981">Solubility Gate in Hydrogel</text>
+  </g>
+
+  <!-- Node 3: OpenFold3 & DiffDock -->
+  <g transform="translate(520, 120)">
+    <rect width="180" height="130" rx="10" class="node-card"/>
+    <rect x="12" y="12" width="156" height="24" rx="4" fill="#8B5CF6" fill-opacity="0.15"/>
+    <text x="20" y="28" fill="#8B5CF6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="700">PHYSICS 3</text>
+    <text x="14" y="60" class="txt-main" font-size="13" font-weight="600">OpenFold3 &amp; DiffDock</text>
+    <text x="14" y="80" class="txt-sub" font-size="11">3D Folding &amp; GtfB Pocket</text>
+    <text x="14" y="100" class="txt-mono" font-size="10" fill="#8B5CF6">pLDDT &gt;90 · iPTM &gt;0.8</text>
+  </g>
+
+  <!-- Node 4: IGSC Biosecurity Screen -->
+  <g transform="translate(750, 120)">
+    <rect width="180" height="130" rx="10" class="node-card"/>
+    <rect x="12" y="12" width="156" height="24" rx="4" fill="#EF4444" fill-opacity="0.15"/>
+    <text x="20" y="28" fill="#EF4444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="700">SECURITY 4</text>
+    <text x="14" y="60" class="txt-main" font-size="13" font-weight="600">IGSC Screen</text>
+    <text x="14" y="80" class="txt-sub" font-size="11">Dual-Use Pathogen Gate</text>
+    <text x="14" y="100" class="txt-mono" font-size="10" fill="#EF4444">Toxin &amp; Virulence Check</text>
+  </g>
+
+  <!-- Node 5: MedGemma IRB Agent -->
+  <g transform="translate(980, 120)">
+    <rect width="160" height="130" rx="10" class="node-card"/>
+    <rect x="12" y="12" width="136" height="24" rx="4" fill="#F59E0B" fill-opacity="0.15"/>
+    <text x="20" y="28" fill="#F59E0B" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="700">CLINICAL 5</text>
+    <text x="14" y="60" class="txt-main" font-size="13" font-weight="600">MedGemma IRB</text>
+    <text x="14" y="80" class="txt-sub" font-size="11">Rationale &amp; PepSy Export</text>
+    <text x="14" y="100" class="txt-mono" font-size="10" fill="#F59E0B">Clinical Protocol Ready</text>
+  </g>
+
+  <!-- Loopback Callout Box -->
+  <g transform="translate(320, 310)">
+    <rect width="520" height="60" rx="8" class="panel"/>
+    <circle cx="24" cy="30" r="5" fill="#F59E0B"/>
+    <text x="42" y="26" class="txt-main" font-size="12" font-weight="600">State Loopback: Rejection &amp; In-Silico Mutagenesis</text>
+    <text x="42" y="44" class="txt-sub" font-size="11">Violations trigger targeted mutation of hydrophobic residues until solubility and safety pass.</text>
+  </g>
+
+  <!-- Traveling Particles -->
+  <circle r="4" fill="#38BDF8">
+    <animateMotion path="M 240 185 L 290 185" dur="1.2s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="4" fill="#10B981">
+    <animateMotion path="M 470 185 L 520 185" dur="1.2s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="4" fill="#8B5CF6">
+    <animateMotion path="M 700 185 L 750 185" dur="1.2s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="4" fill="#F59E0B">
+    <animateMotion path="M 610 250 C 610 340, 380 340, 150 250" dur="3s" repeatCount="indefinite"/>
+  </circle>
+</svg>

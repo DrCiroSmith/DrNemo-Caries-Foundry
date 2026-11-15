@@ -1,0 +1,235 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480" role="img" aria-labelledby="t3 d3">
+  <title id="t3">Directed Evolution Funnel and Chitosan Hydrogel Shield Matrix</title>
+  <desc id="d3">Matrix showing 147 generated candidate sequences across 20 generations filtered by the Chitosan Hydrogel Shield rule.</desc>
+  <style>
+    .bg { fill: #0B111A; }
+    .panel { fill: #131B26; stroke: #233142; stroke-width: 1.2; }
+    .sub-card { fill: #1A2536; stroke: #2A3B50; stroke-width: 1; }
+    .txt-main { fill: #F1F5F9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .txt-sub { fill: #94A3B8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .txt-mono { fill: #38BDF8; font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    
+    .node-dim { fill: #EF4444; fill-opacity: 0.22; stroke: #EF4444; stroke-opacity: 0.4; }
+    .node-viable { fill: #F59E0B; fill-opacity: 0.65; stroke: #F59E0B; animation: pulseViable 2s infinite alternate; }
+    .node-lead { fill: #10B981; stroke: #34D399; stroke-width: 2.5; animation: pulseLead 1.5s infinite alternate; }
+    
+    @keyframes pulseViable { from { fill-opacity: 0.45; } to { fill-opacity: 0.9; } }
+    @keyframes pulseLead { from { transform: scale(1); } to { transform: scale(1.12); } }
+
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #F8FAFC; }
+      .panel { fill: #FFFFFF; stroke: #CBD5E1; }
+      .sub-card { fill: #F1F5F9; stroke: #E2E8F0; }
+      .txt-main { fill: #0F172A; }
+      .txt-sub { fill: #475569; }
+      .txt-mono { fill: #0284C7; }
+      .node-dim { fill: #FEE2E2; stroke: #F87171; fill-opacity: 0.7; }
+    }
+  </style>
+
+  <rect width="1200" height="480" rx="16" class="bg"/>
+  <rect x="0.5" y="0.5" width="1199" height="479" rx="15.5" fill="none" stroke="#334155" stroke-opacity="0.3"/>
+
+  <!-- Header -->
+  <g transform="translate(50, 24)">
+    <text x="0" y="24" class="txt-main" font-size="18" font-weight="700">147-CANDIDATE DIRECTED EVOLUTION MATRIX</text>
+    <text x="0" y="44" class="txt-sub" font-size="12">Generations 1..20 Filtering · Chitosan Hydrogel Shield Rule (I/K/D/E) · Pareto Convergence</text>
+  </g>
+
+  <!-- Left: Candidate Matrix Grid (7 rows x 21 cols = 147 candidates) -->
+  <g transform="translate(50, 85)">
+    <rect width="640" height="360" rx="12" class="panel"/>
+    <text x="24" y="32" class="txt-main" font-size="13" font-weight="700">GENERATION EVOLUTION TIMELINE (GEN 1 TO GEN 20)</text>
+
+    <!-- Matrix Nodes Container -->
+    <g transform="translate(24, 52)">
+      <rect x="0" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="28" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="56" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="84" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="112" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="140" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="168" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="196" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="224" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="252" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="280" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="308" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="336" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="364" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="392" y="0" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="420" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="448" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="476" y="0" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="504" y="0" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="532" y="0" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="560" y="0" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="0" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="28" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="56" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="84" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="112" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="140" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="168" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="196" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="224" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="252" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="280" y="38" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="308" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="336" y="38" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="364" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="392" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="420" y="38" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="448" y="38" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="476" y="38" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="504" y="38" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="532" y="38" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="560" y="38" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="0" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="28" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="56" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="84" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="112" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="140" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="168" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="196" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="224" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="252" y="76" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="280" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="308" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="336" y="76" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="364" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="392" y="76" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="420" y="76" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="448" y="76" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="476" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="504" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="532" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="560" y="76" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="0" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="28" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="56" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="84" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="112" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="140" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="168" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="196" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="224" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="252" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="280" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="308" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="336" y="114" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="364" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="392" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="420" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="448" y="114" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="476" y="114" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="504" y="114" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="532" y="114" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="560" y="114" width="18" height="22" rx="4" class="node-lead"/>
+      <rect x="0" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="28" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="56" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="84" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="112" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="140" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="168" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="196" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="224" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="252" y="152" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="280" y="152" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="308" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="336" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="364" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="392" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="420" y="152" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="448" y="152" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="476" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="504" y="152" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="532" y="152" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="560" y="152" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="0" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="28" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="56" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="84" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="112" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="140" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="168" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="196" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="224" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="252" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="280" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="308" y="190" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="336" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="364" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="392" y="190" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="420" y="190" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="448" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="476" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="504" y="190" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="532" y="190" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="560" y="190" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="0" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="28" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="56" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="84" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="112" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="140" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="168" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="196" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="224" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="252" y="228" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="280" y="228" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="308" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="336" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="364" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="392" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="420" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="448" y="228" width="18" height="22" rx="4" class="node-dim"/>
+      <rect x="476" y="228" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="504" y="228" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="532" y="228" width="18" height="22" rx="4" class="node-viable"/>
+      <rect x="560" y="228" width="18" height="22" rx="4" class="node-dim"/>
+    </g>
+
+    <!-- Legend -->
+    <g transform="translate(24, 325)">
+      <rect x="0" y="0" width="12" height="12" rx="2" class="node-dim"/>
+      <text x="18" y="10" class="txt-sub" font-size="11">Filtered by Shield (112)</text>
+
+      <rect x="180" y="0" width="12" height="12" rx="2" class="node-viable"/>
+      <text x="198" y="10" class="txt-sub" font-size="11">Viable Cyclic Leads (34)</text>
+
+      <rect x="360" y="0" width="12" height="12" rx="2" class="node-lead"/>
+      <text x="378" y="10" class="txt-sub" font-size="11">Pareto-Optimal Lead S-084</text>
+    </g>
+  </g>
+
+  <!-- Right: Pareto Telemetry & Verification Card -->
+  <g transform="translate(720, 85)">
+    <rect width="430" height="360" rx="12" class="panel"/>
+    <text x="24" y="32" class="txt-main" font-size="14" font-weight="700">CHITOSAN HYDROGEL SHIELD TELEMETRY</text>
+
+    <g transform="translate(24, 55)">
+      <rect width="382" height="74" rx="8" class="sub-card"/>
+      <text x="16" y="24" class="txt-sub" font-size="11">Physicochemical Gate Rule</text>
+      <text x="16" y="44" class="txt-main" font-size="13" font-weight="600">I/K/D/E Charge &amp; Hydrophilicity</text>
+      <text x="16" y="62" class="txt-mono" font-size="11" fill="#10B981">Zero Precipitation at pH 5.5 (Caries Active)</text>
+    </g>
+
+    <g transform="translate(24, 142)">
+      <rect width="382" height="74" rx="8" class="sub-card"/>
+      <text x="16" y="24" class="txt-sub" font-size="11">Pareto Winner: Candidate S-084</text>
+      <text x="16" y="44" class="txt-main" font-size="13" font-weight="600">Cyclic Peptide: C-P-W-R-G-D-S-C</text>
+      <text x="16" y="62" class="txt-mono" font-size="11" fill="#38BDF8">pLDDT: 94.2 · iPTM: 0.88 · Ki: 18.6 nM</text>
+    </g>
+
+    <g transform="translate(24, 230)">
+      <rect width="382" height="98" rx="8" class="sub-card"/>
+      <text x="16" y="24" class="txt-sub" font-size="11">Convergence Acceleration</text>
+      <text x="16" y="48" class="txt-main" font-size="13" font-weight="600">20 Generations · 100% In-Silico Validated</text>
+      <text x="16" y="68" class="txt-mono" font-size="11" fill="#F59E0B">Retention in Biofilm Matrix: &gt;98.4%</text>
+      <text x="16" y="86" class="txt-sub" font-size="10">Zero Disruption to Commensal Oral Microflora</text>
+    </g>
+  </g>
+</svg>

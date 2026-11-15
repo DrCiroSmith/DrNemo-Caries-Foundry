@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/hero.svg" alt="Dr. Nemo Caries Vaccine Foundry Banner" width="100%">
+  <img src="assets/hero_gtfb_docking.svg" alt="Dr. Nemo Caries Vaccine Foundry Banner" width="100%">
 </p>
 
 <p align="center">
@@ -18,6 +18,10 @@ An autonomous multi-agent pipeline that designs, filters, and clinically charact
 
 <p align="center">
   <img src="assets/evolution_demo.gif" alt="Directed Evolution and Chitosan Filter Telemetry" width="100%">
+</p>
+
+<p align="center">
+  <img src="assets/evolution_funnel_147.svg" alt="147-Candidate Directed Evolution Matrix" width="100%">
 </p>
 
 ---
@@ -43,6 +47,10 @@ Broad-spectrum antimicrobials like chlorhexidine wipe out both pathogens and ben
 ---
 
 ## 2. End-to-End Discovery Pipeline
+
+<p align="center">
+  <img src="assets/langgraph_loop.svg" alt="Autonomous Closed-Loop Multi-Agent State Machine" width="100%">
+</p>
 
 The discovery engine runs an iterative loop across stateful generation, matrix delivery filtering, high-throughput cloud folding, and local medical synthesis:
 
