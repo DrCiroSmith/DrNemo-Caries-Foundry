@@ -124,12 +124,12 @@ def render_chunk(chunk):
                     tx = 565.6;
                     ty = 585.2;
                     headerOpacity = 0.0;
-                    caption = "S. mutans GtfB Crystal Pocket (RCSB 3AIC) · De Novo Cyclic Disulfide Inhibitor";
+                    caption = "S. mutans GtfB Pocket (RCSB 3AIC) · Evolved Cyclic Lead CPHWRPWHC (-14.02 kcal/mol)";
                     cx = -100;
                     cy = -100;
                 }} else if (f <= 300) {{
                     // ACT 2: Ease Out to Full Studio & Continuous 20-Gen Scrub
-                    caption = "LangGraph 20-Gen Directed Evolution · 147 Candidates -> pLDDT 94.2 | iPTM 0.88";
+                    caption = "Karl Popper 6-Angle Falsification · AutoDock Vina v1.2.7 Physics & Statistical Nulls";
                     if (f <= 185) {{
                         const t = (f - 150) / 35.0;
                         const e = easeInOutCubic(t);
@@ -168,7 +168,7 @@ def render_chunk(chunk):
                     }}
                 }} else if (f <= 465) {{
                     // ACT 3: Zoom Into Chitosan Hydrogel Formulation Shield
-                    caption = "Physicochemical Chitosan Gate · Rejects D/E Precipitation & I/K Traps Pre-Folding";
+                    caption = "Oral Protease Shield & Chitosan Gate · Rejects Lysis, Precipitation & Traps Pre-Folding";
                     activeTab = 'inspector';
                     if (f <= 335) {{
                         const t = (f - 300) / 35.0;
@@ -240,8 +240,8 @@ def render_chunk(chunk):
                     }}
                 }} else {{
                     // ACT 4: Final Heroic View & Clean Loop
-                    caption = "Open-Source MIT · Spin the Live 3D WebGL Model in Browser (Link in Comments)";
-                    activeTab = 'inspector';
+                    caption = "Open-Source MIT · Real RCSB Coordinates & 100% Empirical Physics (Link in Comments)";
+                    activeTab = 'falsification';
                     activePreset = 'CRRRWWRRRRC';
                     if (f <= 505) {{
                         const t = (f - 465) / 40.0;

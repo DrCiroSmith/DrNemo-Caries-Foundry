@@ -1,0 +1,161 @@
+{
+  "lead_sequence": "CPHWRPWHC",
+  "lead_affinity_3aic": -14.02,
+  "lead_affinity_1smd": 144.1,
+  "lead_selectivity_delta": -158.12,
+  "linear_control": {
+    "sequence": "SPHWRPWHS",
+    "affinity": 0.2815,
+    "cyclization_delta": 14.3
+  },
+  "scrambled_null_test": {
+    "n_isomers": 12,
+    "mean_kcal": -7.57,
+    "std_kcal": 4.12,
+    "z_score": -1.56,
+    "p_value": 0.0769,
+    "is_falsified": true,
+    "scrambled_scores": [
+      {
+        "sequence": "CHHWWRPPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_02",
+        "affinity_kcal": -10.45,
+        "elapsed_s": 33.39
+      },
+      {
+        "sequence": "CHWWPHPRC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_06",
+        "affinity_kcal": -5.963,
+        "elapsed_s": 37.25
+      },
+      {
+        "sequence": "CHHPWPWRC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_01",
+        "affinity_kcal": -9.753,
+        "elapsed_s": 38.06
+      },
+      {
+        "sequence": "CHWHRWPPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_04",
+        "affinity_kcal": -9.807,
+        "elapsed_s": 38.38
+      },
+      {
+        "sequence": "CHWWHPRPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_05",
+        "affinity_kcal": -7.362,
+        "elapsed_s": 38.56
+      },
+      {
+        "sequence": "CHPPRHWWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_03",
+        "affinity_kcal": -10.84,
+        "elapsed_s": 39.17
+      },
+      {
+        "sequence": "CPRHHWPWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_07",
+        "affinity_kcal": 3.273,
+        "elapsed_s": 35.63
+      },
+      {
+        "sequence": "CPWRHWHPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_08",
+        "affinity_kcal": -3.167,
+        "elapsed_s": 33.57
+      },
+      {
+        "sequence": "CWRPPHHWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_11",
+        "affinity_kcal": -8.767,
+        "elapsed_s": 34.3
+      },
+      {
+        "sequence": "CWRWPPHHC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_12",
+        "affinity_kcal": -7.437,
+        "elapsed_s": 35.12
+      },
+      {
+        "sequence": "CRPWWPHHC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_10",
+        "affinity_kcal": -11.29,
+        "elapsed_s": 37.27
+      },
+      {
+        "sequence": "CRPHPWWHC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_09",
+        "affinity_kcal": -9.322,
+        "elapsed_s": 38.36
+      }
+    ]
+  },
+  "alanine_scan": {
+    "H3A": {
+      "sequence": "CPAWRPWHC",
+      "affinity_kcal": -7.983,
+      "delta_delta_g_ala": 6.04,
+      "is_hotspot": true
+    },
+    "H8A": {
+      "sequence": "CPHWRPWAC",
+      "affinity_kcal": -4.531,
+      "delta_delta_g_ala": 9.49,
+      "is_hotspot": true
+    },
+    "P2A": {
+      "sequence": "CAHWRPWHC",
+      "affinity_kcal": -5.898,
+      "delta_delta_g_ala": 8.12,
+      "is_hotspot": true
+    },
+    "P6A": {
+      "sequence": "CPHWRAWHC",
+      "affinity_kcal": -9.752,
+      "delta_delta_g_ala": 4.27,
+      "is_hotspot": true
+    },
+    "R5A": {
+      "sequence": "CPHWAPWHC",
+      "affinity_kcal": -11.18,
+      "delta_delta_g_ala": 2.84,
+      "is_hotspot": true
+    },
+    "W4A": {
+      "sequence": "CPHARPWHC",
+      "affinity_kcal": -11.11,
+      "delta_delta_g_ala": 2.91,
+      "is_hotspot": true
+    },
+    "W7A": {
+      "sequence": "CPHWRPAHC",
+      "affinity_kcal": -12.13,
+      "delta_delta_g_ala": 1.89,
+      "is_hotspot": true
+    }
+  }
+}
