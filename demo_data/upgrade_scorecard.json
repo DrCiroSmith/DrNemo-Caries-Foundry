@@ -1,0 +1,62 @@
+[
+  {
+    "lead": "CRRRWWRRRRC",
+    "plddt": 94.2,
+    "file": "S_mutans_GtfB_Insoluble_variant_CRRRWWRRRRC.pdb",
+    "chain_a_atoms": 2488,
+    "chain_b_atoms": 118,
+    "total_atoms": 2606,
+    "chain_a_residues": 311,
+    "chain_b_residues": 11,
+    "min_distance_A": 2.832,
+    "salt_bridges": 4
+  },
+  {
+    "lead": "CRRRWFRRRRC",
+    "plddt": 91.8,
+    "file": "S_mutans_GtfB_Insoluble_variant_CRRRWFRRRRC.pdb",
+    "chain_a_atoms": 2488,
+    "chain_b_atoms": 115,
+    "total_atoms": 2603,
+    "chain_a_residues": 311,
+    "chain_b_residues": 11,
+    "min_distance_A": 2.899,
+    "salt_bridges": 4
+  },
+  {
+    "lead": "CRRRWWPRRRC",
+    "plddt": 89.4,
+    "file": "S_mutans_GtfB_Insoluble_variant_CRRRWWPRRRC.pdb",
+    "chain_a_atoms": 2488,
+    "chain_b_atoms": 114,
+    "total_atoms": 2602,
+    "chain_a_residues": 311,
+    "chain_b_residues": 11,
+    "min_distance_A": 2.641,
+    "salt_bridges": 5
+  },
+  {
+    "lead": "CRRRAWPRRRC",
+    "plddt": 85.2,
+    "file": "S_mutans_GtfB_Insoluble_variant_CRRRAWPRRRC.pdb",
+    "chain_a_atoms": 2488,
+    "chain_b_atoms": 105,
+    "total_atoms": 2593,
+    "chain_a_residues": 311,
+    "chain_b_residues": 11,
+    "min_distance_A": 2.849,
+    "salt_bridges": 3
+  },
+  {
+    "lead": "CRRAGWPRRRC",
+    "plddt": 78.6,
+    "file": "S_mutans_GtfB_Insoluble_variant_CRRAGWPRRRC.pdb",
+    "chain_a_atoms": 2488,
+    "chain_b_atoms": 98,
+    "total_atoms": 2586,
+    "chain_a_residues": 311,
+    "chain_b_residues": 11,
+    "min_distance_A": 2.625,
+    "salt_bridges": 3
+  }
+]
