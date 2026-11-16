@@ -297,6 +297,8 @@ def test_falsification_audit_overall_verdict():
 
 def test_biophysics_macrocycle_embedding():
     """Verify 3D macrocycle building and heavy atom enumeration."""
+    pytest.importorskip("rdkit")
+    pytest.importorskip("meeko")
     import os
     from biophysics_engine import build_macrocycle_3d
     import tempfile
@@ -308,6 +310,8 @@ def test_biophysics_macrocycle_embedding():
 
 def test_biophysics_openmm_relaxation():
     """Verify OpenMM Amber14/GBn2 energy minimization runs and yields valid potential energy."""
+    pytest.importorskip("rdkit")
+    pytest.importorskip("openmm")
     from biophysics_engine import build_macrocycle_3d, relax_with_openmm
     import tempfile
     with tempfile.NamedTemporaryFile(suffix=".pdb") as tf_pdb, tempfile.NamedTemporaryFile(suffix=".pdbqt") as tf_pdbqt:
