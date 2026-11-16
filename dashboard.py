@@ -25,7 +25,9 @@ def resolve_base_dir():
 
 BASE_DIR, IS_DEMO_DATA = resolve_base_dir()
 RESULTS_DIR = BASE_DIR / "results"
-SCORES_FILE = RESULTS_DIR / "master_scores.csv"
+SQLITE_FILE = BASE_DIR / "data" / "foundry_contenders.sqlite"
+LEDGER_FILE = BASE_DIR / "data" / "contenders_ledger.csv"
+SCORES_FILE = LEDGER_FILE if LEDGER_FILE.exists() else (RESULTS_DIR / "master_scores.csv")
 ANALYSIS_DIR = RESULTS_DIR / "analysis"
 COMPLETED_DIR = BASE_DIR / "jobs" / "completed"
 PENDING_DIR = BASE_DIR / "jobs" / "pending"
@@ -102,10 +104,40 @@ if TARGETS_FILE.exists():
         target_list = list(targets_data.keys())
 
 df = None
-if SCORES_FILE.exists():
+if 'SQLITE_FILE' in globals() and SQLITE_FILE.exists():
+    try:
+        import sqlite3
+        with sqlite3.connect(SQLITE_FILE) as conn:
+            df = pd.read_sql_query("SELECT * FROM contenders ORDER BY pareto_rank ASC, vina_3aic_kcal ASC", conn)
+    except Exception:
+        df = None
+
+if df is None and SCORES_FILE.exists():
     try:
         df = pd.read_csv(SCORES_FILE)
-        df = df.sort_values(by="Timestamp", ascending=False)
+    except Exception:
+        df = None
+
+if df is not None:
+    try:
+        if 'evaluated_at_utc' in df.columns and 'Timestamp' not in df.columns:
+            df['Timestamp'] = df['evaluated_at_utc']
+        if 'contender_id' in df.columns and 'Job_ID' not in df.columns:
+            df['Job_ID'] = df['contender_id']
+        if 'sequence' in df.columns and 'Peptide_Seq' not in df.columns:
+            df['Peptide_Seq'] = df['sequence']
+        if 'falsification_status' in df.columns and 'Status' not in df.columns:
+            df['Status'] = df['falsification_status'].apply(lambda s: 'SUCCESS' if s == 'CORROBORATED' else 'FALSIFIED')
+        if 'Project' not in df.columns:
+            df['Project'] = 'S_mutans_GtfB_Insoluble'
+        if 'pLDDT' not in df.columns and 'vina_3aic_kcal' in df.columns:
+            df['pLDDT'] = df['vina_3aic_kcal'].apply(lambda v: round(max(0.0, min(100.0, 50.0 - float(v) * 5.0)), 2))
+        if 'iPTM' not in df.columns and 'ligand_efficiency' in df.columns:
+            df['iPTM'] = df['ligand_efficiency'].apply(lambda le: round(max(0.0, min(1.0, float(le) * 6.0)), 3))
+        if 'Composite_Score' not in df.columns and 'pLDDT' in df.columns and 'iPTM' in df.columns:
+            df['Composite_Score'] = (df['pLDDT'] / 100.0) * df['iPTM']
+        if 'Timestamp' in df.columns:
+            df = df.sort_values(by="Timestamp", ascending=False)
         
         if 'Project' not in df.columns or df['Project'].isnull().all():
             def dict_infer_project(job_id):

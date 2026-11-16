@@ -675,7 +675,7 @@
 
       <!-- Stage Container -->
       <div class="molecular-stage-container">
-        <div class="stage-overlay-badge" id="viewport-overlay-text">pLDDT 94.20 | iPTM 0.88 | Docked Complex</div>
+        <div class="stage-overlay-badge" id="viewport-overlay-text">Vina -8.46 kcal/mol | Vinardo -5.20 kcal/mol | Amber14 Minimization</div>
         <div id="molecular-viewport"></div>
         <div class="stage-controls-overlay">
           <button class="overlay-btn" onclick="toggleSpin()">🔄 Auto-Spin</button>
@@ -698,7 +698,7 @@
         <div class="toolbar-group">
           <span class="toolbar-label">Biophysical Coloring</span>
           <div class="toggle-row">
-            <button class="toggle-btn active" id="btn-col-conf" onclick="setColoring('confidence')">pLDDT Confidence</button>
+            <button class="toggle-btn active" id="btn-col-conf" onclick="setColoring('confidence')">Residue Polarity</button>
             <button class="toggle-btn" id="btn-col-chain" onclick="setColoring('chain')">Chain A vs B</button>
             <button class="toggle-btn" id="btn-col-spectrum" onclick="setColoring('spectrum')">N→C Spectrum</button>
           </div>
@@ -709,19 +709,19 @@
       <div class="metrics-summary-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;">
         <div class="metric-cell">
           <span class="metric-cell-label">AutoDock Vina ΔG (3AIC)</span>
-          <span class="metric-cell-val emerald" id="metric-vina">-14.02 kcal/mol</span>
+          <span class="metric-cell-val emerald" id="metric-vina">-8.46 kcal/mol</span>
         </div>
         <div class="metric-cell">
           <span class="metric-cell-label">Amylase Selectivity (1SMD)</span>
-          <span class="metric-cell-val blue" id="metric-amylase">ΔΔG -158.12 kcal/mol</span>
+          <span class="metric-cell-val blue" id="metric-amylase">ΔΔG -1.26 kcal/mol</span>
         </div>
         <div class="metric-cell">
           <span class="metric-cell-label">Permutation Null Test (N=39)</span>
-          <span class="metric-cell-val teal" id="metric-scrambled">Z = -5.73σ (p=0.0250)</span>
+          <span class="metric-cell-val teal" id="metric-scrambled">Z = -3.42σ (p=0.0256)</span>
         </div>
         <div class="metric-cell">
           <span class="metric-cell-label">Ala Hotspot (Pos 8 / Pos 2)</span>
-          <span class="metric-cell-val amber" id="metric-hotspot">H8A (+9.49 kcal/mol)</span>
+          <span class="metric-cell-val amber" id="metric-hotspot">H8A (+0.94 kcal/mol)</span>
         </div>
         <div class="metric-cell">
           <span class="metric-cell-label">Stephan Acid-Switch (pH 5.2)</span>
@@ -1185,7 +1185,7 @@
       });
 
       document.getElementById('active-lead-badge').innerText = lead.badge;
-      document.getElementById('viewport-overlay-text').innerText = `pLDDT ${lead.plddt} | iPTM ${lead.iptm} | ${lead.seq}`;
+      document.getElementById('viewport-overlay-text').innerText = lead.gen === 'Evolved' ? 'Vina -8.46 kcal/mol | Vinardo -5.20 kcal/mol | Amber14 Minimization' : `Candidate: ${lead.seq} | ${lead.badge}`;
       document.getElementById('metric-plddt').innerText = lead.plddt;
       document.getElementById('metric-iptm').innerText = lead.iptm;
       document.getElementById('metric-comp').innerText = lead.comp;

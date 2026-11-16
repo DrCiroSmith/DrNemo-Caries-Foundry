@@ -161,10 +161,10 @@ Z = -5.73σ | p = 0.0250       ΔΔG > +0.70 kcal/mol            Zero Cleavage S
 #### Head-to-Head Empirical Falsification Verdict
 | Biophysical Evaluation Parameter | Naive Poly-Arginine (`CRRRWWRRRRC`) | Evolved Lead (`CPHWRPWHC`) | Popperian Verdict |
 | :--- | :--- | :--- | :--- |
-| **GtfB (3AIC) Binding Affinity** | $+183.51\text{ kcal/mol}$ (Clashing) | $\mathbf{-14.02\text{ kcal/mol}}$ (Deep Binding) | `CRRRWWRRRRC` **FALSIFIED** |
-| **Amylase (1SMD) Selectivity $\Delta\Delta G$** | $-418.29\text{ kcal/mol}$ | $\mathbf{-158.12\text{ kcal/mol}}$ | Both avoid amylase; Lead fits GtfB |
-| **Permutation Null $Z$-Score** | $+4.21\sigma$ (Worse than null) | $\mathbf{-5.73\sigma}$ ($p = 0.0250$) | `CRRRWWRRRRC` **FALSIFIED** |
-| **Linear vs Cyclic $\Delta\Delta G$** | No macrocycle constraint | $\mathbf{+14.30\text{ kcal/mol}}$ conformational lock | Corroborates cyclic design |
+| **GtfB (3AIC) Binding Affinity** | $+183.51\text{ kcal/mol}$ (Clashing) | $\mathbf{-8.46\text{ kcal/mol}}$ (Deep Binding) | `CRRRWWRRRRC` **FALSIFIED** |
+| **Amylase (1SMD) Selectivity $\Delta\Delta G$** | $-418.29\text{ kcal/mol}$ | $\mathbf{-1.26\text{ kcal/mol}}$ (1SMD: -7.20) | Both avoid amylase; Lead fits GtfB |
+| **Permutation Null $Z$-Score** | $+4.21\sigma$ (Worse than null) | $\mathbf{-3.42\sigma}$ ($p = 0.0256$) | `CRRRWWRRRRC` **FALSIFIED** |
+| **Linear vs Cyclic $\Delta\Delta G$** | No macrocycle constraint | $\mathbf{+2.15\text{ kcal/mol}}$ conformational lock | Corroborates cyclic design |
 | **Oral Protease Cleavage Sites** | **7 sites** (Instant saliva digestion) | **0 sites** (Sterically shielded) | `CRRRWWRRRRC` **FALSIFIED** |
 | **Chitosan Donnan Compatibility** | Net Charge $+7.0$ (Precipitation fail) | Net Charge $\mathbf{+2.05}$ (Carrier compatible) | `CRRRWWRRRRC` **FALSIFIED** |
 | **Stephan-Curve pH Switch ($\Delta Q$)** | $\Delta Q = \mathbf{0.00}$ (No response) | $\Delta Q = \mathbf{+1.62}$ (Plaque targeted) | `CRRRWWRRRRC` **FALSIFIED** |

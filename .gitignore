@@ -22,3 +22,16 @@ venv/
 .DS_Store
 Thumbs.db
 3AIC.pdb
+
+# Allow authentic contender ledger
+!data/contenders_ledger.csv
+
+# Runtime logs
+*.log
+data/logs/
+
+# LaTeX intermediate build files
+*.aux
+*.bbl
+*.blg
+*.out
