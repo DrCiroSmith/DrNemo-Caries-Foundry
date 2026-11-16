@@ -19,11 +19,26 @@ import math
 from pathlib import Path
 from typing import Dict, Any, Tuple, Optional
 
-from rdkit import Chem
-from rdkit.Chem import AllChem
-from meeko import MoleculePreparation, PDBQTWriterLegacy
-import openmm as mm
-from openmm import app, unit
+try:
+    from rdkit import Chem
+    from rdkit.Chem import AllChem
+except ImportError:
+    Chem = None
+    AllChem = None
+
+try:
+    from meeko import MoleculePreparation, PDBQTWriterLegacy
+except ImportError:
+    MoleculePreparation = None
+    PDBQTWriterLegacy = None
+
+try:
+    import openmm as mm
+    from openmm import app, unit
+except ImportError:
+    mm = None
+    app = None
+    unit = None
 
 from solubility_shield import (
     is_viable,
