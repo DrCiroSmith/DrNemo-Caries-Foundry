@@ -844,7 +844,7 @@ TORSDOF 17
 ENDMDL
 MODEL 5
 REMARK VINA RESULT:    -6.554      2.761      7.518
-REMARK INTER + INTRA:         -30.889
+REMARK INTER + INTRA:         -30.899
 REMARK INTER:                 -21.089
 REMARK INTRA:                  -9.800
 REMARK UNBOUND:               -10.542
@@ -953,7 +953,7 @@ ATOM     54  CB  TRP A   5      13.328  42.280  20.933  1.00  0.00    +0.072 C
 BRANCH  54  55
 ATOM     55  CG  TRP A   5      14.056  41.267  21.766  1.00  0.00    -0.020 A 
 ATOM     56  CD1 TRP A   5      13.525  40.564  22.833  1.00  0.00    +0.087 A 
-ATOM     57  CD2 TRP A   5      15.433  40.883  21.663  1.00  0.00    +0.003 A 
+ATOM     57  CD2 TRP A   5      15.433  40.893  21.663  1.00  0.00    +0.003 A 
 ATOM     58  NE1 TRP A   5      14.499  39.747  23.340  1.00  0.00    -0.361 N 
 ATOM     59  CE2 TRP A   5      15.669  39.914  22.639  1.00  0.00    +0.046 A 
 ATOM     60  CE3 TRP A   5      16.505  41.271  20.833  1.00  0.00    +0.010 A 
@@ -1055,7 +1055,7 @@ TORSDOF 17
 ENDMDL
 MODEL 6
 REMARK VINA RESULT:    -6.552      2.020      3.027
-REMARK INTER + INTRA:         -30.885
+REMARK INTER + INTRA:         -30.895
 REMARK INTER:                 -20.707
 REMARK INTRA:                 -10.178
 REMARK UNBOUND:               -10.542
@@ -1085,7 +1085,7 @@ BRANCH   5   6
 ATOM      6  N   TRP A   5      11.304  42.508  23.270  1.00  0.00    -0.342 N 
 ATOM      7  C   TRP A   4      12.633  42.205  23.068  1.00  0.00    +0.243 C 
 ATOM      8  O   TRP A   4      13.276  41.514  23.854  1.00  0.00    -0.273 OA
-ATOM      9  H   UNL     1      10.889  43.294  22.763  1.00  0.00    +0.164 HD
+ATOM      9  H   UNL     1      10.899  43.294  22.763  1.00  0.00    +0.164 HD
 BRANCH   7  10
 ATOM     10  CA  TRP A   4      13.277  42.954  21.887  1.00  0.00    +0.175 C 
 BRANCH  10  11

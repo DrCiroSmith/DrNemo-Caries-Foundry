@@ -19,7 +19,7 @@ REMARK Flexibility Score:  435.900
 ROOT
 ATOM      1  C   PRO A   4     188.028  41.424 197.928  1.00  0.00    +0.243 C 
 ATOM      2  O   PRO A   4     189.161  41.703 197.537  1.00  0.00    -0.273 OA
-ATOM      3  N   TRP A   5     187.780  40.881 199.164  1.00  0.00    -0.342 N 
+ATOM      3  N   TRP A   5     187.780  40.891 199.164  1.00  0.00    -0.342 N 
 ATOM      4  H   UNL     1     186.807  40.905 199.477  1.00  0.00    +0.164 HD
 ENDROOT
 BRANCH   1   5

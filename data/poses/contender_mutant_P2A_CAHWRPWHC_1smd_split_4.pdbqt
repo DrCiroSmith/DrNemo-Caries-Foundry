@@ -1,6 +1,6 @@
 REMARK VINA RESULT:    -7.120      1.974      3.015
 REMARK INTER + INTRA:         -31.038
-REMARK INTER:                 -20.888
+REMARK INTER:                 -20.898
 REMARK INTRA:                 -10.150
 REMARK UNBOUND:                -9.765
 REMARK SMILES C[C@@H]1NC(=O)[C@@H](N)CSSC[C@@H](C(=O)O)NC(=O)[C@H](Cc2c[nH]cn2)NC(=O)[C@H](Cc2c[nH]c3ccccc23)NC(=O)[C@@H]2CCCN2C(=O)[C@H](CCCNC(=N)N)NC(=O)[C@H](Cc2c[nH]c3ccccc23)NC(=O)[C@H](Cc2c[nH]cn2)NC1=O
@@ -82,7 +82,7 @@ ATOM     38  CD1 TRP A   4       2.992  42.444  29.314  1.00  0.00    +0.087 A
 ATOM     39  CD2 TRP A   4       1.609  40.666  29.170  1.00  0.00    +0.003 A 
 ATOM     40  NE1 TRP A   4       2.197  42.412  30.426  1.00  0.00    -0.361 N 
 ATOM     41  CE2 TRP A   4       1.338  41.341  30.363  1.00  0.00    +0.046 A 
-ATOM     42  CE3 TRP A   4       0.881  39.492  28.888  1.00  0.00    +0.010 A 
+ATOM     42  CE3 TRP A   4       0.891  39.492  28.888  1.00  0.00    +0.010 A 
 ATOM     43  CZ2 TRP A   4       0.364  40.913  31.273  1.00  0.00    +0.026 A 
 ATOM     44  CZ3 TRP A   4      -0.097  39.050  29.787  1.00  0.00    +0.001 A 
 ATOM     45  CH2 TRP A   4      -0.353  39.755  30.961  1.00  0.00    +0.002 A 

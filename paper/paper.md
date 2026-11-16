@@ -58,7 +58,7 @@ The system is organized into modular layers orchestrated by Python:
 
 1. **Macrocyclic Conformer Engine:** Cyclic peptides ($C\dots C$) are synthesized *in silico* with disulfide macrocyclization clamps, modeled via RDKit distance geometry, and energy-minimized using the MMFF94 force field.
 2. **Docking Engine:** Automated receptor preparation and OpenBabel/Meeko transduction prepare target PDBQT files with Gasteiger partial charges. Docking grid dimensions are centered on catalytic cleft coordinates ($x=192.072, y=44.370, z=197.309$ for `3AIC`; $x=8.778, y=49.724, z=17.278$ for `1SMD`) using uncompressed $28.0\text{ \AA}$ search grids.
-3. **Interactive Studio:** A zero-backend client-side viewer implemented with `3Dmol.js` renders real dual-chain complexes (Chain A: GtfB pocket, Chain B: cyclic peptide) directly in the browser with per-atom pLDDT confidence and charge spectrum mapping.
+3. **Interactive Studio:** A zero-backend client-side viewer implemented with `3Dmol.js` renders real dual-chain complexes (Chain A: GtfB pocket, Chain B: cyclic peptide) directly in the browser with biophysical binding poses and charge spectrum mapping.
 
 # Case Study: Empirical Falsification of Heuristic Leads
 

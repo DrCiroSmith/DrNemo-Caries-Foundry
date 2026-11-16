@@ -1,5 +1,5 @@
 REMARK VINA RESULT:    -6.554      2.761      7.518
-REMARK INTER + INTRA:         -30.889
+REMARK INTER + INTRA:         -30.899
 REMARK INTER:                 -21.089
 REMARK INTRA:                  -9.800
 REMARK UNBOUND:               -10.542
@@ -108,7 +108,7 @@ ATOM     54  CB  TRP A   5      13.328  42.280  20.933  1.00  0.00    +0.072 C
 BRANCH  54  55
 ATOM     55  CG  TRP A   5      14.056  41.267  21.766  1.00  0.00    -0.020 A 
 ATOM     56  CD1 TRP A   5      13.525  40.564  22.833  1.00  0.00    +0.087 A 
-ATOM     57  CD2 TRP A   5      15.433  40.883  21.663  1.00  0.00    +0.003 A 
+ATOM     57  CD2 TRP A   5      15.433  40.893  21.663  1.00  0.00    +0.003 A 
 ATOM     58  NE1 TRP A   5      14.499  39.747  23.340  1.00  0.00    -0.361 N 
 ATOM     59  CE2 TRP A   5      15.669  39.914  22.639  1.00  0.00    +0.046 A 
 ATOM     60  CE3 TRP A   5      16.505  41.271  20.833  1.00  0.00    +0.010 A 

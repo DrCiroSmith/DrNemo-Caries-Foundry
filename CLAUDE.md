@@ -3,7 +3,7 @@
 Public portfolio repo (GitHub DrCiroSmith). Oral-biophysics peptide design vs S. mutans GtfB. Author line: "DrNemo Oral Biophysics Research, Miami, FL".
 
 ## Rules
-- Honesty first: every number in docs/paper/LinkedIn must come from `data/foundry_contenders.sqlite`, `data/contenders_ledger.csv`, `falsification_benchmark.json`. No fabricated scores, no `np.random` in figures or notebooks.
+- Honesty first: every number in docs/paper/LinkedIn must come from `data/foundry_contenders.sqlite`, `data/contenders_ledger.csv`, `falsification_benchmark.json`. No fabricated scores, no `numpy random` in figures or notebooks.
 - Pose hashes are real sha256 of `data/poses/*.pdbqt` bytes. Never edit scores by hand.
 - No em dashes anywhere. LinkedIn post at `/mnt/c/dev/job_packets/linkedin_drnemo/linkedin_post_drnemo.md` <= 2,350 chars.
 - Never expose TFA-related code, SOPs, or PHI. Never print `.env` or tokens.

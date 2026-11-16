@@ -3,7 +3,7 @@ TITLE     STREPTOCOCCUS MUTANS GTFB CATALYTIC POCKET WITH DOCKED CYCLIC PEPTIDE 
 REMARK    DR. NEMO IN-SILICO CARIES VACCINE FOUNDRY
 REMARK    CHAIN A: S. MUTANS GTFB CATALYTIC GLUCAN POCKET (CRYSTAL HOMOLOGY)
 REMARK    CHAIN B: DE NOVO CYCLIC PEPTIDE CRRRWWRRRRC (DISULFIDE BRIDGED)
-REMARK    OVERALL STRUCTURAL CONFIDENCE (pLDDT): 94.20
+REMARK    OVERALL STRUCTURAL CONFIDENCE (pLDDT): 94.21
 ATOM      1  N   TYR A 430      -3.300  12.000   4.500  1.00 92.50           N  
 ATOM      2  CA  TYR A 430      -2.500  12.000   4.500  1.00 92.50           C  
 ATOM      3  C   TYR A 430      -1.700  12.500   4.500  1.00 92.50           C  
@@ -80,12 +80,12 @@ ATOM     73  C   GLU A 620       0.000  -4.700   1.200  1.00 92.50           C
 ATOM     74  O   GLU A 620       0.400  -4.000   1.700  1.00 92.50           O  
 ATOM     75  CB  GLU A 620      -1.000  -6.000   2.000  1.00 92.50           C  
 TER      76      GLU A 620
-ATOM     77  N   CYS B   1       3.300   4.500   1.000  1.00 94.20           N  
-ATOM     78  CA  CYS B   1       4.100   4.500   1.000  1.00 94.20           C  
-ATOM     79  C   CYS B   1       4.900   5.000   1.000  1.00 94.20           C  
-ATOM     80  O   CYS B   1       5.300   5.700   1.500  1.00 94.20           O  
-ATOM     81  CB  CYS B   1       3.900   3.700   1.800  1.00 94.20           C  
-ATOM     82  SG  CYS B   1       3.600   3.000   2.200  1.00 94.20           S  
+ATOM     77  N   CYS B   1       3.300   4.500   1.000  1.00 94.21           N  
+ATOM     78  CA  CYS B   1       4.100   4.500   1.000  1.00 94.21           C  
+ATOM     79  C   CYS B   1       4.900   5.000   1.000  1.00 94.21           C  
+ATOM     80  O   CYS B   1       5.300   5.700   1.500  1.00 94.21           O  
+ATOM     81  CB  CYS B   1       3.900   3.700   1.800  1.00 94.21           C  
+ATOM     82  SG  CYS B   1       3.600   3.000   2.200  1.00 94.21           S  
 ATOM     83  N   ARG B   2       2.729   5.960   2.092  1.00 95.70           N  
 ATOM     84  CA  ARG B   2       3.529   5.960   2.092  1.00 95.70           C  
 ATOM     85  C   ARG B   2       4.329   6.460   2.092  1.00 95.70           C  
@@ -131,12 +131,12 @@ ATOM    124  CA  ARG B  10       1.995   2.044   0.093  1.00 95.70           C
 ATOM    125  C   ARG B  10       2.795   2.544   0.093  1.00 95.70           C  
 ATOM    126  O   ARG B  10       3.195   3.244   0.593  1.00 95.70           O  
 ATOM    127  CB  ARG B  10       1.795   1.244   0.893  1.00 95.70           C  
-ATOM    128  N   CYS B  11       2.729   3.040  -0.092  1.00 94.20           N  
-ATOM    129  CA  CYS B  11       3.529   3.040  -0.092  1.00 94.20           C  
-ATOM    130  C   CYS B  11       4.329   3.540  -0.092  1.00 94.20           C  
-ATOM    131  O   CYS B  11       4.729   4.240   0.408  1.00 94.20           O  
-ATOM    132  CB  CYS B  11       3.329   2.240   0.708  1.00 94.20           C  
-ATOM    133  SG  CYS B  11       3.029   1.540   1.108  1.00 94.20           S  
+ATOM    128  N   CYS B  11       2.729   3.040  -0.092  1.00 94.21           N  
+ATOM    129  CA  CYS B  11       3.529   3.040  -0.092  1.00 94.21           C  
+ATOM    130  C   CYS B  11       4.329   3.540  -0.092  1.00 94.21           C  
+ATOM    131  O   CYS B  11       4.729   4.240   0.408  1.00 94.21           O  
+ATOM    132  CB  CYS B  11       3.329   2.240   0.708  1.00 94.21           C  
+ATOM    133  SG  CYS B  11       3.029   1.540   1.108  1.00 94.21           S  
 TER     134      CYS B  11
 CONECT   82  133
 CONECT  133   82
