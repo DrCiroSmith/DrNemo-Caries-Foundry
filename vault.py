@@ -20,9 +20,15 @@ DEFAULT_CSV_PATH = DATA_DIR / "contenders_ledger.csv"
 
 
 class ContenderVault:
-    def __init__(self, db_path: Path = DEFAULT_DB_PATH, ledger_csv: Path = DEFAULT_CSV_PATH):
+    def __init__(self, db_path: Path = DEFAULT_DB_PATH, ledger_csv: Optional[Path] = None):
         self.db_path = Path(db_path)
-        self.ledger_csv = Path(ledger_csv)
+        if ledger_csv is not None:
+            self.ledger_csv = Path(ledger_csv)
+        elif self.db_path == DEFAULT_DB_PATH:
+            self.ledger_csv = DEFAULT_CSV_PATH
+        else:
+            self.ledger_csv = self.db_path.parent / f"{self.db_path.stem}_ledger.csv"
+
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.ledger_csv.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()

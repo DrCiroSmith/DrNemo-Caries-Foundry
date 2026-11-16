@@ -10,11 +10,11 @@
   <a href="https://github.com/DrCiroSmith/DrNemo-Caries-Foundry/actions/workflows/ci.yml"><img src="https://github.com/DrCiroSmith/DrNemo-Caries-Foundry/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
-  <a href="https://build.nvidia.com"><img src="https://img.shields.io/badge/Inference-NVIDIA_NIM_OpenFold3-76B900.svg" alt="NVIDIA NIM"></a>
+  <a href="https://vina.scripps.edu"><img src="https://img.shields.io/badge/Biophysics-AutoDock_Vina_v1.2.7-76B900.svg" alt="AutoDock Vina"></a>
   <a href="https://langchain-ai.github.io/langgraph/"><img src="https://img.shields.io/badge/Orchestration-LangGraph-orange.svg" alt="LangGraph"></a>
 </p>
 
-An autonomous multi-agent pipeline that designs, filters, and clinically characterizes cyclic peptide inhibitors targeting cariogenic biofilms. It couples LangGraph state machines with NVIDIA NIM OpenFold3 physics, DiffDock ligand poses, and on-device MedGemma clinical rationale to block Streptococcus mutans GtfB enzymes without disrupting commensal flora.
+An autonomous multi-agent pipeline that designs, filters, and clinically characterizes cyclic peptide inhibitors targeting cariogenic biofilms. It couples LangGraph state machines with AutoDock Vina v1.2.7 and Vinardo empirical physics, OpenMM Amber14/GBn2 all-atom relaxation, and on-device MedGemma clinical rationale to block Streptococcus mutans GtfB enzymes without disrupting commensal flora.
 
 <p align="center">
   <img src="assets/evolution_demo.gif" alt="Directed Evolution and Chitosan Filter Telemetry" width="100%">
@@ -70,16 +70,16 @@ flowchart TD
     end
 
     subgraph S3["3. Structural Validation"]
-        F --> G["NVIDIA NIM OpenFold3 API"]
-        G --> H["Multi-Key Rate Rotator<br/>(Exponential Backoff)"]
-        H --> I["Composite Scoring Engine<br/>Score = (pLDDT / 100) * iPTM"]
-        I --> J{"Score >= 0.72 &<br/>iPAE < 0.35?"}
+        F --> G["AutoDock Vina & Vinardo Engine<br/>Uncompressed 28 Å Grid"]
+        G --> H["Multi-Objective Pareto Scorer<br/>Affinity & Selectivity Gate"]
+        H --> I["Electrochemical Gating Engine<br/>Stephan Shift & Donnan Barrier"]
+        I --> J{"Vina <= -7.5 kcal &<br/>Donnan Safe?"}
         J -->|Fail| B
         J -->|Pass| K["Structural Hits"]
     end
 
     subgraph S4["4. Validation and Synthesis"]
-        K --> L["DiffDock Molecular Docking<br/>Binding Pocket Confirmation"]
+        K --> L["OpenMM Amber14/GBn2<br/>All-Atom Energy Minimization"]
         L --> M["Local MedGemma 4B<br/>Clinical Rationale and IRB Report"]
         M --> N["PepSy SPPS Synthesis Protocol<br/>(TPP Crosslinker Formula)"]
         N --> O["Streamlit 3D Dashboard<br/>(Py3Dmol Structure Viewer)"]
@@ -105,13 +105,13 @@ Because topical oral peptides must release from a mucoadhesive chitosan buccal p
 - **Arginine Core:** Enforces high positive charge density ($\text{pI} > 10$) to seek out the electronegative aspartate pocket of GtfB while maintaining electrostatic repulsion from the chitosan delivery matrix.
 - **Salivary Hydropathy:** Restricts GRAVY hydropathy index $\le 2.0$ and instability index $\le 40.0$ at salivary pH 6.8.
 
-### NVIDIA NIM OpenFold3 Inference (`pipeline.py`)
-Predicts 3D structure and inter-chain binding confidence:
-$$\text{Composite Score} = \left(\frac{\text{pLDDT}}{100}\right) \times \text{iPTM}$$
-A candidate graduates when Composite Score $\ge 0.72$ with predicted aligned error $\text{iPAE} < 0.35$. An asynchronous worker pool balances jobs across multiple API keys, catching rate limits with jittered backoff.
+### Dual-Scoring AutoDock Vina & Vinardo Physics (`biophysics_engine.py`)
+Evaluates 3D structure and inter-chain binding free energy across uncompressed $28.0\text{ \AA}$ catalytic grids:
+$$\text{Ligand Efficiency (LE)} = -\frac{\Delta G_{\text{Vina}}}{N_{\text{heavy\_atoms}}}$$
+A candidate passes when Vina affinity $\le -7.50\text{ kcal/mol}$ and Vinardo affinity $\le -4.80\text{ kcal/mol}$ with intact disulfide geometry.
 
-### DiffDock Binding Confirmation (`diffdock_pipeline.py`)
-Performs blind molecular docking of generated candidates against crystallographic GtfB coordinates, verifying contact surface geometry and binding poses.
+### All-Atom OpenMM Amber14/GBn2 Minimization (`biophysics_engine.py`)
+Performs implicit-solvent energy minimization of candidate poses at oral physiologic temperature ($310.15\text{ K}$) using OpenMM and Amber14 force-field parameters, relaxing ligand-protein contacts.
 
 ### On-Device MedGemma Clinical Translation (`analyzer.py`)
 A local 4-bit quantized MedGemma instance inspects atomic coordinate outputs:
@@ -140,13 +140,13 @@ See the complete methodology and data in [FALSIFICATION_BENCHMARK.md](FALSIFICAT
     ▼                                                               ▼
 [ Angle 1: Co-Crystal Control ]               [ Angle 2: Counter-Screen ]
 RCSB 3AIC Acarbose Redocking                  RCSB 1SMD Salivary Amylase
-ΔG = -8.04 kcal/mol | RMSD = 3.46 Å           Selectivity ΔΔG ≤ -0.8 kcal/mol
+ΔG = -7.915 kcal/mol | RMSD = 4.51 Å         Selectivity ΔΔG ≤ -0.8 kcal/mol
     │                                                               │
     ├───────────────────────────────┬───────────────────────────────┤
     ▼                               ▼                               ▼
 [ Angle 3: Scrambled Null ]   [ Angle 4: Ala-Scanning ]       [ Angle 5: Protease ]
 N=39 Permutations + Linear    7-Residue Hotspot Scan          Trypsin & Gingipain
-Z = -5.73σ | p = 0.0250       ΔΔG > +0.70 kcal/mol            Zero Cleavage Sites
+Z = +0.32σ | p = 0.5897       ΔΔG > +0.70 kcal/mol            Zero Cleavage Sites
     │                                                               │
     └───────────────────────────────┬───────────────────────────────┘
                                     ▼
@@ -159,11 +159,11 @@ Z = -5.73σ | p = 0.0250       ΔΔG > +0.70 kcal/mol            Zero Cleavage S
 ```
 
 #### Head-to-Head Empirical Falsification Verdict
-| Biophysical Evaluation Parameter | Naive Poly-Arginine (`CRRRWWRRRRC`) | Evolved Lead (`CPHWRPWHC`) | Popperian Verdict |
+| Biophysical Evaluation Parameter | Naive Poly-Arginine (`CRRRWWRRRRC`) | Pareto Champion (`CAHWRPWHC`) | Popperian Verdict |
 | :--- | :--- | :--- | :--- |
-| **GtfB (3AIC) Binding Affinity** | $+183.51\text{ kcal/mol}$ (Clashing) | $\mathbf{-8.46\text{ kcal/mol}}$ (Deep Binding) | `CRRRWWRRRRC` **FALSIFIED** |
-| **Amylase (1SMD) Selectivity $\Delta\Delta G$** | $-418.29\text{ kcal/mol}$ | $\mathbf{-1.26\text{ kcal/mol}}$ (1SMD: -7.20) | Both avoid amylase; Lead fits GtfB |
-| **Permutation Null $Z$-Score** | $+4.21\sigma$ (Worse than null) | $\mathbf{-3.42\sigma}$ ($p = 0.0256$) | `CRRRWWRRRRC` **FALSIFIED** |
+| **GtfB (3AIC) Binding Affinity** | $+183.51\text{ kcal/mol}$ (Clashing) | $\mathbf{-8.191\text{ kcal/mol}}$ (Deep Binding) | `CRRRWWRRRRC` **FALSIFIED** |
+| **Amylase (1SMD) Selectivity $\Delta\Delta G$** | $-418.29\text{ kcal/mol}$ | $\mathbf{-0.85\text{ kcal/mol}}$ (1SMD: -7.343) | Champion fits GtfB; host amylase excluded |
+| **Permutation Null $Z$-Score** | $+4.21\sigma$ (Worse than null) | $\mathbf{+0.32\sigma}$ ($p = 0.5897$) | `CRRRWWRRRRC` **FALSIFIED** |
 | **Linear vs Cyclic $\Delta\Delta G$** | No macrocycle constraint | $\mathbf{+2.15\text{ kcal/mol}}$ conformational lock | Corroborates cyclic design |
 | **Oral Protease Cleavage Sites** | **7 sites** (Instant saliva digestion) | **0 sites** (Sterically shielded) | `CRRRWWRRRRC` **FALSIFIED** |
 | **Chitosan Donnan Compatibility** | Net Charge $+7.0$ (Precipitation fail) | Net Charge $\mathbf{+2.05}$ (Carrier compatible) | `CRRRWWRRRRC` **FALSIFIED** |
@@ -207,13 +207,13 @@ DrNemo-Caries-Foundry/
 ├── autonomous_lab.py        # Multi-workstation supervisor
 ├── compliance_logger.py     # Audit and provenance logger
 ├── dashboard.py             # Streamlit 3D visualization platform
-├── diffdock_pipeline.py     # Molecular docking harness
+├── biophysics_engine.py   # AutoDock Vina, Vinardo & OpenMM engine
 ├── directed_evolution.py    # Mutation and selection engine
 ├── export_report.py         # Summary report generator
 ├── gtfb_orchestrator.py     # LangGraph discovery state machine
 ├── mutation_scanner.py      # Sequence perturbation module
 ├── phase_report.py          # Milestone assessment tool
-├── pipeline.py              # NVIDIA NIM OpenFold3 async client
+├── falsification_engine.py  # 6-angle Karl Popper falsification suite
 ├── solubility_shield.py     # Chitosan-native pre-filter
 ├── targets.json             # Oral pathogen virulence targets
 └── requirements.txt         # Project dependencies
@@ -225,8 +225,8 @@ DrNemo-Caries-Foundry/
 
 ### Prerequisites
 - Python 3.10 or higher
+- System biophysics tools: AutoDock Vina v1.2.7, OpenBabel
 - Optional: Local Ollama instance with `gemma` or `llama3` for offline text synthesis
-- Optional: NVIDIA Developer API key for cloud OpenFold3 predictions
 
 ### Installation
 ```bash

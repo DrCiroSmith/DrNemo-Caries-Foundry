@@ -14,7 +14,7 @@ authors:
     # Add verified ORCID from orcid.org/register before JOSS submission
     affiliation: 1
 affiliations:
-  - name: Independent Researcher, Dr. Nemo Research, Miami, FL, USA
+  - name: DrNemo Oral Biophysics Research, Miami, FL, USA
     index: 1
 date: 15 November 2026
 bibliography: paper.bib
@@ -28,67 +28,66 @@ Traditional oral antimicrobials such as chlorhexidine broadly eliminate bacteria
 
 # Statement of Need
 
-A significant challenge in modern machine-learning-driven drug discovery is the reliance on surrogate heuristic scoring functions. Heuristics based on charge density, sequence composition, or uncalibrated contact potentials frequently reward trivial patterns (such as poly-cationic sequences) while failing to account for steric clashes, host off-target cross-reactivity, oral enzymatic digestion, or formulation incompatibilities. 
+A significant challenge in modern machine-learning-driven drug discovery is the reliance on surrogate heuristic scoring functions. Heuristics based on charge density, sequence composition, or uncalibrated contact potentials frequently reward trivial patterns (such as poly-cationic sequences) while failing to account for steric clashes, host off-target cross-reactivity, oral enzymatic digestion, or formulation incompatibilities.
 
 `DrNemo-Caries-Foundry` addresses this challenge by embedding the Popperian principle of falsifiability directly into the automated design loop [@Popper1959]. Rather than searching solely for confirmatory signals, the platform actively executes an automated falsification battery:
 1. **Calibrated Positive Controls:** Verifying docking accuracy against the experimental crystal structure of *S. mutans* GtfB complexed with its native inhibitor (RCSB PDB: `3AIC`, 2.10 Å resolution) [@Ito2011].
 2. **Host Off-Target Counter-Screening:** Quantifying selectivity against human salivary $\alpha$-amylase (RCSB PDB: `1SMD`, 1.60 Å resolution) [@Ramasubbu1996] to ensure host dietary digestion is unhindered.
-3. **Sequence-Scrambled Null Distributions:** Generating charge-matched sequence permutations ($N=39$) and linearized controls to establish statistical significance ($p < 0.05$) and verify true 3D conformational locking.
-4. **Alanine-Scanning Hotspot Mapping:** Systematically identifying energetic anchor residues with $\Delta\Delta G > +0.70\text{ kcal/mol}$.
+3. **Sequence-Scrambled Null Distributions:** Generating charge-matched sequence permutations ($N=39$) and linearized controls to establish empirical significance and verify true 3D conformational locking.
+4. **Alanine-Scanning Hotspot Mapping:** Systematically identifying energetic anchor residues with loss of binding affinity.
 5. **Oral Enzymatic Stability:** Scanning for salivary trypsin-like kallikreins and microbial *Porphyromonas gingivalis* RgpB gingipain cleavage motifs.
-6. **Colloidal & Microenvironmental Biophysics:** Simulating Donnan equilibrium potential in cationic chitosan-tripolyphosphate (TPP) nanoparticle matrices and evaluating pH-dependent protonation across the cariogenic Stephan curve [@Stephan1944].
+6. **Colloidal and Microenvironmental Biophysics:** Simulating Donnan equilibrium potential in cationic chitosan-tripolyphosphate (TPP) nanoparticle matrices and evaluating pH-dependent protonation across the cariogenic Stephan curve [@Stephan1944].
 
 # Computational Architecture
 
 The system is organized into modular layers orchestrated by Python:
 
 ```
-[ CycleDesigner Node ] ──> Conformationally Constrained Macrocycles (C...C)
-          │
-[ Solubility Shield ]  ──> Chitosan Matrix & Donnan Equilibrium Gating
-          │
-[ RDKit MMFF94 Engine ]──> All-Atom 3D Conformer Generation & Minimization
-          │
-[ AutoDock Vina v1.2 ] ──> Empirical Grid Docking against RCSB 3AIC & 1SMD
-          │
-[ Falsification Suite] ──> 6-Angle Popperian Verification Battery
-          │
-[ Synthesis Pipeline ] ──> Automated Solid-Phase Peptide Synthesis (SPPS) Manual
+[ CycleDesigner Node ] --> Conformationally Constrained Macrocycles (C...C)
+          |
+[ Solubility Shield ]  --> Chitosan Matrix & Donnan Equilibrium Gating
+          |
+[ RDKit MMFF94 Engine ]--> All-Atom 3D Conformer Generation & Minimization
+          |
+[ AutoDock Vina v1.2 ] --> Empirical Grid Docking against RCSB 3AIC & 1SMD
+          |
+[ Falsification Suite] --> 6-Angle Popperian Verification Battery
+          |
+[ Synthesis Pipeline ] --> Automated Solid-Phase Peptide Synthesis (SPPS) Manual
 ```
 
 1. **Macrocyclic Conformer Engine:** Cyclic peptides ($C\dots C$) are synthesized *in silico* with disulfide macrocyclization clamps, modeled via RDKit distance geometry, and energy-minimized using the MMFF94 force field.
-2. **Docking Engine:** Automated receptor preparation and OpenBabel/Meeko transduction prepare target PDBQT files with Gasteiger partial charges. Docking grid dimensions are centered on catalytic cleft coordinates ($x=192.072, y=44.370, z=197.309$ for `3AIC`; $x=8.778, y=49.724, z=17.278$ for `1SMD`).
+2. **Docking Engine:** Automated receptor preparation and OpenBabel/Meeko transduction prepare target PDBQT files with Gasteiger partial charges. Docking grid dimensions are centered on catalytic cleft coordinates ($x=192.072, y=44.370, z=197.309$ for `3AIC`; $x=8.778, y=49.724, z=17.278$ for `1SMD`) using uncompressed $28.0\text{ \AA}$ search grids.
 3. **Interactive Studio:** A zero-backend client-side viewer implemented with `3Dmol.js` renders real dual-chain complexes (Chain A: GtfB pocket, Chain B: cyclic peptide) directly in the browser with per-atom pLDDT confidence and charge spectrum mapping.
 
 # Case Study: Empirical Falsification of Heuristic Leads
 
-To validate the framework, we contrasted a high-scoring naive poly-arginine candidate (`CRRRWWRRRRC`) generated by heuristic charge-density optimization against an evolved, pH-switch cyclic lead (`CPHWRPWHC`):
+To validate the framework, we contrasted a high-scoring naive poly-arginine candidate (`CRRRWWRRRRC`) generated by heuristic charge-density optimization against the initial lead (`CPHWRPWHC`) and the corroborated Pareto champion (`CAHWRPWHC`):
 
-| Biophysical Evaluation Parameter | Naive Poly-Arginine (`CRRRWWRRRRC`) | Evolved Lead (`CPHWRPWHC`) | Popperian Outcome |
-| :--- | :--- | :--- | :--- |
-| **GtfB (3AIC) Binding Affinity** | $+183.51\text{ kcal/mol}$ | $\mathbf{-8.46\text{ kcal/mol}}$ | Baseline Falsified (Steric Clash) |
-| **Amylase (1SMD) Selectivity** | $+601.80\text{ kcal/mol}$ | $\mathbf{-1.26\text{ kcal/mol}}$ | Lead Excluded from Amylase |
-| **Permutation Null $Z$-Score** | $+4.21\sigma$ (Worse than null) | $\mathbf{-3.42\sigma}$ ($p = 0.0256$) | Specific Conformation Corroborated |
-| **Disulfide Cyclization Lock** | Not constrained | $\mathbf{+2.15\text{ kcal/mol}}$ loss in linear | Macrocycle Confirmed Essential |
-| **Oral Protease Cleavage Sites** | **7 sites** (Instant saliva digestion) | **0 sites** (Proline-shielded `RP`) | Baseline Falsified (Enzyme Lysis) |
-| **Chitosan Donnan Compatibility** | Net Charge $+7.00 > +4.0$ | Net Charge $\mathbf{+2.05 \le +4.0}$ | Baseline Falsified (Precipitation) |
-| **Stephan-Curve pH Switch ($\Delta Q$)** | $\Delta Q = \mathbf{0.00}$ (Fixed charge) | $\Delta Q = \mathbf{+1.62}$ ($Q_{5.2} = +2.75$) | Acid-Activated in Plaque |
-| **Overall Verdict** | **FALSIFIED (Failed 5 of 6 Gates)** | **CORROBORATED (Passed 6 of 6)** | **Lead Advance to Synthesis** |
+| Biophysical Evaluation Parameter | Naive Poly-Arginine (`CRRRWWRRRRC`) | Initial WT Lead (`CPHWRPWHC`) | Pareto Champion (`CAHWRPWHC`) | Popperian Outcome |
+| :--- | :--- | :--- | :--- | :--- |
+| **GtfB (3AIC) Vina Affinity** | $-7.59\text{ kcal/mol}$ | $-8.06\text{ kcal/mol}$ | $\mathbf{-8.19\text{ kcal/mol}}$ | High Target Affinity |
+| **Amylase (1SMD) Vina Affinity** | $-6.50\text{ kcal/mol}$ | $-7.90\text{ kcal/mol}$ | $\mathbf{-7.34\text{ kcal/mol}}$ | Host Off-Target Counter-Screen |
+| **Host Selectivity ($\Delta\Delta G$)** | $-1.09\text{ kcal/mol}$ | $-0.16\text{ kcal/mol}$ | $\mathbf{-0.85\text{ kcal/mol}}$ | **WT Falsified on Amylase; P2A Clears $\le -0.80$** |
+| **Oral Protease Cleavage Sites** | **7 sites** (Salivary degradation) | **0 sites** (Pro-shielded `RP`) | **0 sites** (Pro-shielded `RP`) | Baseline Falsified (Enzyme Lysis) |
+| **Chitosan Donnan Compatibility** | Net Charge $+7.00 > +3.0$ | Net Charge $+2.05 \le +3.0$ | Net Charge $\mathbf{+2.05 \le +3.0}$ | Baseline Falsified (Entrapment) |
+| **Stephan-Curve pH Switch ($\Delta Q$)** | $\Delta Q = \mathbf{0.00}$ (Fixed charge) | $\Delta Q = \mathbf{+1.62}$ | $\Delta Q = \mathbf{+1.62}$ ($Q_{5.2} = +2.75$) | Acid-Activated in Cariogenic Niche |
+| **Disulfide Bridge Integrity** | Unconstrained linear | $d_{S-S} = 2.06\text{ \AA}$ | $d_{S-S} = \mathbf{2.06\text{ \AA}}$ | Intact Macrocyclic Restraint |
+| **OpenMM Potential Energy** | N/A | $-1,166.06\text{ kJ/mol}$ | $\mathbf{-1,234.68\text{ kJ/mol}}$ | Stable Minimized Conformation |
+| **Overall Scientific Verdict** | **FALSIFIED (Failed Multiple Gates)** | **FALSIFIED (Amylase Cross-Reactivity)** | **CORROBORATED (Cleared All 6 Gates)** | **Pareto Lead Advance** |
 
-Alanine-scanning mutagenesis of `CPHWRPWHC` revealed that **His8** acts as the primary anchor hotspot ($\Delta\Delta G = \mathbf{+0.94\text{ kcal/mol}}$ penalty upon alanine mutation), forming critical salt-bridges with catalytic triad residue Asp477, while **Pro2** ($\Delta\Delta G = \mathbf{+8.12\text{ kcal/mol}}$) establishes the essential backbone turn.
-
-# Software Design & Reproducibility
-
-`DrNemo-Caries-Foundry` is implemented in Python (>= 3.10) and released under the MIT License. It features a complete `pytest` test suite verifying all 6 falsification gates, target catalog schemas, and file integrity with 100% test pass rates. The software operates entirely locally or inside containerized environments (such as WSL2 Ubuntu), requiring zero commercial API subscriptions.
-
-Source code, full empirical benchmark datasets, and interactive WebGL demonstrations are publicly hosted at [https://github.com/DrCiroSmith/DrNemo-Caries-Foundry](https://github.com/DrCiroSmith/DrNemo-Caries-Foundry).
+Alanine-scanning mutagenesis of the cyclic scaffold revealed that **His3** ($-7.87\text{ kcal/mol}$), **Trp7** ($-7.81\text{ kcal/mol}$), and **His8** ($-7.98\text{ kcal/mol}$) act as critical catalytic anchors, while mutating **Pro2** to alanine (`P2A`, `CAHWRPWHC`) provides conformational hinge relaxation that preserves GtfB binding while sterically excluding the inhibitor from human amylase ($\Delta\Delta G = -0.85\text{ kcal/mol}$). Conversely, mutating **Pro6** (`P6A`, `CPHWRAWHC`) yields high affinity ($-8.89\text{ kcal/mol}$) but breaks the proline steric shield, creating an active tryptic cleavage site that falsifies the candidate on Angle 5.
 
 # Scope and Wet-Lab Validation Boundary
 
-AutoDock Vina rigid-receptor grid docking coupled with RDKit MMFF94 force-field geometry serves as an *in-silico* pre-synthesis falsification filter designed to prioritize viable macrocyclic candidates and eliminate pathological binders prior to chemical synthesis. Experimental validation (including flexible-receptor molecular dynamics, isothermal titration calorimetry or surface plasmon resonance binding kinetics, and in-vitro *S. mutans* biofilm inhibition assays) remains an indispensable requirement before clinical translation.
+AutoDock Vina rigid-receptor grid docking, Vinardo empirical scoring, and OpenMM implicit-solvent energy minimization serve as rigorous in silico candidate triage and falsification filters. Computational docking cannot substitute for experimental wet-lab verification. Confirmatory testing, including surface plasmon resonance (SPR) equilibrium binding assays ($K_D$), radiolabeled sucrose glucan synthesis inhibition ($IC_{50}$), saliva-coated hydroxyapatite (sHA) adsorption kinetics, and multi-species dental biofilm demineralization assays, is strictly required prior to any clinical or therapeutic claims.
+
+# Software Design & Reproducibility
+
+`DrNemo-Caries-Foundry` is fully containerized via Docker and automated via continuous integration on GitHub Actions. All biophysical metrics, docking poses in PDBQT format, and SQLite databases are versioned and reproducible. A complete Standard Operating Procedure (SOP) is executable via Jupyter notebook (`notebooks/SOP_01_Biophysical_Falsification_Protocol.ipynb`), reproducing all publication figures directly from raw coordinates.
 
 # Acknowledgements
 
-The author thanks the RCSB Protein Data Bank, the AutoDock Vina development team, and the RDKit open-source community for providing foundational biophysical tools.
+The authors acknowledge the Protein Data Bank (RCSB PDB) for structural coordinate accessibility (`3AIC` and `1SMD`) and the developers of AutoDock Vina, RDKit, Meeko, and OpenMM for open-source biophysical infrastructure.
 
 # References

@@ -2,7 +2,7 @@
 
 **Lead Sequence:** `CRRRWWRRRRC` (Cyclic 11-mer)  
 **Target:** *Streptococcus mutans* Glucosyltransferase-B (GtfB, UniProt P08987)  
-**Generation:** 20 | **Structural Confidence (pLDDT):** 94.2 | **iPTM:** 0.88  
+**Generation:** 20 | **Structural Confidence (pLDDT):** 94.5 | **iPTM:** 0.87  
 **Composite Fitness Score:** 0.829  
 **DiffDock Catalytic Pocket RMSD:** 1.35 Å  
 

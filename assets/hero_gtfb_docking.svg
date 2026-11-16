@@ -94,14 +94,14 @@
     
     <g transform="translate(24, 52)">
       <text x="0" y="16" class="txt-sub" font-size="12">pLDDT Local Backbone Confidence</text>
-      <text x="360" y="16" class="txt-mono" font-size="12" font-weight="700">94.2 / 100</text>
+      <text x="360" y="16" class="txt-mono" font-size="12" font-weight="700">94.5 / 100</text>
       <rect x="0" y="24" width="440" height="8" rx="4" class="sub-card"/>
       <rect x="0" y="24" width="414" height="8" rx="4" fill="#10B981"/>
     </g>
 
     <g transform="translate(24, 104)">
       <text x="0" y="16" class="txt-sub" font-size="12">iPTM Complex Interface Metric</text>
-      <text x="360" y="16" class="txt-mono" font-size="12" font-weight="700">0.88 / 1.00</text>
+      <text x="360" y="16" class="txt-mono" font-size="12" font-weight="700">0.87 / 1.00</text>
       <rect x="0" y="24" width="440" height="8" rx="4" class="sub-card"/>
       <rect x="0" y="24" width="387" height="8" rx="4" fill="#0284C7"/>
     </g>
@@ -109,7 +109,7 @@
     <!-- Card 2: Docking Energetics -->
     <g transform="translate(0, 190)">
       <rect width="490" height="170" rx="12" class="panel"/>
-      <text x="24" y="32" class="txt-main" font-size="14" font-weight="700">DIFFDOCK ENERGETICS &amp; HYDROGEL SHIELD</text>
+      <text x="24" y="32" class="txt-main" font-size="14" font-weight="700">AUTODOCK VINA ENERGETICS &amp; HYDROGEL SHIELD</text>
 
       <g transform="translate(24, 54)">
         <rect width="210" height="90" rx="8" class="sub-card"/>

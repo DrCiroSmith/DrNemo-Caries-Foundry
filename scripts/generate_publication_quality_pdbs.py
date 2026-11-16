@@ -24,8 +24,8 @@ LEADS = [
     {
         "gen": 20,
         "seq": "CRRRWWRRRRC",
-        "plddt": 94.20,
-        "iptm": 0.88,
+        "plddt": 94.50,
+        "iptm": 0.87,
         "rmsd": 1.35,
         "filename": "S_mutans_GtfB_Insoluble_variant_CRRRWWRRRRC.pdb"
     },

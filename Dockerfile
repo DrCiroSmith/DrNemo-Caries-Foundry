@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM python:3.12-slim-bookworm
 
-LABEL maintainer="Dr. Roi Castrellon, DDS <roi@tfa-analytics.com>"
+LABEL maintainer="Dr. Roi Castrellon, DDS <roisasha@gmail.com>"
 LABEL description="DrNemo Caries Foundry — Autonomous Biophysical Falsification & Discovery Engine"
 
 # Set deterministic environment

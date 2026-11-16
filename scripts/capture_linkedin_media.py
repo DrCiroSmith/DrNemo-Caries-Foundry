@@ -124,7 +124,7 @@ def render_chunk(chunk):
                     tx = 565.6;
                     ty = 585.2;
                     headerOpacity = 0.0;
-                    caption = "S. mutans GtfB Pocket (RCSB 3AIC) · Evolved Cyclic Lead CPHWRPWHC (-14.02 kcal/mol)";
+                    caption = "S. mutans GtfB Pocket (RCSB 3AIC) · Evolved Cyclic Lead CPHWRPWHC (-8.46 kcal/mol)";
                     cx = -100;
                     cy = -100;
                 }} else if (f <= 300) {{

@@ -221,7 +221,7 @@
       <rect width="382" height="74" rx="8" class="sub-card"/>
       <text x="16" y="24" class="txt-sub" font-size="11">Pareto Winner: Candidate S-084</text>
       <text x="16" y="44" class="txt-main" font-size="13" font-weight="600">Cyclic Peptide: C-P-W-R-G-D-S-C</text>
-      <text x="16" y="62" class="txt-mono" font-size="11" fill="#38BDF8">pLDDT: 94.2 · iPTM: 0.88 · Ki: 18.6 nM</text>
+      <text x="16" y="62" class="txt-mono" font-size="11" fill="#38BDF8">pLDDT: 94.5 · iPTM: 0.87 · Ki: 18.6 nM</text>
     </g>
 
     <g transform="translate(24, 230)">

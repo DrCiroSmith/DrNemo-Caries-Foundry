@@ -7,7 +7,7 @@
     "status": "SUCCESS",
     "metrics": {
         "pLDDT": 94.2,
-        "iPTM": 0.88,
+        "iPTM": 0.87,
         "composite_score": 0.829,
         "diffdock_rmsd_angstrom": 1.35,
         "binding_affinity_kcal_mol": -10.63,

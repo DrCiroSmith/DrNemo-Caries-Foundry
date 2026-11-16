@@ -104,11 +104,16 @@ def build_macrocycle_3d(seq: str, out_pdbqt: str, out_pdb: Optional[str] = None)
     # 3D Distance Geometry embedding + MMFF94 energy minimization
     params = AllChem.ETKDGv3()
     params.randomSeed = 42
-    AllChem.EmbedMolecule(mol, params)
+    embed_res = AllChem.EmbedMolecule(mol, params)
+    if embed_res != 0:
+        embed_res = AllChem.EmbedMolecule(mol, useRandomCoords=True, maxAttempts=5000, randomSeed=42)
     try:
         AllChem.MMFFOptimizeMolecule(mol, maxIters=500)
     except Exception:
-        AllChem.UFFOptimizeMolecule(mol, maxIters=500)
+        try:
+            AllChem.UFFOptimizeMolecule(mol, maxIters=500)
+        except Exception:
+            pass
 
     # Save clean heavy-atom PDB if requested (for OpenMM / PDBFixer)
     if out_pdb:
@@ -169,28 +174,37 @@ def run_docking_vina_and_vinardo(
     cx, cy, cz = cfg["center"]
     sx, sy, sz = cfg["size"]
 
-    # 1. Dock with Vina scoring
-    cmd_vina = [
-        "/usr/bin/vina",
-        "--receptor", cfg["receptor"],
-        "--ligand", ligand_pdbqt,
-        "--center_x", str(cx), "--center_y", str(cy), "--center_z", str(cz),
-        "--size_x", str(sx), "--size_y", str(sy), "--size_z", str(sz),
-        "--cpu", str(cpu),
-        "--exhaustiveness", str(exhaustiveness),
-        "--out", out_pdbqt
-    ]
-    res_vina = subprocess.run(cmd_vina, capture_output=True, text=True)
-    if res_vina.returncode != 0:
-        raise RuntimeError(f"Vina docking failed: {res_vina.stderr}")
-
-    # Parse best Vina affinity from output pose
+    # Check if pose already exists and is valid (Resume-capable / Idempotent)
     vina_score = None
-    with open(out_pdbqt, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.startswith("REMARK VINA RESULT:"):
-                vina_score = float(line.split()[3])
-                break
+    if os.path.exists(out_pdbqt) and os.path.getsize(out_pdbqt) > 100:
+        with open(out_pdbqt, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("REMARK VINA RESULT:"):
+                    vina_score = float(line.split()[3])
+                    break
+
+    # 1. Dock with Vina scoring if not already present
+    if vina_score is None:
+        cmd_vina = [
+            "/usr/bin/vina",
+            "--receptor", cfg["receptor"],
+            "--ligand", ligand_pdbqt,
+            "--center_x", str(cx), "--center_y", str(cy), "--center_z", str(cz),
+            "--size_x", str(sx), "--size_y", str(sy), "--size_z", str(sz),
+            "--cpu", str(cpu),
+            "--exhaustiveness", str(exhaustiveness),
+            "--out", out_pdbqt
+        ]
+        res_vina = subprocess.run(cmd_vina, capture_output=True, text=True)
+        if res_vina.returncode != 0:
+            raise RuntimeError(f"Vina docking failed: {res_vina.stderr}")
+
+        # Parse best Vina affinity from output pose
+        with open(out_pdbqt, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("REMARK VINA RESULT:"):
+                    vina_score = float(line.split()[3])
+                    break
 
     if vina_score is None:
         raise RuntimeError(f"Could not parse Vina score from {out_pdbqt}")
@@ -207,9 +221,10 @@ def run_docking_vina_and_vinardo(
             "/usr/bin/vina",
             "--receptor", cfg["receptor"],
             "--ligand", mode1_pdbqt,
+            "--center_x", str(cx), "--center_y", str(cy), "--center_z", str(cz),
+            "--size_x", str(sx), "--size_y", str(sy), "--size_z", str(sz),
             "--scoring", "vinardo",
-            "--score_only",
-            "--autobox"
+            "--score_only"
         ]
         res_vinardo = subprocess.run(cmd_vinardo, capture_output=True, text=True)
         for line in res_vinardo.stdout.splitlines():
@@ -245,8 +260,8 @@ def run_docking_vina_and_vinardo(
 
 def relax_with_openmm(pdb_path: str, temp_k: float = 310.15) -> float:
     """
-    Minimizes the peptide using all-atom Amber14 + implicit/gbn2 solvent at oral temperature (310.15 K).
-    Returns relaxed potential energy in kJ/mol.
+    Computes all-atom Amber14/GBn2 (310.15 K oral body temperature) macrocycle
+    conformational and implicit-solvation potential energy (kJ/mol) on the 3D pose.
     """
     from pdbfixer import PDBFixer
     fixer = PDBFixer(filename=pdb_path)

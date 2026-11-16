@@ -30,7 +30,7 @@ Instead of manually typing molecules to test, you use these scripts to generate 
 ---
 
 ### 3. The Folding Pipeline (The "Crystallographer")
-*   **`pipeline.py`**: This script sends the molecular sequence up to the **NVIDIA Health Cloud API** to run **OpenFold3** on multi-million dollar GPU clusters. 
+*   **`biophysics_engine.py`**: This script runs 28 Å uncompressed grid docking using **AutoDock Vina v1.2.7** and **Vinardo** alongside all-atom OpenMM Amber14/GBn2 minimization. 
     *   It tests the physical folding of the proteins to see if your sequence successfully plugs the target. 
     *   It pulls down a 3D structural model (`.pdb` file) and logs two vital scores:
         *   **pLDDT:** Confidence that the 3D shape itself is correct (Aim for >70).

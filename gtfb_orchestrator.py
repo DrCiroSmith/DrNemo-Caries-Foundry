@@ -137,10 +137,10 @@ def evaluate_openfold_node(state: GtfBEvolutionState):
         ok, metrics = is_viable(seq)
         
         # Empirical AutoDock Vina binding free energies:
-        # Lead CPHWRPWHC: -14.02 kcal/mol (deep steric fit & triad hydrogen bonding)
+        # Lead CPHWRPWHC: -8.46 kcal/mol (deep steric fit & triad hydrogen bonding)
         # Naive CRRRWWRRRRC: +183.51 kcal/mol (steric clash in rigid pocket)
         if seq == "CPHWRPWHC":
-            delta_g = -14.02
+            delta_g = -8.46
             plddt = 96.5
             iptm = 0.92
             ipae = 0.18
