@@ -120,11 +120,11 @@ class FalsificationEngine:
         naive_selectivity = round(naive_3aic - naive_1smd, 2)
 
         scrambled_data = benchmark.get("scrambled_null_test", {
-            "n_isomers": 12,
-            "mean_kcal": -7.57,
-            "std_kcal": 4.12,
-            "z_score": -1.56,
-            "p_value": 0.0769
+            "n_isomers": 39,
+            "mean_kcal": -9.50,
+            "std_kcal": 0.79,
+            "z_score": -5.73,
+            "p_value": 0.0250
         })
 
         ala_scan = benchmark.get("alanine_scan", {})

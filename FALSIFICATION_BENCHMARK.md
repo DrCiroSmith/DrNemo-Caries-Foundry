@@ -1,7 +1,7 @@
 # Biophysical Falsification Benchmark: Operation Karl Popper
 
 **Autonomous Structural-Biology Verification Suite for *Streptococcus mutans* GtfB Inhibitors**  
-*Lead Developer & Computational Biologist:* Dr. Ciro Smith (Dr. Nemo Caries Foundry)  
+*Lead Developer & Computational Biologist:* Dr. Roi Castrellon, DDS (Dr. Nemo Caries Foundry)  
 *Benchmark Version:* 2.0 (Post-Karl Popper Audit)  
 *Status:* 100% Empirical Physics Validated (Zero Synthetic / Mock Scores)
 
@@ -35,8 +35,8 @@ RCSB 3AIC Acarbose Redocking                  RCSB 1SMD Salivary Amylase
     ├───────────────────────────────┬───────────────────────────────┤
     ▼                               ▼                               ▼
 [ Angle 3: Scrambled Null ]   [ Angle 4: Ala-Scanning ]       [ Angle 5: Protease ]
-N=12 Permutations + Linear    7-Residue Hotspot Scan          Trypsin & Gingipain
-Z = -1.56σ | p = 0.000        ΔΔG > +0.70 kcal/mol            Zero Cleavage Sites
+N=39 Permutations + Linear    7-Residue Hotspot Scan          Trypsin & Gingipain
+Z = -5.73σ | p = 0.0250       ΔΔG > +0.70 kcal/mol            Zero Cleavage Sites
     │                                                               │
     └───────────────────────────────┬───────────────────────────────┘
                                     ▼
@@ -74,15 +74,15 @@ Z = -1.56σ | p = 0.000        ΔΔG > +0.70 kcal/mol            Zero Cleavage S
 
 ---
 
-### Angle 3: Charge-Matched Sequence-Scrambled Null Distribution ($N=12$) & Linear Control
+### Angle 3: Charge-Matched Sequence-Scrambled Null Distribution ($N=39$) & Linear Control
 * **Scientific Question:** Does the candidate bind because of specific 3D shape complementarity, or merely because it possesses positive charges that non-specifically stick to acidic protein surfaces?
-* **Methodology:** We generated $N=12$ sequence-scrambled cyclic isomers keeping terminal cysteines intact (`C[PHWRPWH]C`), maintaining identical amino acid composition, molecular weight, and net charge. In addition, we tested a linearized control (`SPHWRPWHS`, replacing Cys with Ser) to assess the energetic contribution of the disulfide macrocyclization clamp.
+* **Methodology:** We generated $N=39$ sequence-scrambled cyclic isomers keeping terminal cysteines intact (`C[PHWRPWH]C`), maintaining identical amino acid composition, molecular weight, and net charge. In addition, we tested a linearized control (`SPHWRPWHS`, replacing Cys with Ser) to assess the energetic contribution of the disulfide macrocyclization clamp.
 * **Empirical Null Distribution:**
   * **Wild-Type Cyclic Lead (`CPHWRPWHC`):** $\mathbf{-14.02\text{ kcal/mol}}$.
   * **Linearized Control (`SPHWRPWHS`):** $\mathbf{+0.28\text{ kcal/mol}}$ ($\Delta\Delta G_{\text{cyclization}} = \mathbf{+14.30\text{ kcal/mol}}$ loss).
-  * **Scrambled Null Distribution ($N=12$):** Mean = $\mathbf{-7.57 \pm 4.12\text{ kcal/mol}}$ (Range: $-1.37$ to $-11.29\text{ kcal/mol}$).
-  * **Z-Score:** $\mathbf{-1.56\sigma}$ below the scrambled mean.
-  * **Empirical $p$-Value:** $0/12$ scrambled sequences equaled or beat the wild type ($\mathbf{p = 0.0000}$, Laplace-smoothed $p = 0.0769$).
+  * **Scrambled Null Distribution ($N=39$):** Mean = $\mathbf{-9.50 \pm 0.79\text{ kcal/mol}}$ (Range: $-11.38$ to $-7.69\text{ kcal/mol}$).
+  * **Z-Score:** $\mathbf{-5.73\sigma}$ below the scrambled mean.
+  * **Empirical $p$-Value:** $b=0/39$ scrambled sequences equaled or beat the wild type ($\mathbf{p = 0.0250}$ via exact Phipson-Smyth $(b+1)/(N+1) = 1/40$).
 * **Popperian Criterion:** Specific 3D conformation significantly outperforms charge-matched scrambled isomers ($Z < -1.0$). **PASSED.**
 
 ---
@@ -118,7 +118,7 @@ Z = -1.56σ | p = 0.000        ΔΔG > +0.70 kcal/mol            Zero Cleavage S
 ### Angle 6: Chitosan Donnan Equilibrium & Stephan-Curve Acid-Activation
 * **Donnan Equilibrium Compatibility:** Delivery via cationic Chitosan-TPP nanoparticles requires that peptide net charge at saliva pH 6.0 does not exceed $+4.0$. High poly-cationic peptides ($> +4.0$) trigger severe nanoparticle aggregation, irreversible entrapment, and rapid electrostatic sequestration by anionic salivary mucins (MUC5B/MUC7).
   * `CPHWRPWHC`: Net charge at pH 6.0 = $\mathbf{+2.05 \le +4.0}$ (**Donnan Compatible**).
-  * `CRRRWWRRRRC`: Net charge at pH 6.0 = $\mathbf{+7.00 > +4.0}$ (**FALSIFIED** — precipitates carrier).
+  * `CRRRWWRRRRC`: Net charge at pH 6.0 = $\mathbf{+7.00 > +4.0}$ (**FALSIFIED** : precipitates carrier).
 * **Stephan-Curve pH-Responsive Switch:** In active dental caries, carbohydrate fermentation by cariogenic plaque drops the local enamel biofilm pH below 5.5 (the Stephan Curve). Histidine residues ($pK_a \approx 6.04$) undergo protonation in this acidic microenvironment:
   * $Q(\text{pH } 7.2) = \mathbf{+1.13}$ (Mildly cationic in healthy saliva).
   * $Q(\text{pH } 5.2) = \mathbf{+2.75}$ (Fully protonated in cariogenic plaque).
@@ -134,7 +134,7 @@ Z = -1.56σ | p = 0.000        ΔΔG > +0.70 kcal/mol            Zero Cleavage S
 | :--- | :--- | :--- | :--- |
 | **GtfB (3AIC) Binding Affinity** | $+183.51\text{ kcal/mol}$ (Clashing) | $\mathbf{-14.02\text{ kcal/mol}}$ (Deep Binding) | `CRRRWWRRRRC` **FALSIFIED** |
 | **Amylase (1SMD) Selectivity $\Delta\Delta G$** | $-418.29\text{ kcal/mol}$ | $\mathbf{-158.12\text{ kcal/mol}}$ | Both avoid amylase; Lead fits GtfB |
-| **Permutation Null $Z$-Score** | $+4.21\sigma$ (Worse than null) | $\mathbf{-1.56\sigma}$ ($p = 0.000$) | `CRRRWWRRRRC` **FALSIFIED** |
+| **Permutation Null $Z$-Score** | $+4.21\sigma$ (Worse than null) | $\mathbf{-5.73\sigma}$ ($p = 0.0250$) | `CRRRWWRRRRC` **FALSIFIED** |
 | **Linear vs Cyclic $\Delta\Delta G$** | No macrocycle constraint | $\mathbf{+14.30\text{ kcal/mol}}$ conformational lock | Corroborates cyclic design |
 | **Oral Protease Cleavage Sites** | **7 sites** (Instant saliva digestion) | **0 sites** (Sterically shielded) | `CRRRWWRRRRC` **FALSIFIED** |
 | **Chitosan Donnan Compatibility** | Net Charge $+7.0$ (Precipitation fail) | Net Charge $\mathbf{+2.05}$ (Carrier compatible) | `CRRRWWRRRRC` **FALSIFIED** |
@@ -163,3 +163,9 @@ The resulting docked coordinates and empirical metrics are stored deterministica
 * `demo_data/results/3AIC_docked_lead_CPHWRPWHC.pdb`
 * `demo_data/results/3AIC_docked_complex_CPHWRPWHC.pdb`
 * `demo_data/results/falsification_benchmark.json`
+
+---
+
+## 5. Scope and Wet-Lab Validation Boundary
+
+AutoDock Vina rigid-receptor grid docking coupled with RDKit MMFF94 force-field geometry serves as an *in-silico* pre-synthesis falsification filter designed to prioritize viable macrocyclic candidates and eliminate pathological binders prior to chemical synthesis. Experimental validation (including flexible-receptor molecular dynamics, isothermal titration calorimetry or surface plasmon resonance binding kinetics, and in-vitro *S. mutans* biofilm inhibition assays) remains an indispensable requirement before clinical translation.

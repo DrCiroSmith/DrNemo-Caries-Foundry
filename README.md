@@ -145,8 +145,8 @@ RCSB 3AIC Acarbose Redocking                  RCSB 1SMD Salivary Amylase
     ├───────────────────────────────┬───────────────────────────────┤
     ▼                               ▼                               ▼
 [ Angle 3: Scrambled Null ]   [ Angle 4: Ala-Scanning ]       [ Angle 5: Protease ]
-N=12 Permutations + Linear    7-Residue Hotspot Scan          Trypsin & Gingipain
-Z = -1.56σ | p = 0.000        ΔΔG > +0.70 kcal/mol            Zero Cleavage Sites
+N=39 Permutations + Linear    7-Residue Hotspot Scan          Trypsin & Gingipain
+Z = -5.73σ | p = 0.0250       ΔΔG > +0.70 kcal/mol            Zero Cleavage Sites
     │                                                               │
     └───────────────────────────────┬───────────────────────────────┘
                                     ▼
@@ -163,7 +163,7 @@ Z = -1.56σ | p = 0.000        ΔΔG > +0.70 kcal/mol            Zero Cleavage S
 | :--- | :--- | :--- | :--- |
 | **GtfB (3AIC) Binding Affinity** | $+183.51\text{ kcal/mol}$ (Clashing) | $\mathbf{-14.02\text{ kcal/mol}}$ (Deep Binding) | `CRRRWWRRRRC` **FALSIFIED** |
 | **Amylase (1SMD) Selectivity $\Delta\Delta G$** | $-418.29\text{ kcal/mol}$ | $\mathbf{-158.12\text{ kcal/mol}}$ | Both avoid amylase; Lead fits GtfB |
-| **Permutation Null $Z$-Score** | $+4.21\sigma$ (Worse than null) | $\mathbf{-1.56\sigma}$ ($p = 0.000$) | `CRRRWWRRRRC` **FALSIFIED** |
+| **Permutation Null $Z$-Score** | $+4.21\sigma$ (Worse than null) | $\mathbf{-5.73\sigma}$ ($p = 0.0250$) | `CRRRWWRRRRC` **FALSIFIED** |
 | **Linear vs Cyclic $\Delta\Delta G$** | No macrocycle constraint | $\mathbf{+14.30\text{ kcal/mol}}$ conformational lock | Corroborates cyclic design |
 | **Oral Protease Cleavage Sites** | **7 sites** (Instant saliva digestion) | **0 sites** (Sterically shielded) | `CRRRWWRRRRC` **FALSIFIED** |
 | **Chitosan Donnan Compatibility** | Net Charge $+7.0$ (Precipitation fail) | Net Charge $\mathbf{+2.05}$ (Carrier compatible) | `CRRRWWRRRRC` **FALSIFIED** |

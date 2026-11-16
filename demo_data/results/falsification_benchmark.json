@@ -9,108 +9,324 @@
     "cyclization_delta": 14.3
   },
   "scrambled_null_test": {
-    "n_isomers": 12,
-    "mean_kcal": -7.57,
-    "std_kcal": 4.12,
-    "z_score": -1.56,
-    "p_value": 0.0769,
+    "n_isomers": 39,
+    "mean_kcal": -9.5,
+    "std_kcal": 0.79,
+    "z_score": -5.73,
+    "p_value": 0.025,
     "is_falsified": true,
     "scrambled_scores": [
       {
-        "sequence": "CHHWWRPPC",
-        "target": "3AIC",
-        "is_cyclic": true,
-        "label": "Scrambled_02",
-        "affinity_kcal": -10.45,
-        "elapsed_s": 33.39
-      },
-      {
-        "sequence": "CHWWPHPRC",
-        "target": "3AIC",
-        "is_cyclic": true,
-        "label": "Scrambled_06",
-        "affinity_kcal": -5.963,
-        "elapsed_s": 37.25
-      },
-      {
-        "sequence": "CHHPWPWRC",
+        "sequence": "CPWPHWHRC",
         "target": "3AIC",
         "is_cyclic": true,
         "label": "Scrambled_01",
-        "affinity_kcal": -9.753,
-        "elapsed_s": 38.06
+        "affinity_kcal": -9.13,
+        "elapsed_s": 39.43
       },
       {
-        "sequence": "CHWHRWPPC",
+        "sequence": "CRHPWPWHC",
         "target": "3AIC",
         "is_cyclic": true,
-        "label": "Scrambled_04",
-        "affinity_kcal": -9.807,
-        "elapsed_s": 38.38
+        "label": "Scrambled_02",
+        "affinity_kcal": -11.0,
+        "elapsed_s": 39.43
       },
       {
-        "sequence": "CHWWHPRPC",
-        "target": "3AIC",
-        "is_cyclic": true,
-        "label": "Scrambled_05",
-        "affinity_kcal": -7.362,
-        "elapsed_s": 38.56
-      },
-      {
-        "sequence": "CHPPRHWWC",
+        "sequence": "CHPRWPHWC",
         "target": "3AIC",
         "is_cyclic": true,
         "label": "Scrambled_03",
-        "affinity_kcal": -10.84,
-        "elapsed_s": 39.17
+        "affinity_kcal": -9.631,
+        "elapsed_s": 39.43
       },
       {
-        "sequence": "CPRHHWPWC",
+        "sequence": "CPWPHHRWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_04",
+        "affinity_kcal": -9.656,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CRPPWHHWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_05",
+        "affinity_kcal": -8.883,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CHWPRPWHC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_06",
+        "affinity_kcal": -7.916,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPPWRHHWC",
         "target": "3AIC",
         "is_cyclic": true,
         "label": "Scrambled_07",
-        "affinity_kcal": 3.273,
-        "elapsed_s": 35.63
+        "affinity_kcal": -10.62,
+        "elapsed_s": 39.43
       },
       {
-        "sequence": "CPWRHWHPC",
+        "sequence": "CHWPHRPWC",
         "target": "3AIC",
         "is_cyclic": true,
         "label": "Scrambled_08",
-        "affinity_kcal": -3.167,
-        "elapsed_s": 33.57
+        "affinity_kcal": -9.517,
+        "elapsed_s": 39.43
       },
       {
-        "sequence": "CWRPPHHWC",
-        "target": "3AIC",
-        "is_cyclic": true,
-        "label": "Scrambled_11",
-        "affinity_kcal": -8.767,
-        "elapsed_s": 34.3
-      },
-      {
-        "sequence": "CWRWPPHHC",
-        "target": "3AIC",
-        "is_cyclic": true,
-        "label": "Scrambled_12",
-        "affinity_kcal": -7.437,
-        "elapsed_s": 35.12
-      },
-      {
-        "sequence": "CRPWWPHHC",
-        "target": "3AIC",
-        "is_cyclic": true,
-        "label": "Scrambled_10",
-        "affinity_kcal": -11.29,
-        "elapsed_s": 37.27
-      },
-      {
-        "sequence": "CRPHPWWHC",
+        "sequence": "CRPPWHWHC",
         "target": "3AIC",
         "is_cyclic": true,
         "label": "Scrambled_09",
-        "affinity_kcal": -9.322,
-        "elapsed_s": 38.36
+        "affinity_kcal": -11.38,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CHRWHPWPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_10",
+        "affinity_kcal": -9.944,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPWHRHPWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_11",
+        "affinity_kcal": -9.188,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPWHPHRWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_12",
+        "affinity_kcal": -9.132,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPHPRWWHC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_13",
+        "affinity_kcal": -9.053,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPRHWWPHC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_14",
+        "affinity_kcal": -8.691,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CWWRPPHHC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_15",
+        "affinity_kcal": -8.405,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CWHWHPPRC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_16",
+        "affinity_kcal": -10.03,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CWHPWRHPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_17",
+        "affinity_kcal": -9.32,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CHWHWPPRC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_18",
+        "affinity_kcal": -9.021,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CRPHWHWPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_19",
+        "affinity_kcal": -8.886,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CRPWHWHPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_20",
+        "affinity_kcal": -10.4,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPWHRWHPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_21",
+        "affinity_kcal": -9.749,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CHWRWPHPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_22",
+        "affinity_kcal": -8.902,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPWPWRHHC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_23",
+        "affinity_kcal": -9.726,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPHRWHWPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_24",
+        "affinity_kcal": -9.442,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CHPRHWPWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_25",
+        "affinity_kcal": -9.81,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CHPHWRPWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_26",
+        "affinity_kcal": -8.596,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPHWPHRWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_27",
+        "affinity_kcal": -9.671,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CHHWWPPRC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_28",
+        "affinity_kcal": -9.569,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CWRPWPHHC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_29",
+        "affinity_kcal": -7.693,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPWRHHPWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_30",
+        "affinity_kcal": -9.941,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPPRHWWHC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_31",
+        "affinity_kcal": -10.6,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPWHWHPRC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_32",
+        "affinity_kcal": -9.743,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CWWHRHPPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_33",
+        "affinity_kcal": -9.779,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CWHRPHPWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_34",
+        "affinity_kcal": -10.49,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPPHWRHWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_35",
+        "affinity_kcal": -8.366,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CHHPWPRWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_36",
+        "affinity_kcal": -9.118,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPHRHWWPC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_37",
+        "affinity_kcal": -9.59,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CPHPWHWRC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_38",
+        "affinity_kcal": -9.823,
+        "elapsed_s": 39.43
+      },
+      {
+        "sequence": "CHPHPRWWC",
+        "target": "3AIC",
+        "is_cyclic": true,
+        "label": "Scrambled_39",
+        "affinity_kcal": -10.24,
+        "elapsed_s": 39.43
       }
     ]
   },

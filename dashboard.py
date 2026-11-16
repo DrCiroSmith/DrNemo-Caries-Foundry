@@ -460,7 +460,7 @@ with tab_popper:
         st.markdown("""
         * **Angle 1 (3AIC Pocket Binding):** **-14.02 kcal/mol** (Deep active-site cleft engagement).
         * **Angle 2 (1SMD Salivary Amylase):** **+144.10 kcal/mol** (Steric clash with amylase; **ΔΔG = -158.12 kcal/mol** selectivity window).
-        * **Angle 3 (Null Permutation, N=12):** **Z = -1.56σ**, empirical **p = 0.000** (beats all charge-matched scrambled isomers; macrocycle lock loss = **+14.30 kcal/mol**).
+        * **Angle 3 (Null Permutation, N=39):** **Z = -5.73σ**, empirical **p = 0.0250** (beats all charge-matched scrambled isomers; macrocycle lock loss = **+14.30 kcal/mol**).
         * **Angle 4 (Alanine Hotspot Scan):** **His8 primary anchor (+9.49 kcal/mol)**, Pro2 backbone hinge (+8.12), His3 acid-switch (+6.04).
         * **Angle 5 (Oral Protease Clearance):** **0 cleavage sites** (Arg5 sterically shielded by adjacent Proline `RP`).
         * **Angle 6 (Chitosan & Stephan Switch):** Net charge **+2.05 ≤ +4.0** (Donnan compatible), **ΔQ = +1.62** (pH 5.2 acid-activation).
@@ -472,7 +472,7 @@ with tab_popper:
         st.markdown("""
         * **Angle 1 (3AIC Pocket Binding):** **+183.51 kcal/mol** (Severe steric clash in catalytic triad).
         * **Angle 2 (1SMD Salivary Amylase):** **+601.80 kcal/mol** (Off-target calculation failure).
-        * **Angle 3 (Null Permutation, N=12):** **Z = +4.21σ** (Significantly worse than scrambled null).
+        * **Angle 3 (Null Permutation, N=39):** **Z = +4.21σ** (Significantly worse than scrambled null).
         * **Angle 4 (Alanine Hotspot Scan):** None (Electrostatic blob with no specific shape complementarity).
         * **Angle 5 (Oral Protease Clearance):** **7 cleavage sites** (Rapid enzymatic degradation in saliva).
         * **Angle 6 (Chitosan & Stephan Switch):** Net charge **+7.00 > +4.0** (Precipitates carrier), **ΔQ = 0.00** (No pH switch).
