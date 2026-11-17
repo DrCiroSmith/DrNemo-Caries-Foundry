@@ -1,28 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" width="1200" height="280">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" width="1200" height="280" role="img" aria-labelledby="t1 d1">
+  <title id="t1">DrNemo Caries Foundry — Targeted GtfB Macrocycle Biophysics</title>
+  <desc id="d1">Targeted GtfB macrocycle biophysics: AutoDock Vina · Vinardo · OpenMM Amber14 · Popperian Falsification. CAHWRPWHC Rank-1 Champion, 6/6 Gates Cleared.</desc>
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0B1120"/>
-      <stop offset="50%" stop-color="#0F172A"/>
-      <stop offset="100%" stop-color="#020617"/>
+      <stop offset="0%" stop-color="var(--bg-start)"/>
+      <stop offset="50%" stop-color="var(--bg-mid)"/>
+      <stop offset="100%" stop-color="var(--bg-end)"/>
     </linearGradient>
     <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#06B6D4"/>
       <stop offset="100%" stop-color="#14B8A6"/>
     </linearGradient>
-    <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1E293B"/>
-      <stop offset="100%" stop-color="#0F172A"/>
-    </linearGradient>
     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
     </filter>
+    @media (prefers-color-scheme: light) {
+      :root { --bg-start:#F1F5F9; --bg-mid:#FFFFFF; --bg-end:#E2E8F0; --text:#0F172A; --muted:#475569; --accent:#0EA5E9; }
+    }
+    :root { --bg-start:#0B1120; --bg-mid:#0F172A; --bg-end:#020617; --text:#F8FAFC; --muted:#94A3B8; --accent:#38BDF8; }
   </defs>
-
-  <!-- Background -->
   <rect width="1200" height="280" fill="url(#bg)"/>
-  
-  <!-- Subtle Background Grid -->
   <g stroke="rgba(255,255,255,0.03)" stroke-width="1">
     <line x1="0" y1="70" x2="1200" y2="70"/>
     <line x1="0" y1="140" x2="1200" y2="140"/>
@@ -31,73 +29,40 @@
     <line x1="600" y1="0" x2="600" y2="280"/>
     <line x1="900" y1="0" x2="900" y2="280"/>
   </g>
-
-  <!-- Glow Accents -->
   <circle cx="1100" cy="40" r="140" fill="#06B6D4" opacity="0.08" filter="url(#glow)"/>
   <circle cx="80" cy="220" r="100" fill="#14B8A6" opacity="0.06" filter="url(#glow)"/>
-
-  <!-- Top Pill -->
   <g transform="translate(60, 36)">
-    <rect width="320" height="26" rx="13" fill="rgba(6,182,212,0.12)" stroke="#06B6D4" stroke-width="1"/>
+    <rect width="300" height="26" rx="13" fill="rgba(6,182,212,0.12)" stroke="#06B6D4" stroke-width="1"/>
     <circle cx="16" cy="13" r="4" fill="#10B981"/>
     <text x="30" y="17" fill="#38BDF8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="1.2">AUTONOMOUS COMPUTATIONAL BIOLOGY</text>
   </g>
-
-  <!-- Main Title -->
-  <text x="60" y="104" fill="#F8FAFC" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="800" letter-spacing="-0.5">
-    Dr. Nemo <tspan fill="url(#cyanGrad)">Caries Vaccine Foundry</tspan>
+  <text x="60" y="100" fill="var(--text)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="32" font-weight="800" letter-spacing="-0.4">
+    DrNemo <tspan fill="url(#cyanGrad)">Caries Foundry</tspan>
   </text>
-  <text x="60" y="132" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="400">
-    High-Precision Discovery of GtfB/C-Inhibiting Cyclic Peptides with Mucoadhesive Chitosan Delivery
+  <text x="60" y="126" fill="var(--muted)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="400">
+    Targeted GtfB Macrocycle Biophysics • AutoDock Vina • Vinardo • OpenMM Amber14 • Popperian Falsification
   </text>
-
-  <!-- Pipeline Stage Pills (Interactive Flow) -->
-  <g transform="translate(60, 160)">
-    <!-- Stage 1 -->
-    <rect x="0" y="0" width="220" height="52" rx="8" fill="url(#badgeGrad)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-    <text x="16" y="22" fill="#64748B" font-family="monospace" font-size="10" font-weight="700">STAGE 01</text>
-    <text x="16" y="40" fill="#E2E8F0" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">Mutation Scan (T=25)</text>
-
-    <!-- Arrow 1 -->
-    <path d="M 232 26 L 246 26 M 241 21 L 246 26 L 241 31" stroke="#06B6D4" stroke-width="1.8" fill="none"/>
-
-    <!-- Stage 2 -->
-    <rect x="258" y="0" width="220" height="52" rx="8" fill="url(#badgeGrad)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-    <text x="274" y="22" fill="#14B8A6" font-family="monospace" font-size="10" font-weight="700">STAGE 02</text>
-    <text x="274" y="40" fill="#E2E8F0" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">Chitosan Shield Filter</text>
-
-    <!-- Arrow 2 -->
-    <path d="M 490 26 L 504 26 M 499 21 L 504 26 L 499 31" stroke="#06B6D4" stroke-width="1.8" fill="none"/>
-
-    <!-- Stage 3 -->
-    <rect x="516" y="0" width="230" height="52" rx="8" fill="url(#badgeGrad)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-    <text x="532" y="22" fill="#38BDF8" font-family="monospace" font-size="10" font-weight="700">STAGE 03</text>
-    <text x="532" y="40" fill="#E2E8F0" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">OpenFold3 + DiffDock</text>
-
-    <!-- Arrow 3 -->
-    <path d="M 758 26 L 772 26 M 767 21 L 772 26 L 767 31" stroke="#06B6D4" stroke-width="1.8" fill="none"/>
-
-    <!-- Stage 4 -->
-    <rect x="784" y="0" width="230" height="52" rx="8" fill="url(#badgeGrad)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-    <text x="800" y="22" fill="#10B981" font-family="monospace" font-size="10" font-weight="700">STAGE 04</text>
-    <text x="800" y="40" fill="#E2E8F0" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">MedGemma Clinical Synth</text>
+  <g transform="translate(60, 158)">
+    <rect x="0" y="0" width="210" height="50" rx="8" fill="rgba(31,41,55,0.6)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="14" y="22" fill="#64748B" font-family="monospace" font-size="9" font-weight="700">STAGE 01</text>
+    <text x="14" y="40" fill="#E2E8F0" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">Evolutionary Generator</text>
+    <path d="M 222 25 L 236 25 M 231 20 L 236 25 L 231 30" stroke="#06B6D4" stroke-width="1.8" fill="none"/>
+    <rect x="248" y="0" width="210" height="50" rx="8" fill="rgba(31,41,55,0.6)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="262" y="22" fill="#64748B" font-family="monospace" font-size="9" font-weight="700">STAGE 02</text>
+    <text x="262" y="40" fill="#E2E8F0" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">Oral Shield Gate</text>
+    <path d="M 470 25 L 484 25 M 479 20 L 484 25 L 479 30" stroke="#06B6D4" stroke-width="1.8" fill="none"/>
+    <rect x="496" y="0" width="210" height="50" rx="8" fill="rgba(31,41,55,0.6)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="510" y="22" fill="#64748B" font-family="monospace" font-size="9" font-weight="700">STAGE 03</text>
+    <text x="510" y="40" fill="#E2E8F0" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">28.0 Å Dual Docking</text>
+    <path d="M 718 25 L 732 25 M 727 20 L 732 25 L 727 30" stroke="#06B6D4" stroke-width="1.8" fill="none"/>
+    <rect x="744" y="0" width="210" height="50" rx="8" fill="rgba(31,41,55,0.6)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="758" y="22" fill="#64748B" font-family="monospace" font-size="9" font-weight="700">STAGE 04</text>
+    <text x="758" y="40" fill="#E2E8F0" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">Popperian Falsification</text>
   </g>
-
-  <!-- Bottom Badges -->
-  <g transform="translate(60, 236)">
-    <rect x="0" y="0" width="110" height="24" rx="4" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"/>
-    <text x="55" y="16" fill="#94A3B8" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" text-anchor="middle">NVIDIA NIM</text>
-
-    <rect x="120" y="0" width="100" height="24" rx="4" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"/>
-    <text x="170" y="16" fill="#94A3B8" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" text-anchor="middle">LangGraph</text>
-
-    <rect x="230" y="0" width="110" height="24" rx="4" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"/>
-    <text x="285" y="16" fill="#94A3B8" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" text-anchor="middle">MedGemma 4B</text>
-
-    <rect x="350" y="0" width="100" height="24" rx="4" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)"/>
-    <text x="400" y="16" fill="#94A3B8" font-family="-apple-system, sans-serif" font-size="11" font-weight="500" text-anchor="middle">DiffDock</text>
-
-    <rect x="460" y="0" width="120" height="24" rx="4" fill="rgba(16,185,129,0.1)" stroke="#10B981"/>
-    <text x="520" y="16" fill="#34D399" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Pass Gate: ≥ 0.72</text>
+  <g transform="translate(60, 224)">
+    <rect x="0" y="0" width="160" height="24" rx="4" fill="rgba(16,185,129,0.12)" stroke="#10B981" stroke-width="1"/>
+    <text x="80" y="16" fill="#34D399" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" text-anchor="middle">CAHWRPWHC 6/6 Gates</text>
+    <rect x="172" y="0" width="140" height="24" rx="4" fill="rgba(6,182,212,0.12)" stroke="#06B6D4" stroke-width="1"/>
+    <text x="242" y="16" fill="#38BDF8" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" text-anchor="middle">330fb5d Physics</text>
   </g>
 </svg>
