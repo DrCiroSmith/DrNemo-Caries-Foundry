@@ -1,6 +1,6 @@
 DrNemo Caries Foundry - Targeted GtfB Macrocycle Biophysics
 
-We rebuilt the DrNemo-Caries-Foundry portfolio around real, falsifiable biophysics (commit 330fb5d), replacing the deprecated v1 visuals (OpenFold3, DiffDock, pLDDT/iPTM, "Caries Vaccine" framing) with experimental-structure-guided computational design.
+We rebuilt the DrNemo-Caries-Foundry portfolio around real, falsifiable biophysics (our empirical biophysical campaign), replacing the deprecated v1 visuals (OpenFold3, DiffDock, pLDDT/iPTM, "Caries Vaccine" framing) with experimental-structure-guided computational design.
 
 The target is Streptococcus mutans glucosyltransferase-B (GtfB, RCSB 3AIC), the enzyme that synthesizes the water-insoluble mutan matrix cementing acid-producing biofilms to enamel. The molecule is CAHWRPWHC, a cyclic disulfide macrocycle: Cys-Ala-His-Trp-Arg-Pro-Trp-His-Cys, disulfide S-S 2.06 angstrom, Arg5-Pro6 steric shield, zero protease cleavage sites.
 

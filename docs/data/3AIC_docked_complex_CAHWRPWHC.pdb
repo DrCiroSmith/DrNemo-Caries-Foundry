@@ -4,7 +4,7 @@ COMPND   3 CHAIN: A (protein), B (ligand CAHWRPWHC);
 REMARK   Docked complex: CAHWRPWHC into S. mutans GtfB RCSB 3AIC catalytic cleft
 REMARK   Vina -8.191 kcal/mol  Vinardo -4.990  1SMD dG -7.343  dDG -0.85 kcal/mol
 REMARK   OpenMM Amber14/GBn2 310.15 K -1234.68 kJ/mol  S-S 2.06 A  0 protease sites
-REMARK   Rank-1 Pareto champion, 6/6 Popper gates cleared (330fb5d)
+REMARK   Rank-1 Pareto champion, 6/6 Popper gates cleared
 ATOM      1  N  ALA A 246     177.606  93.584 223.248  1.00 92.02           N
 ATOM      2  CA ALA A 246     176.566  93.495 222.167  1.00 90.38           C
 ATOM      3  C  ALA A 246     177.083  94.148 220.890  1.00 89.76           C

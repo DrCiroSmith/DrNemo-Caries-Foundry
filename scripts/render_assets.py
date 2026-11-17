@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate flagship raster assets from REAL data (330fb5d physics)."""
+"""Regenerate flagship raster assets from REAL data (empirical biophysical data)."""
 import math, sqlite3
 from pathlib import Path
 import imageio.v2 as imageio

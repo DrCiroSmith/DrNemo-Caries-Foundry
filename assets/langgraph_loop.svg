@@ -81,5 +81,5 @@
   <path d="M 796 224 Q 796 300 28 300 L 28 128" class="falsify"/>
   <text x="34" y="284" class="txt-mono" font-size="10.5" fill="var(--falsify)">Falsified: Amylase / Protease → Mutate Hinge</text>
   <circle cx="28" cy="300" r="5" fill="var(--falsify)"/>
-  <text x="24" y="464" class="txt-sub" font-size="10">60fps • Light/Dark • Zero text collisions • 100% 330fb5d physics</text>
+  <text x="24" y="464" class="txt-sub" font-size="10">DrNemo Caries Foundry · RCSB PDB 3AIC (2.10 Å) &amp; 1SMD (1.60 Å) · AutoDock Vina v1.2.7 · Vinardo · OpenMM Amber14/GBn2 (310.15 K)</text>
 </svg>

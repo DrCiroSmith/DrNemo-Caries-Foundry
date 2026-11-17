@@ -68,7 +68,7 @@ Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to 
 
 ---
 
-## 3. Biophysical Results — Pareto Champion CAHWRPWHC (330fb5d)
+## 3. Biophysical Results — Pareto Champion CAHWRPWHC
 
 | Parameter | CRRRWWRRRRC | CPHWRPWHC (WT lead) | CPHWRAWHC (P6A) | **CAHWRPWHC (Champion)** | Popperian outcome |
 |---|---:|---:|---:|---:|---|
