@@ -10,6 +10,12 @@ import re
 import sys
 from dotenv import load_dotenv
 
+REPO_ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(REPO_ROOT))
+
+import foundry_manager as fm
+from vault import ContenderVault
+
 load_dotenv()
 
 def resolve_base_dir():
@@ -464,8 +470,215 @@ def apply_lab_styling(df_to_style):
                             .map(lambda x: score_styler(x, "iptm"), subset=['iPTM'])\
                             .map(lambda x: score_styler(x, "composite"), subset=['Composite_Score'] if 'Composite_Score' in df_to_style.columns else [])
 
+# ----------------- SIDEBAR LIVE DAEMON CONTROLS -----------------
+st.sidebar.markdown("### ⚡ Live Foundry Daemon")
+sb_d = fm.get_daemon_status()
+st.sidebar.metric("Daemon Status", sb_d["badge"])
+st.sidebar.metric("Contenders Vault", f"{sb_d['vault_count']} candidates")
+if sb_d.get("pid"):
+    st.sidebar.caption(f"Main PID: `{sb_d['pid']}`")
+
+sb_c1, sb_c2 = st.sidebar.columns(2)
+with sb_c1:
+    if st.sidebar.button("▶️ Start/Resume", key="sb_btn_start", help="Starts service or resumes paused process with SIGCONT"):
+        ok, msg = fm.start_or_resume_daemon()
+        if ok: st.sidebar.success(msg)
+        else: st.sidebar.error(msg)
+        st.rerun()
+with sb_c2:
+    if st.sidebar.button("⏸ Pause", key="sb_btn_pause", help="Freezes Vina instantly at 0% CPU with SIGSTOP"):
+        ok, msg = fm.pause_daemon()
+        if ok: st.sidebar.warning(msg)
+        else: st.sidebar.error(msg)
+        st.rerun()
+
+sb_c3, sb_c4 = st.sidebar.columns(2)
+with sb_c3:
+    if st.sidebar.button("🔄 Restart", key="sb_btn_restart", help="Restarts drnemo-discovery.service cleanly"):
+        ok, msg = fm.restart_daemon()
+        if ok: st.sidebar.info(msg)
+        else: st.sidebar.error(msg)
+        st.rerun()
+with sb_c4:
+    if st.sidebar.button("⏹ Stop", key="sb_btn_stop", help="Stops drnemo-discovery.service"):
+        ok, msg = fm.stop_daemon()
+        if ok: st.sidebar.warning(msg)
+        else: st.sidebar.error(msg)
+        st.rerun()
+
+if st.sidebar.button("⚡ Run 1 Immediate Cycle", key="sb_btn_cycle", use_container_width=True, help="Triggers 1 evolutionary step now"):
+    ok, msg = fm.run_immediate_cycle()
+    if ok: st.sidebar.success(msg)
+    else: st.sidebar.error(msg)
+    st.rerun()
+
+st.sidebar.markdown("---")
+
 # ----------------- TABS -----------------
-tab1, tab_popper, tab7, tab5, tab2, tab3, tab6, tab4 = st.tabs(["🔬 Target Monitoring", "⚖️ Karl Popper Falsification", "🛡️ Foundry Strategy", "📈 Expansion Status", "🏆 Leaderboard", "🧬 3D Structure Viewer", "🎯 Target Reference", "📚 Manual"])
+tab_cmd, tab1, tab_popper, tab7, tab5, tab2, tab3, tab6, tab4 = st.tabs([
+    "⚡ Live Command & Sequence Lab",
+    "🔬 Target Monitoring",
+    "⚖️ Karl Popper Falsification",
+    "🛡️ Foundry Strategy",
+    "📈 Expansion Status",
+    "🏆 Leaderboard",
+    "🧬 3D Structure Viewer",
+    "🎯 Target Reference",
+    "📚 Manual"
+])
+
+with tab_cmd:
+    st.header("⚡ Live Foundry Command & Custom Sequence Lab")
+    st.markdown("""
+    Direct zero-shell command center for the 24/7 autonomous evolutionary hunter daemon (`drnemo-discovery.service`).
+    Inspect live process states, freeze/resume docking runs without losing progress, input custom cyclic sequences (`C...C`), 
+    build point mutations, preview oral biochemistry metrics, and trigger 28Å AutoDock Vina + Vinardo + 1SMD counter-screening + OpenMM relaxation on demand.
+    """)
+
+    daemon_info = fm.get_daemon_status()
+
+    # 1. Live Daemon Controls
+    st.markdown("### 🎛️ Live Daemon Controls")
+    c_stat1, c_stat2, c_stat3, c_stat4 = st.columns([1.5, 1.2, 1.8, 1.5])
+    with c_stat1:
+        st.metric("Daemon State", daemon_info["badge"])
+    with c_stat2:
+        st.metric("Evaluated Vault", f"{daemon_info['vault_count']} Contenders")
+    with c_stat3:
+        latest = daemon_info.get("latest_contender")
+        if latest:
+            st.metric("Latest Contender", f"{latest.get('sequence')} ({latest.get('vina_3aic_kcal')} kcal)", delta=latest.get("falsification_status"))
+        else:
+            st.metric("Latest Contender", "None yet")
+    with c_stat4:
+        champ = ContenderVault().get_pareto_champion()
+        if champ:
+            st.metric("Pareto Champion", f"{champ.get('sequence')}", delta=f"{champ.get('vina_3aic_kcal')} kcal/mol")
+        else:
+            st.metric("Pareto Champion", "CAHWRPWHC")
+
+    # 5 Action Buttons
+    b1, b2, b3, b4, b5 = st.columns(5)
+    with b1:
+        if st.button("▶️ Start / Resume", use_container_width=True, help="Starts daemon or unpauses with SIGCONT"):
+            ok, msg = fm.start_or_resume_daemon()
+            if ok: st.success(msg)
+            else: st.error(msg)
+            st.rerun()
+    with b2:
+        if st.button("⏸ Pause", use_container_width=True, help="Freezes Vina instantly at 0% CPU with SIGSTOP"):
+            ok, msg = fm.pause_daemon()
+            if ok: st.warning(msg)
+            else: st.error(msg)
+            st.rerun()
+    with b3:
+        if st.button("🔄 Restart / Retry", use_container_width=True, help="Restarts drnemo-discovery.service"):
+            ok, msg = fm.restart_daemon()
+            if ok: st.info(msg)
+            else: st.error(msg)
+            st.rerun()
+    with b4:
+        if st.button("⏹ Stop", use_container_width=True, help="Stops drnemo-discovery.service cleanly"):
+            ok, msg = fm.stop_daemon()
+            if ok: st.warning(msg)
+            else: st.error(msg)
+            st.rerun()
+    with b5:
+        if st.button("⚡ Run 1 Immediate Cycle", use_container_width=True, help="Triggers 1 evolutionary step now"):
+            ok, msg = fm.run_immediate_cycle()
+            if ok: st.success(msg)
+            else: st.error(msg)
+            st.rerun()
+
+    with st.expander("📜 Tail of data/logs/continuous_hunter.log (Last 5 Entries)", expanded=False):
+        if daemon_info["last_logs"]:
+            for log_entry in daemon_info["last_logs"]:
+                st.code(log_entry, language="text")
+        else:
+            st.caption("No log entries found yet.")
+
+    st.markdown("---")
+
+    # 2. Manual Sequence Input & Point-Mutation Workbench
+    st.markdown("### 🧪 Manual Sequence Input & Point-Mutation Workbench")
+
+    col_input, col_preview = st.columns([1.1, 0.9])
+
+    with col_input:
+        if "custom_seq_val" not in st.session_state:
+            st.session_state["custom_seq_val"] = "CAHWRPWHC"
+
+        seq_text = st.text_input(
+            "Custom Sequence (must start and end with 'C'):",
+            value=st.session_state["custom_seq_val"],
+            key="custom_seq_input_widget"
+        ).strip().upper()
+
+        st.markdown("**1-Click Point-Mutation Builder:**")
+        pm_c1, pm_c2, pm_c3 = st.columns([1, 1, 1.2])
+
+        pos_options = list(range(2, len(seq_text))) if len(seq_text) >= 3 else [2]
+        with pm_c1:
+            sel_pos = st.selectbox("Position (2..N-1):", pos_options, index=0)
+        with pm_c2:
+            safe_aas = list("ACFGHMNPQRSTVWY")
+            default_aa_idx = safe_aas.index("Y") if "Y" in safe_aas else 0
+            sel_aa = st.selectbox("Target AA:", safe_aas, index=default_aa_idx)
+        with pm_c3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🧬 Apply Mutation", use_container_width=True):
+                ok, mutated = fm.mutate_sequence(seq_text, sel_pos, sel_aa)
+                if ok:
+                    st.session_state["custom_seq_val"] = mutated
+                    st.success(f"Mutated to {mutated}")
+                    st.rerun()
+                else:
+                    st.error(mutated)
+
+        if st.button("⚡ Queue All Single-Site Variants", use_container_width=True, help="Generates and queues all single-site variants for positions 2..N-1"):
+            variants = fm.generate_all_single_site_variants(seq_text)
+            cnt = 0
+            for v in variants:
+                fm.enqueue_sequence_for_docking(v)
+                cnt += 1
+            st.success(f"Successfully queued {cnt} single-site variants to priority queue!")
+            st.rerun()
+
+    with col_preview:
+        st.markdown("**Instant Pre-Check Preview:**")
+        pre = fm.precheck_sequence(seq_text)
+        
+        pr_col1, pr_col2 = st.columns(2)
+        with pr_col1:
+            st.metric("Net Charge (pH 7.2)", f"{pre['q_ph72']:+.2f}")
+            st.metric("Net Charge (pH 6.0)", f"{pre['q_ph60']:+.2f}", delta="Donnan PASS" if pre["donnan_pass"] else "Donnan FAIL", delta_color="normal" if pre["donnan_pass"] else "inverse")
+            st.metric("Net Charge (pH 5.2)", f"{pre['q_ph52']:+.2f}")
+        with pr_col2:
+            st.metric("Stephan Switch ΔQ", f"+{pre['delta_q_stephan']:.2f}", delta="PASS (>= +1.0)" if pre["stephan_pass"] else "FAIL", delta_color="normal" if pre["stephan_pass"] else "inverse")
+            st.metric("Protease Sites", f"{pre['protease_sites']} sites", delta="RP Shielded" if pre["protease_pass"] else "Cleavable", delta_color="normal" if pre["protease_pass"] else "inverse")
+            verdict = "✅ VIABLE FOR DOCKING" if pre["precheck_passed"] else "⚠️ FAILS ORAL BARRIERS"
+            st.info(f"**Pre-Screen:** {verdict}")
+
+        if st.button("🚀 Queue & Dock Sequence Now (28Å Vina + Vinardo + 1SMD + OpenMM)", type="primary", use_container_width=True):
+            ok, msg, qid = fm.enqueue_sequence_for_docking(seq_text)
+            if ok:
+                st.success(f"Task #{qid} submitted: {msg}")
+                st.rerun()
+            else:
+                st.error(f"Error: {msg}")
+
+    st.markdown("---")
+
+    # 3. Priority Queue Table
+    st.markdown("### 📋 Priority Docking Queue (`data/foundry_contenders.sqlite`)")
+    pq = daemon_info.get("priority_queue", [])
+    if pq:
+        df_pq = pd.DataFrame(pq)
+        disp_cols = ["id", "sequence", "status", "submitted_at", "completed_at", "result_vina", "result_status"]
+        avail_cols = [c for c in disp_cols if c in df_pq.columns]
+        st.dataframe(df_pq[avail_cols], use_container_width=True)
+    else:
+        st.caption("No custom priority tasks currently in queue. Submit a sequence above to prioritize.")
 
 with tab_popper:
     st.header("⚖️ Karl Popper Biophysical Falsification Suite")

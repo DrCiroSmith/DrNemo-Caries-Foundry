@@ -369,3 +369,72 @@ def test_contender_vault_crud_and_mirroring():
         assert champ["sequence"] == "CPHWRPWHC"
         assert champ["vina_3aic_kcal"] == -8.30
 
+
+def test_priority_queue_lifecycle():
+    """Verify priority queue insertion, retrieval, and status updates."""
+    from vault import ContenderVault
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        db_path = Path(td) / "test_queue.sqlite"
+        vault = ContenderVault(db_path=db_path)
+        
+        # Enqueue item
+        item_id = vault.enqueue_priority("CAHYRPWHC", generation=4)
+        assert item_id == 1
+
+        # Fetch next item
+        item = vault.get_next_priority_item()
+        assert item is not None
+        assert item["id"] == 1
+        assert item["sequence"] == "CAHYRPWHC"
+        assert item["status"] == "QUEUED"
+
+        # Update status to docking
+        vault.update_priority_status(item_id, "DOCKING_3AIC")
+        assert vault.get_next_priority_item() is None  # No more QUEUED items
+
+        # Update to completed
+        vault.update_priority_status(item_id, "COMPLETED", result_vina=-8.25, result_status="CORROBORATED")
+        queue = vault.get_priority_queue(limit=5)
+        assert len(queue) == 1
+        assert queue[0]["status"] == "COMPLETED"
+        assert queue[0]["result_vina"] == -8.25
+
+
+def test_foundry_manager_validation_and_mutation():
+    """Verify validation, mutation workbench, and precheck logic."""
+    from foundry_manager import (
+        validate_cyclic_sequence,
+        mutate_sequence,
+        generate_all_single_site_variants,
+        precheck_sequence
+    )
+    # Valid cyclic peptide
+    ok, seq = validate_cyclic_sequence("CAHWRPWHC")
+    assert ok is True
+    assert seq == "CAHWRPWHC"
+
+    # Invalid cases
+    ok, err = validate_cyclic_sequence("AAHWRPWHA")
+    assert ok is False
+    assert "Cysteine" in err
+
+    ok, err = validate_cyclic_sequence("C123C")
+    assert ok is False
+
+    # Mutation
+    ok, mut = mutate_sequence("CAHWRPWHC", 4, "Y")
+    assert ok is True
+    assert mut == "CAHYRPWHC"
+
+    # Terminal cysteine mutation rejected
+    ok, err = mutate_sequence("CAHWRPWHC", 1, "A")
+    assert ok is False
+
+    # Precheck
+    pre = precheck_sequence("CAHWRPWHC")
+    assert "q_ph72" in pre
+    assert "delta_q_stephan" in pre
+    assert pre["donnan_pass"] is True
+    assert pre["protease_pass"] is True
+

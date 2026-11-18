@@ -34,7 +34,7 @@ class ContenderVault:
         self._init_db()
 
     def _init_db(self):
-        """Initializes the SQLite schema with the 20 canonical fields."""
+        """Initializes the SQLite schema with the 20 canonical fields and priority queue."""
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
         cur.execute("""
@@ -64,6 +64,21 @@ class ContenderVault:
         cur.execute("CREATE INDEX IF NOT EXISTS idx_status ON contenders(falsification_status);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_vina ON contenders(vina_3aic_kcal);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_rank ON contenders(pareto_rank);")
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS priority_queue (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sequence TEXT NOT NULL,
+                generation INTEGER DEFAULT 4,
+                status TEXT NOT NULL DEFAULT 'QUEUED',
+                submitted_at TEXT NOT NULL,
+                completed_at TEXT,
+                result_vina REAL,
+                result_status TEXT,
+                error TEXT
+            );
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_pq_status ON priority_queue(status);")
         conn.commit()
         conn.close()
 
@@ -169,6 +184,88 @@ class ContenderVault:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rows)
+
+    def get_latest_contender(self) -> Optional[Dict[str, Any]]:
+        """Returns the most recently evaluated contender."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT * FROM contenders
+            ORDER BY evaluated_at_utc DESC
+            LIMIT 1
+        """)
+        row = cur.fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def enqueue_priority(self, sequence: str, generation: int = 4) -> int:
+        """Enqueues a candidate sequence into the priority queue."""
+        now_utc = datetime.now(timezone.utc).isoformat()
+        conn = sqlite3.connect(self.db_path)
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO priority_queue (sequence, generation, status, submitted_at)
+            VALUES (?, ?, 'QUEUED', ?)
+        """, (sequence.strip().upper(), generation, now_utc))
+        item_id = cur.lastrowid
+        conn.commit()
+        conn.close()
+        return item_id
+
+    def get_next_priority_item(self) -> Optional[Dict[str, Any]]:
+        """Fetches the oldest uncompleted item in the priority queue."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT * FROM priority_queue
+            WHERE status = 'QUEUED'
+            ORDER BY id ASC
+            LIMIT 1
+        """)
+        row = cur.fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def update_priority_status(
+        self,
+        item_id: int,
+        status: str,
+        result_vina: Optional[float] = None,
+        result_status: Optional[str] = None,
+        error: Optional[str] = None
+    ):
+        """Updates the status and optional results of a priority queue item."""
+        conn = sqlite3.connect(self.db_path)
+        cur = conn.cursor()
+        completed_at = datetime.now(timezone.utc).isoformat() if status in ("COMPLETED", "FAILED") else None
+        
+        cur.execute("""
+            UPDATE priority_queue
+            SET status = ?,
+                completed_at = COALESCE(?, completed_at),
+                result_vina = COALESCE(?, result_vina),
+                result_status = COALESCE(?, result_status),
+                error = COALESCE(?, error)
+            WHERE id = ?
+        """, (status, completed_at, result_vina, result_status, error, item_id))
+        conn.commit()
+        conn.close()
+
+    def get_priority_queue(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Returns recent priority queue items."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT * FROM priority_queue
+            ORDER BY id DESC
+            LIMIT ?
+        """, (limit,))
+        rows = cur.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
 
 
 if __name__ == "__main__":
