@@ -1,4 +1,12 @@
 {
+    "S_mutans_GtfB_3AIC": {
+        "name": "Streptococcus mutans Glucosyltransferase-B (GtfB) [RCSB 3AIC · 2.10 Å]",
+        "category": "Tier 1: Primary Target (Catalytic Cleft)",
+        "description": "Streptococcus mutans GtfB catalytic cleft (Asp477, Glu515, Asp588). 2.10 Å resolution crystal structure.",
+        "uniprot": "P08987",
+        "sequence": "MSSQDNKAQVDTSRKPDTGSSGSAQDNKANQDASTGSGTKASQGENTGNKTESEQKSQSGSTGSNTSQVSSSQSSSDTAKNQSAKDSGTGSKTNSETQKASQSSSGTGSKTGSEQKASAN",
+        "base_peptide": "CAHWRPWHC"
+    },
     "S_mutans_SpaP_Baseline": {
         "name": "Streptococcus mutans SpaP/P1 Adhesin",
         "category": "Tier 1: Primary Cariogenic Adhesion",
