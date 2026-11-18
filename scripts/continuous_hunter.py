@@ -175,7 +175,7 @@ def evaluate_candidate(seq: str, gen: int, vault: ContenderVault, priority_id: i
 
         if donnan_ok and protease_ok and stephan_ok and affinity_ok and selectivity_ok:
             status = "CORROBORATED"
-        elif not donnan_ok or not protease_ok:
+        elif not donnan_ok or not protease_ok or not stephan_ok:
             status = "FALSIFIED_ORAL_BARRIER"
         elif not selectivity_ok:
             status = "FALSIFIED_AMYLASE_CROSSREACTIVITY"
@@ -206,7 +206,7 @@ def evaluate_candidate(seq: str, gen: int, vault: ContenderVault, priority_id: i
             "q_ph52": q52,
             "delta_q_stephan": delta_q,
             "protease_sites": p_sites,
-            "pareto_rank": 1 if status == "CORROBORATED" else 2,
+            "pareto_rank": 1 if status == "CORROBORATED" else (3 if "FALSIFIED" in status else 2),
             "falsification_status": status,
             "pose_sha256": pose_sha
         }

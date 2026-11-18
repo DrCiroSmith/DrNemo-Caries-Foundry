@@ -137,13 +137,24 @@ class ContenderVault:
         return [dict(r) for r in rows]
 
     def get_top_contenders(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """Returns the top contenders sorted by Pareto rank and affinity."""
+        """Returns the top contenders sorted by Pareto rank and affinity,
+        strictly enforcing oral barrier & amylase selectivity gates."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
         cur.execute("""
             SELECT * FROM contenders
-            ORDER BY pareto_rank ASC, vina_3aic_kcal ASC
+            ORDER BY 
+                CASE
+                    WHEN falsification_status = 'CORROBORATED'
+                         AND delta_q_stephan >= 1.0
+                         AND protease_sites = 0
+                         AND selectivity_ddg <= -0.80
+                         AND q_ph60 <= 4.0 THEN 1
+                    WHEN falsification_status = 'CORROBORATED' THEN 3
+                    ELSE pareto_rank
+                END ASC,
+                vina_3aic_kcal ASC
             LIMIT ?
         """, (limit,))
         rows = cur.fetchall()
@@ -160,14 +171,18 @@ class ContenderVault:
         return count
 
     def get_pareto_champion(self) -> Optional[Dict[str, Any]]:
-        """Returns the #1 Pareto lead (best affinity + selectivity)."""
+        """Returns the #1 Pareto lead (best affinity + selectivity passing all oral & amylase gates)."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
         cur.execute("""
             SELECT * FROM contenders
             WHERE falsification_status = 'CORROBORATED'
-            ORDER BY vina_3aic_kcal ASC, selectivity_ddg ASC
+              AND delta_q_stephan >= 1.0
+              AND protease_sites = 0
+              AND selectivity_ddg <= -0.80
+              AND q_ph60 <= 4.0
+            ORDER BY pareto_rank ASC, vina_3aic_kcal ASC, selectivity_ddg ASC
             LIMIT 1
         """)
         row = cur.fetchone()
