@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Biophysics Engine — True 28Å / exh=16 Vina + Vinardo + OpenMM Physics.
+Biophysics Engine: True 28Å / exh=16 Vina + Vinardo + OpenMM Physics.
 Author: Dr. Roi Castrellon, DDS (DrNemo Caries Foundry)
 
 Zero synthetic formulas, zero mock shortcuts:
@@ -52,8 +52,9 @@ REPO_ROOT = Path(__file__).parent.resolve()
 RECEPTORS_DIR = REPO_ROOT / "demo_data" / "receptors"
 RECEPTOR_3AIC_PDBQT = RECEPTORS_DIR / "3AIC_receptor.pdbqt"
 RECEPTOR_1SMD_PDBQT = RECEPTORS_DIR / "1SMD_receptor.pdbqt"
+RECEPTOR_1LZ1_PDBQT = RECEPTORS_DIR / "1LZ1_receptor.pdbqt"
 
-# Uncompressed 28 A grid centered on solvent-exposed catalytic triads
+# Uncompressed 28 A grid centered on solvent-exposed catalytic triads / active clefts
 TARGET_COORDS = {
     "3AIC": {
         "center": (192.072, 44.370, 197.309),
@@ -64,6 +65,11 @@ TARGET_COORDS = {
         "center": (8.778, 49.724, 17.278),
         "size": (28.0, 28.0, 28.0),
         "receptor": str(RECEPTOR_1SMD_PDBQT)
+    },
+    "1LZ1": {
+        "center": (10.319, 8.503, 25.960),
+        "size": (28.0, 28.0, 28.0),
+        "receptor": str(RECEPTOR_1LZ1_PDBQT)
     }
 }
 

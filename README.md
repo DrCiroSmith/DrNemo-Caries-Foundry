@@ -15,7 +15,7 @@
   <a href="https://openmm.org"><img src="https://img.shields.io/badge/ForceField-OpenMM_Amber14-blueviolet.svg" alt="OpenMM Amber14"></a>
 </p>
 
-An autonomous computational biophysics pipeline that designs, filters, and falsifies cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). It couples LangGraph state machines with AutoDock Vina v1.2.7 and Vinardo empirical grid docking, OpenMM Amber14/GBn2 all-atom relaxation at 310.15 K, and a 6-angle Karl Popper falsification suite, ranking the Pareto champion **CAHWRPWHC** (6/6 gates cleared) over 82 contenders and N=39 scrambled nulls.
+An autonomous computational biophysics pipeline that designs, filters, and falsifies cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). It couples LangGraph state machines with AutoDock Vina v1.2.7 and Vinardo empirical grid docking, OpenMM Amber14/GBn2 all-atom relaxation at 310.15 K, and an exhaustive 12-angle Karl Popper falsification battery evaluating candidate **CAHWRPWHC** over 82 contenders and N=39 scrambled nulls. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
 
 ---
 
@@ -39,12 +39,12 @@ The Foundry designs **arginine-rich cyclic disulfide macrocycles** that dock int
 
 The discovery engine runs an iterative closed loop:
 
-1. **Evolutionary Generator** -- C-X-7-C scaffold with P2A hinge; produces 82 contenders.
-2. **Oral Shield Gate** -- Donnan Q <= +4.0, Stephan DQ >= +1.0, 0 protease sites.
-3. **28.0 A Dual Docking** -- AutoDock Vina + Vinardo on RCSB 3AIC (target) and 1SMD (human alpha-amylase off-target).
-4. **OpenMM 310.15 K Relaxation** -- Amber14/GBn2 all-atom minimization.
-5. **6-Angle Popper Falsification** -- 1SMD DDG <= -0.80, N=39 scrambled nulls, alanine scan, Acarbose counter-screen.
-6. **SQLite Contender Vault and SPPS Protocol** -- solid-phase synthesis plan for the corroborated lead.
+1. **Evolutionary Generator**: C-X-7-C scaffold with P2A hinge; produces 82 contenders.
+2. **Oral Shield Gate**: Donnan Q <= +4.0, Stephan DQ >= +1.0, 0 protease sites.
+3. **28.0 A Dual Docking**: AutoDock Vina + Vinardo on RCSB 3AIC (target) and 1SMD (human alpha-amylase off-target).
+4. **OpenMM 310.15 K Relaxation**: Amber14/GBn2 all-atom minimization.
+5. **12-Angle Popper Falsification**: 1SMD DDG <= -0.80, N=39 scrambled nulls, alanine scan, Acarbose counter-screen.
+6. **SQLite Contender Vault and SPPS Protocol**: solid-phase synthesis plan for the corroborated lead.
 
 Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to mutate the hinge.
 
@@ -60,19 +60,42 @@ Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to 
 |---|---:|---:|---:|---:|---|
 | **GtfB (3AIC) Vina DG** | -7.586 kcal/mol | -8.062 kcal/mol | -8.890 kcal/mol | **-8.191 kcal/mol** | High target affinity |
 | **Amylase (1SMD) Vina DG** | -7.580 kcal/mol | -7.902 kcal/mol | -7.300 kcal/mol | **-7.343 kcal/mol** | Host off-target counter-screen |
-| **Host Selectivity DDG** | -0.006 kcal/mol | -0.16 kcal/mol | -1.59 kcal/mol | **-0.85 kcal/mol** | **WT falsified on amylase; P2A clears <= -0.80** |
-| **Oral protease sites** | 7 (degraded) | 0 (RP-shielded) | 1 (trypsin fail) | **0** (RP-shielded) | Baseline falsified (enzyme lysis) |
+| **Host Selectivity DDG** | -0.006 kcal/mol | -0.16 kcal/mol | -1.59 kcal/mol | **-0.85 kcal/mol** | **WT cross-reactive; P2A clears <= -0.80 (within Vina noise)** |
+| **Oral protease sites** | 7 (degraded) | 0 (RP-shielded) | 1 (trypsin fail) | **0 Trypsin (AT RISK: Trp4/7 chymotryptic)** | Baseline falsified (enzyme lysis) |
 | **Chitosan Donnan Q (pH 6)** | +7.00 (> +4.0 fail) | +2.046 | +2.046 | **+2.046 (<= +4.0)** | Baseline falsified (entrapment) |
 | **Stephan DQ (acid switch)** | 0.00 | +1.62 | +1.62 | **+1.62** | Acid-activated in cariogenic niche |
 | **Disulfide S-S** | unconstrained | 2.06 A | 2.06 A | **2.06 A** | Intact macrocyclic restraint |
 | **OpenMM 310.15 K** | N/A | -1,165.5 kJ/mol | -1,271.48 kJ/mol | **-1,234.68 kJ/mol** | Stable minimized conformation |
-| **Verdict** | FALSIFIED (multiple gates) | FALSIFIED (amylase) | FALSIFIED (trypsin site) | **CORROBORATED (6/6 gates)** | Pareto lead advance |
+| **Verdict** | FALSIFIED (multiple gates) | FALSIFIED (amylase) | FALSIFIED (trypsin site) | **IN SILICO HYPOTHESIS** | Candidate advance with 3 caveats |
 
 P2A (Pro2 to Ala) hinge relaxation preserves GtfB binding while sterically excluding the inhibitor from human amylase (DDG = -0.85 kcal/mol). P6A (Pro6 to Ala) gives raw affinity -8.890 kcal/mol but breaks the proline steric shield, creating a tryptic cleavage site, falsified on Angle 5.
 
 ---
 
-## 4. Validation Figures
+## 4. 12-Angle Exhaustive Computational Disproof Battery
+
+In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** was challenged across twelve computational disproof angles to systematically identify physical failure modes:
+
+| Angle | Evaluation Angle | Quantitative Metric | Honest Classification |
+|---|---|---|---|
+| **1** | Co-Crystal Redocking Calibration (3AIC) | Hungarian RMSD 4.51 A, Vina -7.915 kcal/mol | `PASSED_IN_SILICO` |
+| **2** | Multi-Seed Conformer & Docking (N=5) | Mean -8.10 +/- 0.37 kcal/mol, RMSD = 9.24 A | `INCONCLUSIVE_WITHIN_NOISE` |
+| **3** | Pose Mode Clustering & Energy Gap | Mode 1-2 Delta E = +0.10 kcal/mol, shift 1.74 A | `INCONCLUSIVE_WITHIN_NOISE` |
+| **4** | Force-Field Error Margin on 1SMD Selectivity | DeltaDeltaG = -0.85 kcal/mol vs Vina SE ~2.85 kcal/mol | `INCONCLUSIVE_WITHIN_NOISE` |
+| **5** | Charge-Matched Scrambled Null (N=39) | Lead -8.191 vs Null -8.343 +/- 0.470 (Z = +0.32, p = 0.5897) | `INCONCLUSIVE_WITHIN_NOISE` |
+| **6** | In-Silico Alanine-Scanning Mutagenesis | Identifies His3, Trp7, His8 catalytic anchors | `PASSED_IN_SILICO` |
+| **7** | Explicit pH 5.2 Histidine Diprotonation | Formal charge +1 -> +3; acidic 3AIC DG = -7.71 kcal/mol | `PASSED_IN_SILICO` |
+| **8** | Broad Oral Protease & Peptidase Check | Trypsin shielded (Arg5-Pro6); Trp4/Trp7 vulnerable to chymotrypsin | `AT_RISK` |
+| **9** | Additional Host Screen (RCSB 1LZ1 Lysozyme) | Human lysozyme DG = -6.67 kcal/mol (DeltaDeltaG = -1.52) | `PASSED_IN_SILICO` |
+| **10** | Linear Control vs Cyclic Macrocycle | Linear AHWRPWH (-9.25 kcal/mol) vs cyclic (-8.19 kcal/mol; 14 vs 28 torsions) | `PASSED_IN_SILICO` |
+| **11** | OpenMM Implicit-Solvent Relaxation Drift | Amber14/GBn2 310.15 K heavy-atom drift RMSD = 0.94 A | `PASSED_IN_SILICO` |
+| **12** | Chitosan Donnan & Stephan Acid Switch | Saliva Q = +2.05 <= +4.0; Stephan Delta Q = +1.62 | `PASSED_IN_SILICO` |
+
+> **Scientific Skepticism Verdict:** While CAHWRPWHC cleared 7 physical hurdles in silico (7 Passed in Silico, 4 Inconclusive within Noise, 1 At Risk, 0 Falsified), strict scientific skepticism highlights 5 caveats: multi-seed conformer RMSD spread (Angle 2), pose mode clustering gap (Angle 3), host selectivity (Angle 4), and scrambled null differentiation (Angle 5) fall within force-field uncertainty boundaries, and aromatic residues Trp4/Trp7 (Angle 8) carry chymotryptic risk requiring whole-saliva degradation assays. All results are computational hypotheses requiring wet-lab enzymatic, whole human saliva, and cellular biofilm falsification.
+
+---
+
+## 5. Validation Figures
 
 <p align="center">
   <img src="assets/fig4_falsification_plate.png" alt="4-panel biophysical validation: Pareto frontier, scrambled null histogram, alanine scan, Stephan pH titration" width="100%">
@@ -85,7 +108,7 @@ P2A (Pro2 to Ala) hinge relaxation preserves GtfB binding while sterically exclu
 
 ---
 
-## 5. Repository Layout
+## 6. Repository Layout
 
 ```
 DrNemo-Caries-Foundry/
@@ -139,7 +162,7 @@ DrNemo-Caries-Foundry/
 
 ---
 
-## 6. Getting Started
+## 7. Getting Started
 
 ### Prerequisites
 - Python 3.10 or higher
@@ -171,7 +194,7 @@ streamlit run dashboard.py
 
 ---
 
-## 7. Virulence Target Inventory
+## 8. Virulence Target Inventory
 
 Target definitions are cataloged in `targets.json`:
 - **Tier 1 (Surface Adhesin):** *S. mutans* SpaP/P1 Adhesin (`P23504`)
@@ -180,13 +203,13 @@ Target definitions are cataloged in `targets.json`:
 
 ---
 
-## 8. Research Notice
+## 9. Research Notice
 
 This codebase is for academic, computational biology, and preclinical discovery research. Molecular predictions and synthesis plans require wet-lab in-vitro confirmation prior to therapeutic application.
 
 ---
 
-## 9. Author
+## 10. Author
 
 **Dr. Roi Castrellon, DDS**
 Clinical AI and Healthcare Data Engineering

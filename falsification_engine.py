@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Falsification Engine — Autonomous Biophysical Falsification Suite.
+Falsification Engine: Autonomous Biophysical Falsification Suite.
 Author: Dr. Roi Castrellon, DDS (DrNemo Oral Biophysics Research)
 
 Replaces synthetic mock formulas with rigorous multi-angle falsification gates:
@@ -180,6 +180,8 @@ class FalsificationEngine:
                 "lead_selectivity": lead_selectivity,
                 "naive_passed": False,
                 "naive_selectivity": naive_selectivity,
+                "classification": "INCONCLUSIVE_WITHIN_NOISE",
+                "force_field_reality_check": "Vina standard error ~2.85 kcal/mol; DeltaDeltaG = -0.85 kcal/mol is within force-field uncertainty",
                 "criterion": "DeltaDeltaG (3AIC - 1SMD) <= -0.80 kcal/mol"
             },
             "gate3_scrambled_null_permutation": {
@@ -192,6 +194,8 @@ class FalsificationEngine:
                 "p_value": scrambled_data["p_value"],
                 "b_count": scrambled_data.get("b_count", 26),
                 "linear_loss_delta": benchmark.get("linear_control", {}).get("cyclization_delta_kcal", -0.803),
+                "classification": "INCONCLUSIVE",
+                "null_reality_check": "H0 not rejected (Z = +0.32, p = 0.5897); rigid-receptor static docking under-penalizes aqueous conformational entropy",
                 "criterion": "Empirical N=39 null permutation battery (mean -8.343 +/- 0.470 kcal/mol)"
             },
             "gate4_alanine_hotspot_scan": {
@@ -199,14 +203,18 @@ class FalsificationEngine:
                 "passed": any(v.get("is_hotspot", False) for v in ala_scan.values()),
                 "hotspot_count": sum(1 for v in ala_scan.values() if v.get("is_hotspot", False)),
                 "hotspots": [k for k, v in ala_scan.items() if v.get("is_hotspot", False)],
+                "classification": "PASSED_IN_SILICO",
                 "criterion": "At least 1 energetic hotspot residue with DeltaDeltaG > +0.70 kcal/mol"
             },
             "gate5_oral_protease_resistance": {
-                "name": "Angle 5: Salivary Trypsin & RgpB Gingipain Resistance",
+                "name": "Angle 5: Salivary Trypsin and RgpB Gingipain Resistance",
                 "lead_passed": bio["protease_resistant"],
                 "lead_cleavage_sites": bio["protease"]["cleavage_site_count"],
                 "naive_passed": naive_bio["protease_resistant"],
                 "naive_cleavage_sites": naive_bio["protease"]["cleavage_site_count"],
+                "chymotrypsin_vulnerable": bio["protease"].get("is_chymotrypsin_vulnerable", True),
+                "classification": "AT_RISK" if bio["protease"].get("is_chymotrypsin_vulnerable", True) else "PASSED_IN_SILICO",
+                "protease_reality_check": "Trypsin protected by Pro6, but W4/W7 vulnerable to chymotrypsin and bacterial proteases (requires whole saliva assay)",
                 "criterion": "Zero unshielded Arg/Lys cleavage sites (RP/KP protection)"
             },
             "gate6_chitosan_donnan_stephan": {
@@ -217,6 +225,7 @@ class FalsificationEngine:
                 "naive_passed": False,
                 "naive_net_charge_pH6": naive_bio["net_charge_pH6"],
                 "naive_delta_q_stephan": naive_bio["stephan_switch"]["delta_q_stephan"],
+                "classification": "PASSED_IN_SILICO",
                 "criterion": "Net charge pH 6.0 <= +4.0 AND Delta Q (pH 5.2 - 7.2) >= +1.0"
             }
         }
@@ -241,7 +250,7 @@ class FalsificationEngine:
 def print_falsification_report(audit: Dict[str, Any]):
     """Pretty prints the full Karl Popper falsification audit report."""
     print("=" * 76)
-    print("  OPERATION KARL POPPER — BIOPHYSICAL FALSIFICATION BENCHMARK AUDIT")
+    print("  OPERATION KARL POPPER: BIOPHYSICAL FALSIFICATION BENCHMARK AUDIT")
     print("=" * 76)
     gates = audit["gates"]
     for k, g in gates.items():

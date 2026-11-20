@@ -181,8 +181,7 @@ with colB:
     st.markdown("<br>", unsafe_allow_html=True)
     search_term = st.text_input("🔍 Global Data Search:", placeholder="Filter by Sequence or ID...").strip()
 
-# --- Load Targets ---
-target_list = []
+# === Load Targets ===target_list = []
 targets_data = {}
 if TARGETS_FILE.exists():
     with open(TARGETS_FILE, 'r') as f:
@@ -201,8 +200,7 @@ def save_targets():
         json.dump(targets_data, f, indent=4)
 
 
-# --- SIDEBAR INTERFACE ---
-teacher_mode = st.sidebar.toggle("🎓 Teacher Mode", value=False)
+# === SIDEBAR INTERFACE ===teacher_mode = st.sidebar.toggle("🎓 Teacher Mode", value=False)
 
 st.sidebar.header("🔬 Target Project Control")
 selected_project = st.sidebar.selectbox("Active Project Target:", target_list, index=0 if "S_mutans_GtfB_3AIC" in target_list else 0)
@@ -252,20 +250,20 @@ if teacher_mode:
 if selected_project and selected_project in targets_data:
     st.sidebar.info(f"**Target:** {targets_data[selected_project].get('name', selected_project)}\n\n{targets_data[selected_project].get('description', '')}")
 
-st.sidebar.markdown("---")
+st.sidebar.divider()
 st.sidebar.header("🧠 Reasoning Engine (Port :4000 Gateway)")
 
 # Live zero-watt gateway models
 model_options = [
-    "nim-main (Nemotron 3.5 Super VL 120B — Cloud 0W)",
-    "nim-reason (Nemotron 3 Ultra 550B — Deep Biophysics Cloud 0W)",
-    "nim-fast (Nemotron 3.5 Lightning 30B — Fast Triage Cloud 0W)",
-    "phi-local (Local Ollama Air-Gapped — Offline/PHI Only)"
+    "nim-main (Nemotron 3.5 Super VL 120B :  Cloud 0W)",
+    "nim-reason (Nemotron 3 Ultra 550B :  Deep Biophysics Cloud 0W)",
+    "nim-fast (Nemotron 3.5 Lightning 30B :  Fast Triage Cloud 0W)",
+    "phi-local (Local Ollama Air-Gapped :  Offline/PHI Only)"
 ]
 model_choice = st.sidebar.selectbox("Active Reasoning Model:", model_options, index=0)
 os.environ["OLLAMA_MODEL"] = model_choice.split(" ")[0]
 
-st.sidebar.markdown("---")
+st.sidebar.divider()
 with st.sidebar.expander("🚀 Laboratory Actions", expanded=False):
     st.markdown("**💡 High-Throughput Sampling**")
     col_mass1, col_mass2 = st.columns(2)
@@ -284,8 +282,7 @@ with st.sidebar.expander("🚀 Laboratory Actions", expanded=False):
             except Exception as e:
                 st.error(f"Error: {e}")
 
-# --- MANUAL PEPTIDE INPUT ---
-with st.sidebar.expander("🧪 Quick Sequence Dispatch", expanded=False):
+# === MANUAL PEPTIDE INPUT ===with st.sidebar.expander("🧪 Quick Sequence Dispatch", expanded=False):
     st.caption("Submit custom cyclic peptide (must start/end with C) to the AutoDock Vina + Vinardo pipeline.")
     manual_peptide = st.text_input("Sequence:", max_chars=30, placeholder="e.g. CAHWRPWHC").strip().upper()
     manual_note = st.text_input("Notes:", placeholder="Custom design")
@@ -314,7 +311,7 @@ with st.sidebar.expander("🧪 Quick Sequence Dispatch", expanded=False):
         else:
             st.error(msg)
 
-st.sidebar.markdown("---")
+st.sidebar.divider()
 st.sidebar.header("📖 Biophysical Falsification Gates")
 st.sidebar.markdown("""
 - **Vina / Vinardo ΔG**: ≤ -7.50 kcal/mol (3AIC active cleft affinity)
@@ -322,11 +319,10 @@ st.sidebar.markdown("""
 - **Stephan Switch ΔQ**: ≥ +1.00 (pH 5.2 acid-activation)
 - **Donnan Barrier**: Q(pH 6.0) ≤ +4.0 (Chitosan compatibility)
 - **Protease Resistance**: 0 Cleavage Sites (RP motif steric shield)
-- **Disulfide Geometry**: S-S bond 2.00–2.15 Å (Macrocycle lock)
+- **Disulfide Geometry**: S-S bond 2.00-2.15 Å (Macrocycle lock)
 """)
 
-# --- SIDEBAR LIVE DAEMON CONTROLS ---
-st.sidebar.markdown("---")
+# === SIDEBAR LIVE DAEMON CONTROLS ===st.sidebar.divider()
 st.sidebar.markdown("### ⚡ Live Foundry Daemon")
 sb_d = fm.get_daemon_status()
 st.sidebar.metric("Daemon Status", sb_d["badge"])
@@ -368,10 +364,9 @@ if st.sidebar.button("⚡ Run 1 Immediate Cycle", key="sb_btn_cycle", use_contai
     else: st.sidebar.error(msg)
     st.rerun()
 
-st.sidebar.markdown("---")
+st.sidebar.divider()
 
-# --- TOP BANNER: LIVE SQLITE VAULT TELEMETRY CARD ---
-vault_count = len(df) if df is not None else 0
+# === TOP BANNER: LIVE SQLITE VAULT TELEMETRY CARD ===vault_count = len(df) if df is not None else 0
 best_vina = df['vina_3aic_kcal'].min() if (df is not None and 'vina_3aic_kcal' in df.columns) else -8.191
 
 st.markdown(f"""
@@ -460,7 +455,7 @@ def apply_lab_styling(df_to_style):
     return styler
 
 
-# ----------------- TABS -----------------
+# === TABS ===
 tab_cmd, tab1, tab_popper, tab7, tab5, tab2, tab3, tab6, tab4 = st.tabs([
     "⚡ Live Command & Sequence Lab",
     "🔬 Target Monitoring",
@@ -473,7 +468,7 @@ tab_cmd, tab1, tab_popper, tab7, tab5, tab2, tab3, tab6, tab4 = st.tabs([
     "📚 Manual"
 ])
 
-# ----------------- TAB 1: LIVE COMMAND & SEQUENCE LAB -----------------
+# === TAB 1: LIVE COMMAND & SEQUENCE LAB ===
 with tab_cmd:
     st.header("⚡ Live Foundry Command & Custom Sequence Lab")
     st.markdown("""
@@ -544,7 +539,7 @@ with tab_cmd:
         else:
             st.caption("No log entries found yet.")
 
-    st.markdown("---")
+    st.divider()
 
     # 2. Manual Sequence Input & Point-Mutation Workbench
     st.markdown("### 🧪 Manual Sequence Input & Point-Mutation Workbench")
@@ -614,7 +609,7 @@ with tab_cmd:
             else:
                 st.error(f"Error: {msg}")
 
-    st.markdown("---")
+    st.divider()
 
     # 3. Priority Queue Table
     st.markdown("### 📋 Priority Docking Queue (`data/foundry_contenders.sqlite`)")
@@ -627,7 +622,7 @@ with tab_cmd:
     else:
         st.caption("No custom priority tasks currently in queue. Submit a sequence above to prioritize.")
 
-# ----------------- TAB 2: TARGET MONITORING -----------------
+# === TAB 2: TARGET MONITORING ===
 with tab1:
     st.header(f"🔬 Target Monitoring: {selected_project}")
     st.caption("Live telemetry across physical simulations in the 28 Å active-site catalytic cleft (Asp477, Glu515, Asp588).")
@@ -649,7 +644,7 @@ with tab1:
     with tm4:
         st.metric("⚡ Best 3AIC Vina ΔG", f"{project_df['vina_3aic_kcal'].min():.3f} kcal/mol" if not project_df.empty and 'vina_3aic_kcal' in project_df.columns else "N/A")
 
-    st.markdown("---")
+    st.divider()
     st.subheader(f"📊 Evaluated Contenders Log ({len(project_df)} contenders)")
 
     if project_df.empty:
@@ -672,8 +667,7 @@ with tab1:
 
         selected_rows = event.selection.rows
 
-        # --- BIOPHYSICAL SCATTER VISUALIZATIONS ---
-        st.markdown("---")
+        # === BIOPHYSICAL SCATTER VISUALIZATIONS ===st.divider()
         st.subheader("📈 Biophysical Correlation Landscapes")
         sc_col1, sc_col2 = st.columns(2)
         with sc_col1:
@@ -685,10 +679,9 @@ with tab1:
             if 'vina_3aic_kcal' in project_df.columns and 'vina_1smd_kcal' in project_df.columns:
                 st.scatter_chart(project_df, x="vina_3aic_kcal", y="vina_1smd_kcal", color="Status")
 
-        # --- MULTI-PEPTIDE SEQUENCE ALIGNMENT ---
-        if selected_rows and len(selected_rows) >= 2:
+        # === MULTI-PEPTIDE SEQUENCE ALIGNMENT ===if selected_rows and len(selected_rows) >= 2:
             selected_df = project_df.iloc[selected_rows].copy()
-            st.markdown("---")
+            st.divider()
             st.subheader(f"🔬 Multi-Peptide Sequence Alignment ({len(selected_df)} Contenders Selected)")
 
             seqs = selected_df["Peptide_Sequence"].tolist()
@@ -782,37 +775,64 @@ with tab1:
                 st.success(f"Successfully generated & queued {queued_cnt} hybrid cyclic candidates!")
                 st.rerun()
 
-# ----------------- TAB 3: KARL POPPER FALSIFICATION SUITE -----------------
+# === TAB 3: KARL POPPER FALSIFICATION SUITE ===
 with tab_popper:
     st.header("⚖️ Karl Popper Biophysical Falsification Suite")
     st.markdown("""
-    **Operation Karl Popper** systematically replaced heuristic mock scoring with a ruthless 6-angle biophysical falsification battery powered by **AutoDock Vina v1.2.7**, **RDKit MMFF94**, and empirical oral chemistry gates.
+    **Operation Karl Popper** systematically enforces a ruthless 12-angle biophysical falsification battery powered by **AutoDock Vina v1.2.7**, **RDKit MMFF94**, **OpenMM Amber14/GBn2**, and empirical oral chemistry gates. Every angle is classified honestly as `PASSED_IN_SILICO`, `INCONCLUSIVE_WITHIN_NOISE`, `AT_RISK`, or `FALSIFIED`.
     """)
 
-    # Top Metrics Bar — 100% synced to demo_data/results/falsification_benchmark.json
+    # Top Metrics Bar: synced to data/exhaustive_disproof_report.json
     col_p1, col_p2, col_p3, col_p4 = st.columns(4)
     with col_p1:
-        st.metric(label="Lead 3AIC Vina ΔG (CAHWRPWHC)", value="-8.191 kcal/mol", delta="Passed Gate 1")
+        st.metric(label="Lead 3AIC Vina ΔG (CAHWRPWHC)", value="-8.191 kcal/mol", delta="Passed in Silico")
     with col_p2:
-        st.metric(label="Amylase 1SMD ΔΔG (CAHWRPWHC)", value="-0.850 kcal/mol", delta="Passed Gate 2 (≤ -0.80)")
+        st.metric(label="Amylase 1SMD ΔΔG (CAHWRPWHC)", value="-0.848 kcal/mol", delta="Inconclusive (< ±2.85 SE)")
     with col_p3:
-        st.metric(label="Scrambled Permutation Z", value="+0.32σ", delta="p = 0.5897 (Null N=39)")
+        st.metric(label="Scrambled Permutation Z", value="+0.32σ", delta="p = 0.5897 (H0 Not Rejected)")
     with col_p4:
-        st.metric(label="Oral Cleavage Sites", value="0 Sites", delta="Passed Gate 5 (RP Shield)")
+        st.metric(label="Broad Oral Proteases", value="At Risk (W4, W7)", delta="Trypsin Shielded (RP)")
 
-    st.markdown("---")
+    st.divider()
+
+    # Load 12-angle exhaustive disproof report if available
+    disproof_path = Path("data/exhaustive_disproof_report.json")
+    if disproof_path.exists():
+        with open(disproof_path, "r", encoding="utf-8") as f:
+            disproof_data = json.load(f)
+        
+        st.subheader("📋 Comprehensive 12-Angle Biophysical Disproof Matrix (`CAHWRPWHC`)")
+        st.caption("All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.")
+        
+        matrix_rows = []
+        for a in disproof_data.get("angles", []):
+            matrix_rows.append({
+                "Angle": f"#{a.get('angle')}",
+                "Evaluation Angle": a.get("name"),
+                "Classification": a.get("classification"),
+                "Summary": a.get("scientific_summary")
+            })
+        st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True, hide_index=True)
+        st.markdown(f"**Battery Verdict:** 7 Passed in Silico | 4 Inconclusive within Noise | 1 At Risk | 0 Falsified")
+        st.divider()
 
     col_lead, col_naive = st.columns(2)
     with col_lead:
-        st.success("### 🏆 Pareto Champion: `CAHWRPWHC` (P2A Hinge Variant)")
+        st.info("### 🏆 Evaluated Candidate: `CAHWRPWHC` (P2A Hinge Variant)")
         st.markdown("""
-        * **Angle 1 (3AIC Pocket Binding):** **-8.191 kcal/mol** Vina / **-4.990 kcal/mol** Vinardo (Deep active-site cleft engagement).
-        * **Angle 2 (1SMD Salivary Amylase):** **-7.343 kcal/mol** (ΔΔG = **-0.85 kcal/mol** ≤ -0.80; host amylase sterically excluded by P2A hinge).
-        * **Angle 3 (Null Permutation, N=39):** Z = **+0.32σ**, p = **0.5897** (null mean -8.343 ± 0.470 kcal/mol; raw docking rank alone cannot distinguish champion — multi-angle gates mandatory).
-        * **Angle 4 (Alanine Hotspot Scan):** His3 acid-switch (-7.869 kcal/mol), His8 anchor (-7.978), Trp7 hydrophobic packing (-7.805); Pro6 shields Arg5 from trypsin.
-        * **Angle 5 (Oral Protease Clearance):** **0 cleavage sites** (Arg5 sterically shielded by adjacent Proline `RP`).
-        * **Angle 6 (Chitosan & Stephan Switch):** Net charge **+2.05 ≤ +3.0** (Donnan compatible), **ΔQ = +1.618** (pH 5.2 acid-activation), OpenMM Amber14/GBn2 **-1234.68 kJ/mol** at 310.15 K.
-        * **Verdict:** **CORROBORATED (Passed 6 of 6 Gates).**
+        * **Angle 1 (3AIC Pocket Binding):** **-8.191 kcal/mol** Vina / **-4.990 kcal/mol** Vinardo (Deep active-site cleft engagement; 4.51 Å Hungarian RMSD co-crystal calibration).
+        * **Angle 2 (Multi-Seed N=5):** Score mean **-8.10 ± 0.37 kcal/mol**, RMSD **9.24 Å** (`INCONCLUSIVE_WITHIN_NOISE`).
+        * **Angle 3 (Pose Mode Clustering):** Mode 1-2 gap **+0.10 kcal/mol**, centroid shift **1.74 Å** (`INCONCLUSIVE_WITHIN_NOISE`).
+        * **Angle 4 (1SMD Selectivity Reality Check):** ΔΔG = **-0.85 kcal/mol** vs Vina SE ~2.85 kcal/mol (`INCONCLUSIVE_WITHIN_NOISE`).
+        * **Angle 5 (Null Permutation, N=39):** Z = **+0.32σ**, p = **0.5897** (null mean -8.343 ± 0.470 kcal/mol; static docking fails to reject H0; `INCONCLUSIVE_WITHIN_NOISE`).
+        * **Angle 6 (Alanine Hotspot Scan):** His3 acid-switch (-7.869), His8 anchor (-7.978), Trp7 hydrophobic packing (-7.805).
+        * **Angle 7 (Explicit pH 5.2):** Diprotonated His **-7.706 kcal/mol** in 3AIC / **-7.891 kcal/mol** in 1SMD (`PASSED_IN_SILICO`).
+        * **Angle 8 (Protease Vulnerability):** Trypsin shielded by Pro6, but chymotrypsin/cathepsin G cleaves Trp4/Trp7 (`AT_RISK`).
+        * **Angle 9 (Human Lysozyme 1LZ1):** **-6.67 kcal/mol** (ΔΔG = **-1.52 kcal/mol** vs 3AIC; `PASSED_IN_SILICO`).
+        * **Angle 10 (Conformational Control):** Cyclic CAHWRPWHC vs Linear AHWRPWH (14 vs 28 rotatable bonds; rigid pre-organization; `PASSED_IN_SILICO`).
+        * **Angle 11 (OpenMM Relaxation):** Amber14/GBn2 310.15 K minimization drift **0.94 Å** (`PASSED_IN_SILICO`).
+        * **Angle 12 (Chitosan & Stephan Switch):** Net charge **+2.05 ≤ +4.0**, **ΔQ = +1.618** (`PASSED_IN_SILICO`).
+        * **Honest Verdict:** **7 Passed in Silico, 4 Inconclusive within Noise, 1 At Risk, 0 Falsified.**
         """)
 
     with col_naive:
@@ -827,7 +847,7 @@ with tab_popper:
         * **Verdict:** **FALSIFIED (Failed 5 of 6 Gates).**
         """)
 
-    st.markdown("---")
+    st.divider()
     st.subheader("🔬 Alanine-Scanning Energetic Hotspot Spectrum (Parent: `CPHWRPWHC` | Champion: `CAHWRPWHC`)")
 
     # Load Alanine scan data directly from falsification_benchmark.json
@@ -848,7 +868,7 @@ with tab_popper:
     with c_al2:
         st.bar_chart(ala_df.set_index("Position")["Vina ΔG (kcal/mol)"])
 
-# ----------------- TAB 4: FOUNDRY STRATEGY -----------------
+# === TAB 4: FOUNDRY STRATEGY ===
 with tab7:
     st.header("🛡️ Foundry Strategy: The Road to the Cure")
     st.markdown("""
@@ -902,7 +922,7 @@ with tab7:
         </div>
         """, unsafe_allow_html=True)
 
-# ----------------- TAB 5: EXPANSION STATUS -----------------
+# === TAB 5: EXPANSION STATUS ===
 with tab5:
     st.header("📈 Expansion Status & Contenders Vault")
     st.caption("Live tracking of evaluated cyclic peptide contenders across generations in SQLite.")
@@ -925,12 +945,12 @@ with tab5:
     st.progress(min(live_contenders_count / target_goal, 1.0) if target_goal > 0 else 0.0)
 
     if df is not None and not df.empty and 'generation' in df.columns:
-        st.markdown("---")
+        st.divider()
         st.subheader("🧬 Generation Distribution in Contenders Vault")
         gen_counts = df['generation'].value_counts().sort_index()
         st.bar_chart(gen_counts)
 
-# ----------------- TAB 6: LEADERBOARD -----------------
+# === TAB 6: LEADERBOARD ===
 with tab2:
     st.header(f"🏆 Contenders Leaderboard: {selected_project}")
     st.caption("Ranked by Pareto frontier, AutoDock Vina 3AIC affinity, and 1SMD amylase selectivity.")
@@ -960,7 +980,7 @@ with tab2:
             st.line_chart(leaderboard.head(20).set_index("Peptide_Sequence")["vina_3aic_kcal"])
 
         # Bulk Export Engine
-        st.markdown("---")
+        st.divider()
         st.subheader("📚 Synthesis-Ready Export")
         csv_data = leaderboard.to_csv(index=False).encode('utf-8')
         st.download_button(
@@ -972,7 +992,7 @@ with tab2:
             use_container_width=True
         )
 
-# ----------------- TAB 7: 3D STRUCTURE VIEWER -----------------
+# === TAB 7: 3D STRUCTURE VIEWER ===
 with tab3:
     st.header("🧬 3D Macromolecular Structure Viewer")
     st.caption("Interactive macromolecular visualization and sequence mapping for top candidates.")
@@ -1011,7 +1031,7 @@ with tab3:
             options.append(lbl)
             job_mapping[lbl] = (jid, pep, row)
 
-        st.markdown("---")
+        st.divider()
         selected_lbl = st.selectbox("🔬 Select Candidate from Contenders Vault:", options)
 
         if selected_lbl:
@@ -1138,7 +1158,7 @@ with tab3:
                     st.caption(f"🟢 Cyclic {sel_pep} Conformer")
 
                 # Sequences & Biophysical Profile Card
-                st.markdown("---")
+                st.divider()
                 st.subheader(f"🔬 Candidate Biophysical Profile: {sel_job}")
 
                 col_s1, col_s2 = st.columns(2)
@@ -1166,7 +1186,7 @@ with tab3:
     else:
         st.warning("No contenders data available to visualize.")
 
-# ----------------- TAB 8: TARGET REFERENCE -----------------
+# === TAB 8: TARGET REFERENCE ===
 with tab6:
     st.header("🎯 Target Protein Reference Library")
     st.caption("Fixed crystallographic targets and counter-screens in the oral cavity.")
@@ -1186,16 +1206,16 @@ with tab6:
     df_ref = pd.DataFrame(ref_data)
     st.dataframe(df_ref, hide_index=True, use_container_width=True)
 
-    st.markdown("---")
+    st.divider()
     st.subheader("🔎 Target Sequence Viewer")
     view_target = st.selectbox("Select Target to Inspect:", target_list, key="ref_viewer_sel")
     if view_target:
         t_info = targets_data.get(view_target, {})
-        st.markdown(f"**{t_info.get('name', view_target)}** — UniProt: `{t_info.get('uniprot', 'N/A')}`")
+        st.markdown(f"**{t_info.get('name', view_target)}** :  UniProt: `{t_info.get('uniprot', 'N/A')}`")
         st.markdown(f"<div class='seq-box' style='font-size: 12px; overflow-wrap: break-word;'>{colorize_sequence(t_info.get('sequence', ''))}</div>", unsafe_allow_html=True)
         st.caption(f"📝 {t_info.get('description', '')}")
 
-# ----------------- TAB 9: MANUAL -----------------
+# === TAB 9: MANUAL ===
 with tab4:
     st.header("📚 Dr. Nemo Pipeline Guide")
     st.caption("Assembly line process: from target pocket definition to physical mucoadhesive peptide delivery.")
@@ -1230,7 +1250,7 @@ with tab4:
     """
     components.html(html_guide, height=450)
 
-    st.markdown("---")
+    st.divider()
     st.markdown("""
 **Biophysical Legend:**
 - **AutoDock Vina ΔG**: Receptor-ligand binding free energy (kcal/mol). More negative indicates tighter binding.

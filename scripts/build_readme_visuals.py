@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-build_readme_visuals.py -- Generate 5 README figures + social preview as Retina PNGs.
+build_readme_visuals.py: Generate 5 README figures + social preview as Retina PNGs.
 Author: Dr. Roi Castrellon, DDS (DrNemo Caries Foundry)
 
 Design system: Deep Clinical Slate
@@ -9,10 +9,10 @@ Design system: Deep Clinical Slate
 
 GitHub 896px Column Readability Rules:
   All HTML viewports at 1200px logical width, device_scale_factor=2 -> 2400px Retina PNG.
-  Hero headers: 36px–44px
-  Panel titles: 22px–28px
-  Body labels / text: 16px–18px
-  Mono badges / metrics: 15px–18px
+  Hero headers: 36px-44px
+  Panel titles: 22px-28px
+  Body labels / text: 16px-18px
+  Mono badges / metrics: 15px-18px
 """
 import csv
 import json
@@ -30,7 +30,7 @@ DEMO = REPO / "demo_data" / "results"
 PDB_PATH = DEMO / "3AIC_docked_complex_CAHWRPWHC.pdb"
 PDB_CONTENT = PDB_PATH.read_text(encoding="utf-8").replace("`", "\\`").replace("$", "\\$")
 
-# --- Design tokens ---
+# === Design tokens ===
 BG = "#0c1017"
 CARD = "#131b28"
 BORDER = "#1e293b"
@@ -96,9 +96,9 @@ def render_html_to_png(html: str, width: int, height: int, out_path: Path, wait_
     print(f"  -> {out_path.name} ({out_path.stat().st_size:,} bytes)")
 
 
-# ============================================================
+# ===  ===
 # FIGURE 1: Hero Banner (1200x380 @2x = 2400x760)
-# ============================================================
+# ===  ===
 def build_hero_banner():
     html = f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
@@ -188,7 +188,7 @@ h1 {{
   <div class="triad-legend">
     <div class="legend-item"><span class="dot" style="background:{CORAL}"></span><span>Triad Asp477/Glu515/Asp588</span></div>
     <div class="legend-item"><span class="dot" style="background:{CYAN}"></span><span>CAHWRPWHC Macrocycle</span></div>
-    <div class="legend-item"><span class="dot" style="background:{AMBER}"></span><span>C1:SG–C9:SG Disulfide (2.06 Å)</span></div>
+    <div class="legend-item"><span class="dot" style="background:{AMBER}"></span><span>C1:SG-C9:SG Disulfide (2.06 Å)</span></div>
   </div>
   <div class="render-overlay">3Dmol.js WebGL · RCSB 3AIC</div>
 </div>
@@ -233,9 +233,9 @@ h1 {{
     render_html_to_png(html, 1200, 380, ASSETS / "hero_banner.png", wait_ms=4000)
 
 
-# ============================================================
+# ===  ===
 # FIGURE 2: Biological Mechanism (1200x360 @2x = 2400x720)
-# ============================================================
+# ===  ===
 def build_biological_mechanism():
     html = f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
@@ -345,15 +345,15 @@ body {{ width:1200px; height:360px; overflow:hidden; display:flex; gap:18px; pad
     render_html_to_png(html, 1200, 360, ASSETS / "fig1_biological_mechanism.png")
 
 
-# ============================================================
+# ===  ===
 # FIGURE 3: Pipeline Architecture (1200x420 @2x = 2400x840)
-# ============================================================
+# ===  ===
 def build_pipeline_architecture():
     stages = [
         ("1", "Evolutionary Generator", "C-X7-C cyclic scaffold<br>P2A hinge mutant pool", CYAN),
         ("2", "Oral Shield Gate", "Donnan Q ≤ +4.0<br>Stephan ΔQ ≥ +1.0<br>0 protease sites", EMERALD),
         ("3", "28.0 Å Dual Docking", "3AIC target (GtfB)<br>1SMD host counter (amylase)<br>Vina + Vinardo", AMBER),
-        ("4", "OpenMM Relaxation", "Amber14/GBn2 at 310.15 K<br>All-atom minimization<br>S–S 2.06 Å check", CORAL),
+        ("4", "OpenMM Relaxation", "Amber14/GBn2 at 310.15 K<br>All-atom minimization<br>S-S 2.06 Å check", CORAL),
         ("5", "Popper Falsification", "1SMD ΔΔG ≤ -0.80<br>N=39 scrambled nulls<br>Alanine scanning", CYAN),
         ("6", "Contender Vault", "SQLite registry<br>Pareto rank-1 advance<br>Fmoc SPPS protocol", EMERALD),
     ]
@@ -438,9 +438,9 @@ body {{ width:1200px; height:420px; overflow:hidden; padding:24px 28px; display:
     render_html_to_png(html, 1200, 420, ASSETS / "fig2_pipeline_architecture.png")
 
 
-# ============================================================
+# ===  ===
 # FIGURE 4: Pocket + Attrition Funnel (1200x480 @2x = 2400x960)
-# ============================================================
+# ===  ===
 def build_pocket_and_funnel():
     funnel_data = [
         ("82", "Design Candidates", 1.0, TEXT2),
@@ -541,7 +541,7 @@ body {{ width:1200px; height:480px; overflow:hidden; display:flex; gap:20px; pad
     <div id="viewer-pocket"></div>
     <div class="pocket-labels">
       <span>Asp477 · Glu515 · Asp588 (Triad)</span>
-      <span style="color:{AMBER}">S–S 2.06 Å Restraint</span>
+      <span style="color:{AMBER}">S-S 2.06 Å Restraint</span>
     </div>
   </div>
 </div>
@@ -609,14 +609,14 @@ body {{ width:1200px; height:480px; overflow:hidden; display:flex; gap:20px; pad
     render_html_to_png(html, 1200, 480, ASSETS / "fig3_pocket_and_funnel.png", wait_ms=4000)
 
 
-# ============================================================
+# ===  ===
 # FIGURE 5: Falsification Data Plate 2x2 (1200x760 @2x = 2400x1520)
 # REVISION 2:
 #   Panel A: Centered callouts, no card edge clipping
 #   Panel B: Axis label lowered to avoid baseline collision
 #   Panel C: Scaled bar widths so -8.890 and "Flagged: Trypsin Lysis" never collide
 #   Panel D: Fully contained labels
-# ============================================================
+# ===  ===
 def build_falsification_plate():
     ledger = load_ledger()
     benchmark = load_benchmark()
@@ -894,9 +894,9 @@ body {{ width:1200px; height:760px; overflow:hidden; padding:18px; }}
     render_html_to_png(html, 1200, 760, ASSETS / "fig4_falsification_plate.png")
 
 
-# ============================================================
+# ===  ===
 # SOCIAL PREVIEW (1280x640 @2x = 2560x1280)
-# ============================================================
+# ===  ===
 def build_social_preview():
     html = f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>

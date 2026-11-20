@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-Solubility Shield v2.0 — Biophysical Viability & Falsification Pre-Filter (Angle 5).
+Solubility Shield v2.0: Biophysical Viability and Falsification Pre-Filter (Angle 5).
 Author: Dr. Nemo Caries Foundry / Dr. Castrellon
 
-Incorporates rigorous oral biophysics & formulation constraints:
+Incorporates rigorous oral biophysics and formulation constraints:
 1. Chitosan Surface Compatibility (No D/E anionic salt-bridges, no I/K entrapment).
-2. Salivary Trypsin & P. gingivalis RgpB Gingipain Cleavage Resistance (R/K shielded by Proline).
-3. Chitosan-TPP Nanoparticle Donnan Electrostatic Repulsion (Reject net_charge_pH6 > +4.0).
-4. Stephan-Curve Protonation Acid-Switch (Delta Q = Q_pH5.2 - Q_pH7.2 >= +1.0 via Henderson-Hasselbalch).
+2. Salivary Trypsin and P. gingivalis RgpB Gingipain Cleavage Resistance (R/K shielded by Proline).
+3. Salivary Chymotrypsin and Cathepsin G Cleavage Vulnerability (W/Y/F aromatic residues).
+4. Chitosan-TPP Nanoparticle Donnan Electrostatic Repulsion (Reject net_charge_pH6 > +4.0).
+5. Stephan-Curve Protonation Acid-Switch (Delta Q = Q_pH5.2 - Q_pH7.2 >= +1.0 via Henderson-Hasselbalch).
 """
 import math
 from typing import Tuple, Dict, List
@@ -108,23 +109,47 @@ def calc_stephan_switch(seq: str) -> Dict[str, float]:
 
 def count_protease_cleavage_sites(seq: str) -> Dict[str, object]:
     """
-    Models salivary trypsin and P. gingivalis RgpB gingipain cleavage sites.
-    Endopeptidases hydrolyze C-terminal to basic residues (R, K) UNLESS
-    immediately followed by Proline (P_1' = Pro) which stereochemically blocks the active site.
+    Models salivary trypsin and P. gingivalis RgpB gingipain cleavage sites,
+    along with broad oral protease / chymotrypsin vulnerability.
+    
+    Trypsin / RgpB:
+    Endopeptidases hydrolyze C-terminal to basic residues (R, K) unless
+    immediately followed by Proline (P_1' = Pro), which stereochemically blocks the active site.
+    
+    Chymotrypsin / Cathepsin G / Bacterial Peptidases:
+    Hydrolyze C-terminal to bulky aromatic hydrophobic residues (W, Y, F) unless
+    shielded by tertiary macrocyclic restraint or Proline.
     """
     seq = seq.upper().strip()
-    sites = []
+    trypsin_sites = []
     for i in range(len(seq) - 1):
         if seq[i] in ("R", "K"):
             if seq[i + 1] != "P":
-                sites.append(f"{seq[i]}{i+1}_{seq[i+1]}{i+2}")
+                trypsin_sites.append(f"{seq[i]}{i+1}_{seq[i+1]}{i+2}")
     if seq and seq[-1] in ("R", "K"):
-        sites.append(f"{seq[-1]}{len(seq)}_Cterm")
+        trypsin_sites.append(f"{seq[-1]}{len(seq)}_Cterm")
+
+    chymotrypsin_sites = []
+    for i in range(len(seq) - 1):
+        if seq[i] in ("W", "Y", "F"):
+            if seq[i + 1] != "P":
+                chymotrypsin_sites.append(f"{seq[i]}{i+1}_{seq[i+1]}{i+2}")
+    if seq and seq[-1] in ("W", "Y", "F"):
+        chymotrypsin_sites.append(f"{seq[-1]}{len(seq)}_Cterm")
+
+    is_trypsin_resistant = len(trypsin_sites) == 0
+    is_chymotrypsin_vulnerable = len(chymotrypsin_sites) > 0
 
     return {
-        "cleavage_site_count": len(sites),
-        "cleavage_sites": sites,
-        "is_protease_resistant": len(sites) == 0
+        "cleavage_site_count": len(trypsin_sites),
+        "cleavage_sites": trypsin_sites,
+        "trypsin_cleavage_sites": trypsin_sites,
+        "is_protease_resistant": is_trypsin_resistant,
+        "is_trypsin_resistant": is_trypsin_resistant,
+        "chymotrypsin_cleavage_sites": chymotrypsin_sites,
+        "chymotrypsin_site_count": len(chymotrypsin_sites),
+        "is_chymotrypsin_vulnerable": is_chymotrypsin_vulnerable,
+        "broad_protease_verdict": "AT_RISK" if is_chymotrypsin_vulnerable else ("RESISTANT_IN_SILICO" if is_trypsin_resistant else "FALSIFIED_TRYPSIN")
     }
 
 

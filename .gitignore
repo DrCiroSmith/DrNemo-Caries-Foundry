@@ -30,6 +30,10 @@ Thumbs.db
 *.log
 data/logs/
 
+# Continuous hunter transitory contenders
+data/poses/contender_g0[2-9]*
+data/poses/contender_g[1-9][0-9]*
+
 # LaTeX intermediate build files
 *.aux
 *.bbl
