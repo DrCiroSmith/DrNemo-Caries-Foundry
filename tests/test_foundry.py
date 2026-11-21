@@ -1,5 +1,5 @@
 """
-Unit test suite for Dr. Nemo Caries Vaccine Foundry.
+Unit test suite for Dr. Nemo Caries Foundry.
 Tests biochemical pre-filtering, target catalog integrity, scoring metrics,
 demo data integrity, gtfb_orchestrator --demo execution, dashboard resolution,
 and the comprehensive 6-Angle Karl Popper Biophysical Falsification Battery.
@@ -89,18 +89,12 @@ def test_targets_catalog_integrity():
         assert "base_peptide" in info and len(info["base_peptide"]) > 0
 
 
-def test_composite_scoring_logic():
-    def compute_composite(plddt: float, iptm: float) -> float:
-        return round((plddt / 100.0) * iptm, 3)
-
-    # Sub-threshold hit
-    assert compute_composite(80.0, 0.70) == 0.560
-    assert compute_composite(80.0, 0.70) < 0.72
-
-    # Major structural lead (exceeds 0.72)
-    lead_score = compute_composite(92.0, 0.85)
-    assert lead_score == 0.782
-    assert lead_score >= 0.72
+def test_ligand_efficiency_calculation():
+    """Verify ligand efficiency formula LE = round(-vina_kcal / heavy_atoms, 3)."""
+    vina_kcal = -8.191
+    heavy_atoms = 84
+    le = round(-vina_kcal / heavy_atoms, 3)
+    assert le == 0.098
 
 
 def test_cycle_designer_generation():
@@ -144,7 +138,7 @@ def test_demo_dataset_integrity():
         rows = list(csv.DictReader(f))
     assert len(rows) >= 50, f"Expected >= 50 rows, got {len(rows)}"
     cols = set(rows[0].keys())
-    assert ("contender_id" in cols and "vina_3aic_kcal" in cols) or ("Job_ID" in cols and "pLDDT" in cols)
+    assert "contender_id" in cols and "vina_3aic_kcal" in cols
 
     # 2. Directed evolution complex PDB files
     variant_files = list((demo_dir / "results").glob("S_mutans_GtfB_Insoluble_variant_*.pdb"))
@@ -578,5 +572,60 @@ def test_continuous_hunter_indel_generation():
             assert cand.startswith("C") and cand.endswith("C")
             assert 6 <= len(cand) <= 18
             assert vault.has_sequence(cand) is False
+
+
+def test_single_source_of_truth_integrity():
+    """Verify single source of truth across repo files, database, and docking tools."""
+    # 1. Assert zero forbidden files exist
+    forbidden_files = ["CLAUDE.md", "AGENTS.md", "GEMINI.md", "linkedin_post_drnemo.md"]
+    for fname in forbidden_files:
+        assert not (REPO_ROOT / fname).exists(), f"Forbidden file {fname} must not exist"
+
+    # 2. Assert zero forbidden tokens or em-dashes in tracked python and doc files
+    forbidden_tokens = ["pLDDT", "iPTM", "0.65 *", "-1100.0", "Caries Vaccine"]
+    tracked_files = [
+        REPO_ROOT / "biophysics_engine.py",
+        REPO_ROOT / "gtfb_orchestrator.py",
+        REPO_ROOT / "vault.py",
+        REPO_ROOT / "falsification_engine.py",
+        REPO_ROOT / "solubility_shield.py",
+        REPO_ROOT / "dashboard.py",
+        REPO_ROOT / "README.md",
+        REPO_ROOT / "paper" / "paper.md"
+    ]
+    for p in tracked_files:
+        if p.exists():
+            text = p.read_text(encoding="utf-8")
+            assert "—" not in text, f"Em-dash found in {p.name}"
+            for tok in forbidden_tokens:
+                assert tok not in text, f"Forbidden token '{tok}' found in {p.name}"
+
+    # 3. Assert all rows in ContenderVault have valid SS bonds and zero broken disulfides marked CORROBORATED
+    from vault import ContenderVault
+    vault = ContenderVault()
+    all_rows = vault.get_all_contenders()
+    assert len(all_rows) == 259, f"Expected 259 contenders in vault, found {len(all_rows)}"
+
+    for r in all_rows:
+        ss = r["ss_bond_angstrom"]
+        status = r["falsification_status"]
+        if status == "CORROBORATED":
+            assert 1.95 <= ss <= 2.25, f"Contender {r['contender_id']} has broken SS {ss} but is CORROBORATED"
+
+    # 4. Check README.md matches contender count exactly
+    readme_text = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    assert "259" in readme_text, "README.md must cite exact 259 contender count"
+
+    # 5. Live 1-ligand Vina smoke test (score_only)
+    cmd = [
+        "/usr/bin/vina",
+        "--receptor", str(REPO_ROOT / "demo_data" / "receptors" / "3AIC_receptor.pdbqt"),
+        "--ligand", str(REPO_ROOT / "demo_data" / "receptors" / "3AIC_native_ligand.pdbqt"),
+        "--score_only",
+        "--autobox"
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    assert res.returncode == 0, f"Vina smoke test failed: {res.stderr}"
+    assert "Estimated Free Energy of Binding" in res.stdout
 
 

@@ -16,6 +16,7 @@ import sys
 import hashlib
 import subprocess
 import math
+import numpy as np
 from pathlib import Path
 from typing import Dict, Any, Tuple, Optional
 
@@ -74,9 +75,15 @@ TARGET_COORDS = {
 }
 
 
-def build_macrocycle_3d(seq: str, out_pdbqt: str, out_pdb: Optional[str] = None) -> int:
+def build_macrocycle_3d(
+    seq: str,
+    out_pdbqt: str,
+    out_pdb: Optional[str] = None,
+    target_center: Optional[Tuple[float, float, float]] = None
+) -> int:
     """
     Builds an all-atom 3D structure for a cyclic disulfide peptide with RDKit MMFF94 force field.
+    If target_center is provided, translates the conformer centroid to target_center.
     Returns the count of heavy atoms.
     """
     mol = Chem.MolFromSequence(seq)
@@ -84,14 +91,24 @@ def build_macrocycle_3d(seq: str, out_pdbqt: str, out_pdb: Optional[str] = None)
         raise ValueError(f"Invalid peptide sequence: {seq}")
     mol = Chem.AddHs(mol)
 
-    # Disulfide bond between first and last Cysteine
-    sg_indices = [a.GetIdx() for a in mol.GetAtoms() if a.GetSymbol() == 'S']
-    if len(sg_indices) >= 2:
-        s1, s2 = sg_indices[0], sg_indices[-1]
+    # Disulfide bond strictly between first residue (resi 1, N-terminal CYS) SG
+    # and last residue (resi N, C-terminal CYS) SG
+    cys1_sg = None
+    cysN_sg = None
+    N = len(seq)
+    for a in mol.GetAtoms():
+        info = a.GetPDBResidueInfo()
+        if info and info.GetResidueName().strip() == "CYS" and info.GetName().strip() == "SG":
+            if info.GetResidueNumber() == 1:
+                cys1_sg = a.GetIdx()
+            elif info.GetResidueNumber() == N:
+                cysN_sg = a.GetIdx()
+
+    if cys1_sg is not None and cysN_sg is not None:
         atoms_to_remove = []
-        for s_idx in (s1, s2):
+        for s_idx in (cys1_sg, cysN_sg):
             for nbr in mol.GetAtomWithIdx(s_idx).GetNeighbors():
-                if nbr.GetSymbol() == 'H':
+                if nbr.GetSymbol() == "H":
                     atoms_to_remove.append(nbr.GetIdx())
                     break
         emol = Chem.EditableMol(mol)
@@ -99,10 +116,18 @@ def build_macrocycle_3d(seq: str, out_pdbqt: str, out_pdb: Optional[str] = None)
             emol.RemoveAtom(h_idx)
         mol = emol.GetMol()
 
-        sg_indices = [a.GetIdx() for a in mol.GetAtoms() if a.GetSymbol() == 'S']
-        s1, s2 = sg_indices[0], sg_indices[-1]
+        cys1_sg = None
+        cysN_sg = None
+        for a in mol.GetAtoms():
+            info = a.GetPDBResidueInfo()
+            if info and info.GetResidueName().strip() == "CYS" and info.GetName().strip() == "SG":
+                if info.GetResidueNumber() == 1:
+                    cys1_sg = a.GetIdx()
+                elif info.GetResidueNumber() == N:
+                    cysN_sg = a.GetIdx()
+
         emol = Chem.EditableMol(mol)
-        emol.AddBond(s1, s2, Chem.BondType.SINGLE)
+        emol.AddBond(cys1_sg, cysN_sg, Chem.BondType.SINGLE)
         mol = emol.GetMol()
 
     Chem.SanitizeMol(mol)
@@ -120,6 +145,14 @@ def build_macrocycle_3d(seq: str, out_pdbqt: str, out_pdb: Optional[str] = None)
             AllChem.UFFOptimizeMolecule(mol, maxIters=500)
         except Exception:
             pass
+
+    if target_center is not None:
+        conf = mol.GetConformer()
+        positions = conf.GetPositions()
+        centroid = np.mean(positions, axis=0)
+        translation = np.array(target_center) - centroid
+        for i in range(mol.GetNumAtoms()):
+            conf.SetAtomPosition(i, positions[i] + translation)
 
     # Save clean heavy-atom PDB if requested (for OpenMM / PDBFixer)
     if out_pdb:
@@ -140,24 +173,37 @@ def build_macrocycle_3d(seq: str, out_pdbqt: str, out_pdb: Optional[str] = None)
 
 
 def measure_disulfide_bond(pdbqt_path: str) -> Optional[float]:
-    """Measures the S-S bond distance (Angstroms) in a docked PDBQT pose."""
-    s_coords = []
+    """Measures the terminal Cys1:SG-CysN:SG distance (Angstroms) in a docked PDBQT pose."""
+    cys1_sg = None
+    cys_last_sg = None
+    max_resi = -1
+    if not os.path.exists(pdbqt_path):
+        return None
     with open(pdbqt_path, "r", encoding="utf-8") as f:
         for line in f:
             if line.startswith("ATOM") or line.startswith("HETATM"):
                 atom_name = line[12:16].strip()
-                if atom_name in ("SG", "S", "SD"):
+                res_name = line[17:20].strip()
+                try:
+                    res_num = int(line[22:26].strip())
+                except ValueError:
+                    continue
+                if atom_name == "SG" and res_name == "CYS":
                     x = float(line[30:38])
                     y = float(line[38:46])
                     z = float(line[46:54])
-                    s_coords.append((x, y, z))
+                    if res_num == 1:
+                        cys1_sg = (x, y, z)
+                    if res_num > max_resi:
+                        max_resi = res_num
+                        cys_last_sg = (x, y, z)
             if line.startswith("ENDMDL"):
                 break
-    if len(s_coords) >= 2:
-        dx = s_coords[0][0] - s_coords[-1][0]
-        dy = s_coords[0][1] - s_coords[-1][1]
-        dz = s_coords[0][2] - s_coords[-1][2]
-        dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+    if cys1_sg and cys_last_sg and max_resi > 1:
+        dx = cys1_sg[0] - cys_last_sg[0]
+        dy = cys1_sg[1] - cys_last_sg[1]
+        dz = cys1_sg[2] - cys_last_sg[2]
+        dist = math.sqrt(dx * dx + dy * dy + dz * dz)
         return round(dist, 2)
     return None
 
@@ -245,8 +291,29 @@ def run_docking_vina_and_vinardo(
                         pass
                 break
 
+        # Fallback to autobox if ligand drifted slightly outside fixed box
+        if vinardo_score is None:
+            cmd_vinardo_auto = [
+                "/usr/bin/vina",
+                "--receptor", cfg["receptor"],
+                "--ligand", mode1_pdbqt,
+                "--scoring", "vinardo",
+                "--score_only",
+                "--autobox"
+            ]
+            res_auto = subprocess.run(cmd_vinardo_auto, capture_output=True, text=True)
+            for line in res_auto.stdout.splitlines():
+                if "Estimated Free Energy of Binding" in line:
+                    parts = line.split(":")
+                    if len(parts) >= 2:
+                        try:
+                            vinardo_score = float(parts[1].split()[0])
+                        except ValueError:
+                            pass
+                    break
+
     if vinardo_score is None:
-        vinardo_score = round(vina_score * 0.65, 2)
+        raise RuntimeError(f"Vinardo scoring failed to extract binding free energy for {ligand_pdbqt} on {target}")
 
     # 3. Pose SHA256 & Disulfide check
     with open(out_pdbqt, "rb") as f:

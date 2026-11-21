@@ -18,7 +18,7 @@
   <a href="https://openmm.org"><img src="https://img.shields.io/badge/ForceField-OpenMM_Amber14-blueviolet.svg" alt="OpenMM Amber14"></a>
 </p>
 
-An autonomous computational biophysics pipeline that designs, filters, and falsifies cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). It couples LangGraph state machines with AutoDock Vina v1.2.7 and Vinardo empirical grid docking, OpenMM Amber14/GBn2 all-atom relaxation at 310.15 K, and an exhaustive 12-angle Karl Popper falsification battery evaluating candidate **CAHWRPWHC** over 82 contenders and N=39 scrambled nulls. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
+An autonomous computational biophysics pipeline that designs, filters, and falsifies cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). It couples LangGraph state machines with AutoDock Vina v1.2.7 and Vinardo empirical grid docking, OpenMM Amber14/GBn2 all-atom relaxation at 310.15 K, and an exhaustive 12-angle Karl Popper falsification battery evaluating candidate **CAHWRPWHC** over 259 total contenders in the vault, including N=39 scrambled nulls. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
 
 ---
 
@@ -48,7 +48,7 @@ The Foundry designs **arginine-rich cyclic disulfide macrocycles** that dock int
 
 The discovery engine runs an iterative closed loop:
 
-1. **Evolutionary Generator**: C-X-7-C scaffold with P2A hinge; produces 82 contenders.
+1. **Evolutionary Generator**: C-X-7-C scaffold with P2A hinge; evaluates 259 contenders across discovery and null controls.
 2. **Oral Shield Gate**: Donnan Q <= +4.0, Stephan DQ >= +1.0, 0 protease sites.
 3. **28.0 A Dual Docking**: AutoDock Vina + Vinardo on RCSB 3AIC (target) and 1SMD (human alpha-amylase off-target).
 4. **OpenMM 310.15 K Relaxation**: Amber14/GBn2 all-atom minimization.
@@ -95,7 +95,7 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 | **3** | Pose Mode Clustering & Energy Gap | Mode 1-2 Delta E = +0.10 kcal/mol, shift 1.74 A | `INCONCLUSIVE_WITHIN_NOISE` |
 | **4** | Force-Field Error Margin on 1SMD Selectivity | DeltaDeltaG = -0.85 kcal/mol vs Vina SE ~2.85 kcal/mol | `INCONCLUSIVE_WITHIN_NOISE` |
 | **5** | Charge-Matched Scrambled Null (N=39) | Lead -8.191 vs Null -8.343 +/- 0.470 (Z = +0.32, p = 0.5897) | `INCONCLUSIVE_WITHIN_NOISE` |
-| **6** | In-Silico Alanine-Scanning Mutagenesis | Identifies His3, Trp7, His8 catalytic anchors | `PASSED_IN_SILICO` |
+| **6** | In-Silico Alanine-Scanning Mutagenesis | Single-site Ala shifts (+0.08 to +0.39 kcal/mol) within Vina noise; P6A exposes Arg5 to trypsin | `PASSED_IN_SILICO` |
 | **7** | Explicit pH 5.2 Histidine Diprotonation | Formal charge +1 -> +3; 3AIC -7.71 vs 1SMD -7.89 kcal/mol (Delta = +0.48, slight 1SMD inversion within noise) | `INCONCLUSIVE_WITHIN_NOISE` |
 | **8** | Broad Oral Protease & Peptidase Check | Trypsin shielded (Arg5-Pro6); Trp4/Trp7 vulnerable to chymotrypsin | `AT_RISK` |
 | **9** | Additional Host Screen (RCSB 1LZ1 Lysozyme) | Human lysozyme DG = -6.67 kcal/mol (DeltaDeltaG = -1.52) | `PASSED_IN_SILICO` |
@@ -130,49 +130,55 @@ DrNemo-Caries-Foundry/
 ├── .github/workflows/
 │   └── ci.yml                           # Automated GitHub Actions test pipeline
 ├── assets/
-│   ├── hero_banner.png                  # Retina hero with 3D pocket schematic
-│   ├── fig1_biological_mechanism.png    # 2-panel biological mechanism diagram
-│   ├── fig2_pipeline_architecture.png   # 6-stage closed-loop pipeline
-│   ├── fig3_pocket_and_funnel.png       # Active site + attrition funnel
-│   ├── fig4_falsification_plate.png     # 2x2 validation data plate
-│   └── social_preview.png              # 1280x640 social preview (not embedded)
+│   ├── hero_banner_dark.png             # Dark-mode retina hero with 3D pocket schematic
+│   ├── hero_banner_light.png            # Light-mode retina hero
+│   ├── fig1_biological_mechanism_dark.png
+│   ├── fig1_biological_mechanism_light.png
+│   ├── fig2_pipeline_architecture_dark.png
+│   ├── fig2_pipeline_architecture_light.png
+│   ├── fig3_pocket_and_funnel_dark.png
+│   ├── fig3_pocket_and_funnel_light.png
+│   ├── fig4_falsification_plate_dark.png
+│   └── fig4_falsification_plate_light.png
 ├── data/
-│   ├── contenders_ledger.csv            # 194 contenders (155 design + 39 nulls)
-│   ├── foundry_contenders.sqlite        # Persistent contender vault
+│   ├── contenders_ledger.csv            # 259 contenders (220 design + 39 nulls)
+│   ├── foundry_contenders.sqlite        # Persistent SQLite contender vault
+│   ├── exhaustive_disproof_report.json  # 12-angle Popperian disproof report
 │   └── poses/                           # Docked PDBQT poses
 ├── demo_data/
-│   └── results/
-│       ├── master_scores.csv            # 20-generation demo scores
-│       └── falsification_benchmark.json # 6-angle benchmark data
+│   ├── receptors/                       # Calibrated receptor PDBQT models (3AIC, 1SMD, 1LZ1)
+│   └── results/                         # Benchmark falsification results
 ├── docs/
-│   └── index.html                       # Live 3Dmol.js studio (unchanged)
+│   ├── index.html                       # Live 3Dmol.js studio with Light/Dark mode
+│   └── vendor/                          # Vendored 3Dmol-min.js
 ├── manuscript/
-│   └── DrNemo_Preprint.pdf              # Preprint manuscript (unchanged)
+│   ├── DrNemo_Preprint.tex              # Full LaTeX manuscript
+│   └── DrNemo_Preprint.pdf              # Compiled publication preprint
+├── notebooks/                           # Educational SOP Jupyter notebooks (SOP_00..05)
 ├── scripts/
-│   ├── build_readme_visuals.py          # Playwright Retina PNG figure builder
-│   ├── capture_linkedin_media.py        # LinkedIn demo media render
-│   ├── generate_assets.py               # Legacy asset generator
-│   └── render_assets.py                 # Real-data raster generator
+│   ├── audit_cleanliness.py             # OpSec and integrity audit
+│   ├── build_educational_sops.py        # Educational SOP notebook builder
+│   ├── build_readme_visuals.py          # Playwright 3Dmol figure builder
+│   ├── continuous_hunter.py             # Continuous biophysical contender generator
+│   ├── dock_scrambled_1smd.py           # Parallel Vina/Vinardo 1SMD null docker
+│   ├── render_assets.py                 # Real-data raster generator
+│   ├── run_campaign.py                  # Real campaign discovery runner
+│   ├── run_exhaustive_disproof.py       # 12-angle Popperian disproof battery
+│   └── verify_educational_sops.py       # Notebook execution verifier
 ├── tests/
-│   └── test_foundry.py                  # Unit test suite
+│   └── test_foundry.py                  # Unit and single-source-of-truth test suite
 ├── analyzer.py                          # Local clinical synthesis
-├── auto_pilot.py                        # Autonomous lab worker
-├── automated_breeder.py                 # Evolutionary breeder
-├── autonomous_lab.py                    # Multi-workstation supervisor
 ├── biophysics_engine.py                 # AutoDock Vina, Vinardo, OpenMM engine
 ├── compliance_logger.py                 # Audit and provenance logger
 ├── dashboard.py                         # Streamlit 3D visualization platform
-├── directed_evolution.py                # Mutation and selection engine
-├── export_report.py                     # Summary report generator
-├── falsification_engine.py              # 6-angle Karl Popper falsification suite
-├── foundry_manager.py                   # Foundry CLI management
+├── falsification_engine.py              # Karl Popper falsification suite
+├── foundry_cli.py                       # Foundry command-line interface
+├── foundry_manager.py                   # Contender validation and parameter bounds
 ├── gtfb_orchestrator.py                 # LangGraph discovery state machine
-├── mutation_scanner.py                  # Sequence perturbation module
-├── phase_report.py                      # Milestone assessment tool
-├── solubility_shield.py                 # Chitosan-native pre-filter
+├── solubility_shield.py                 # Chitosan-native and Donnan pre-filter
 ├── targets.json                         # Oral pathogen virulence targets
 ├── vault.py                             # SQLite contender vault
-└── requirements.txt                     # Project dependencies
+└── requirements.txt                     # Pinned project dependencies
 ```
 
 ---

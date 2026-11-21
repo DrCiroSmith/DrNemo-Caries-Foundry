@@ -201,7 +201,7 @@ def worker_dock_contender(item: Dict[str, Any]) -> Dict[str, Any]:
     try:
         openmm_kj = relax_with_openmm(ligand_pdb, temp_k=310.15)
     except Exception:
-        openmm_kj = -1100.0
+        openmm_kj = None
 
     # 4. Physical Chemistry & Oral Barriers
     q72 = calc_net_charge_at_ph(seq, 7.2)

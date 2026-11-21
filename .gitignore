@@ -1,4 +1,4 @@
-# Dr. Nemo Caries Vaccine Foundry - Git Ignore
+# Dr. Nemo Caries Foundry - Git Ignore
 # Exclude transitory research data and large binaries
 
 # Research Outputs (root runtime directories)
@@ -11,7 +11,6 @@
 !demo_data/**
 demo_data/results/screenshots/
 !targets.json
-!expansion_stats.json
 
 # Python
 __pycache__/
@@ -40,3 +39,18 @@ data/poses/contender_g[1-9][0-9]*
 *.bbl
 *.blg
 *.out
+
+# Agent configuration, prompts, and temporary files
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+copilot-instructions.md
+linkedin_post_drnemo.md
+PLAN.md
+scripts/*_temp.py
+scripts/test_*.py
+scripts/check_*.py
+scripts/audit_all_poses.py
+scripts/list_rank1.py
+scripts/compare_leads.py
+scripts/calc_nulls.py

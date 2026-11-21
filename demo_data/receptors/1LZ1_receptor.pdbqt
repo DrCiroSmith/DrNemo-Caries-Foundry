@@ -1,4 +1,4 @@
-REMARK  Name = /home/drnemo/projects/portfolio_overhaul/DrNemo-Caries-Foundry/demo_data/receptors/1LZ1_receptor.pdb
+REMARK  Name = demo_data/receptors/1LZ1_receptor.pdb
 REMARK                            x       y       z     vdW  Elec       q    Type
 REMARK                         _______ _______ _______ _____ _____    ______ ____
 ATOM      1  N   LYS A   1       1.395  19.741  22.120  0.00  0.00    -0.123 N 

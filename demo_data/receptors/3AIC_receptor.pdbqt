@@ -1,4 +1,4 @@
-REMARK  Name = /home/drnemo/projects/portfolio_overhaul/DrNemo-Caries-Foundry/demo_data/receptors/3AIC_receptor.pdb
+REMARK  Name = demo_data/receptors/3AIC_receptor.pdb
 REMARK                            x       y       z     vdW  Elec       q    Type
 REMARK                         _______ _______ _______ _____ _____    ______ ____
 ATOM      1  N   ALA A   1     177.606  93.584 223.248  0.00  0.00    -0.123 N 

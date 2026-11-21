@@ -1,4 +1,4 @@
-REMARK  Name = /home/drnemo/projects/portfolio_overhaul/DrNemo-Caries-Foundry/demo_data/receptors/3AIC_native_ligand.pdb
+REMARK  Name = demo_data/receptors/3AIC_native_ligand.pdb
 REMARK  23 active torsions:
 REMARK  status: ('A' for Active; 'I' for Inactive)
 REMARK    1  A    between atoms: C_1  and  O_7

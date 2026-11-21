@@ -88,6 +88,12 @@ class ContenderVault:
         if "evaluated_at_utc" not in data:
             data["evaluated_at_utc"] = datetime.now(timezone.utc).isoformat()
 
+        # Hard physical gate: broken disulfide rings cannot be corroborated
+        ss_dist = data.get("ss_bond_angstrom")
+        if ss_dist is not None and (ss_dist < 1.95 or ss_dist > 2.25):
+            data["falsification_status"] = "FALSIFIED_BROKEN_DISULFIDE"
+            data["pareto_rank"] = 3
+
         fields = [
             "contender_id", "sequence", "generation", "heavy_atoms",
             "vina_3aic_kcal", "vinardo_3aic_kcal", "ligand_efficiency",
@@ -192,12 +198,29 @@ class ContenderVault:
               AND protease_sites = 0
               AND selectivity_ddg <= -0.80
               AND q_ph60 <= 4.0
+              AND ss_bond_angstrom >= 1.95 AND ss_bond_angstrom <= 2.25
             ORDER BY pareto_rank ASC, vina_3aic_kcal ASC, selectivity_ddg ASC
             LIMIT 1
         """)
         row = cur.fetchone()
         conn.close()
         return dict(row) if row else None
+
+    def get_rank_1_contenders(self) -> List[Dict[str, Any]]:
+        """Retrieves all Rank 1 corroborated contenders ordered by affinity."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT * FROM contenders
+            WHERE pareto_rank = 1
+              AND falsification_status = 'CORROBORATED'
+              AND ss_bond_angstrom >= 1.95 AND ss_bond_angstrom <= 2.25
+            ORDER BY vina_3aic_kcal ASC, selectivity_ddg ASC
+        """)
+        rows = cur.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
 
     def export_ledger_csv(self):
         """Mirrors all contenders to data/contenders_ledger.csv."""

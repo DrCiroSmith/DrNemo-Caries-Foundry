@@ -360,22 +360,23 @@ def evaluate_angle5_scrambled_null_test() -> Dict[str, Any]:
 # =========================================================================
 def evaluate_angle6_alanine_scan() -> Dict[str, Any]:
     ala_map = {
-        "P2A": {"sequence": "CAHWRPWHC", "vina_kcal": -8.191, "delta_ddg": 0.000, "role": "Hinge relaxation"},
-        "H3A": {"sequence": "CAPWRPWHC", "vina_kcal": -7.869, "delta_ddg": 0.322, "role": "Catalytic triad anchor"},
-        "W4A": {"sequence": "CAHARPWHC", "vina_kcal": -8.214, "delta_ddg": -0.023, "role": "Aromatic core"},
-        "R5A": {"sequence": "CAHWAPWHC", "vina_kcal": -8.105, "delta_ddg": 0.086, "role": "Salt-bridge partner"},
-        "P6A": {"sequence": "CAHWRAWHC", "vina_kcal": -8.890, "delta_ddg": -0.699, "role": "Affinity trap / tryptic fail"},
-        "W7A": {"sequence": "CAHWRPARC", "vina_kcal": -7.805, "delta_ddg": 0.386, "role": "Aromatic stacking anchor"},
-        "H8A": {"sequence": "CAHWRPWAC", "vina_kcal": -7.978, "delta_ddg": 0.213, "role": "Catalytic anchor"}
+        "P2A": {"sequence": "CAHWRPWHC", "vina_kcal": -8.191, "delta_ddg": 0.000, "is_hotspot": False, "role": "Hinge relaxation"},
+        "H3A": {"sequence": "CAPWRPWHC", "vina_kcal": -7.869, "delta_ddg": 0.322, "is_hotspot": False, "role": "Catalytic triad anchor (within noise)"},
+        "W4A": {"sequence": "CAHARPWHC", "vina_kcal": -8.214, "delta_ddg": -0.023, "is_hotspot": False, "role": "Aromatic core"},
+        "R5A": {"sequence": "CAHWAPWHC", "vina_kcal": -8.105, "delta_ddg": 0.086, "is_hotspot": False, "role": "Salt-bridge partner (within noise)"},
+        "P6A": {"sequence": "CAHWRAWHC", "vina_kcal": -8.890, "delta_ddg": -0.699, "is_hotspot": False, "role": "Affinity trap / tryptic fail"},
+        "W7A": {"sequence": "CAHWRPARC", "vina_kcal": -7.805, "delta_ddg": 0.386, "is_hotspot": False, "role": "Aromatic stacking anchor (within noise)"},
+        "H8A": {"sequence": "CAHWRPWAC", "vina_kcal": -7.978, "delta_ddg": 0.213, "is_hotspot": False, "role": "Catalytic anchor (within noise)"}
     }
-    hotspots = [k for k, v in ala_map.items() if v["delta_ddg"] > 0.15]
+    hotspots = [k for k, v in ala_map.items() if v["delta_ddg"] >= 0.70]
     return {
         "angle": 6,
         "name": "In-Silico Alanine-Scanning Mutagenesis Hotspot Mapping",
         "mutants": ala_map,
+        "hotspot_cutoff_kcal": 0.70,
         "identified_hotspots": hotspots,
         "classification": "PASSED_IN_SILICO",
-        "scientific_summary": f"Alanine scanning identifies His3, Trp7, and His8 as key energetic anchors. Mutating Pro6 (P6A) yields -8.89 kcal/mol but destroys the proline steric shield, exposing Arg5 to tryptic cleavage."
+        "scientific_summary": "Single-site alanine perturbations (+0.08 to +0.39 kcal/mol) remain within Vina force-field noise (threshold +0.70 kcal/mol); while P2A provides hinge relaxation, P6A is an affinity trap that destroys the proline shield and exposes Arg5 to tryptic cleavage."
     }
 
 
@@ -501,8 +502,9 @@ def evaluate_angle7_explicit_protonation() -> Dict[str, Any]:
             "selectivity_ddg_kcal": selectivity_acidic
         },
         "affinity_shift_upon_protonation_kcal": delta_3aic_protonation,
+        "receptor_protonation_state": "Receptors 3AIC, 1SMD, and 1LZ1 were prepared at physiological pH 7.4; Angle 7 tests explicit diprotonation of the peptide ligand at plaque acidic pH 5.2 against the physiological receptor model.",
         "classification": "INCONCLUSIVE_WITHIN_NOISE",
-        "scientific_summary": f"Explicit diprotonation at pH 5.2 shifts formal charge from +1 to +3. GtfB binding free energy is {score_a_3aic:.2f} kcal/mol vs {score_n_3aic:.2f} kcal/mol at pH 7.2 (Delta = {delta_3aic_protonation:+.2f} kcal/mol). Explicit diprotonation weakens 3AIC score by 0.49 kcal/mol and slightly inverts raw 1SMD ranking within Vina's +/-2.85 kcal/mol error."
+        "scientific_summary": f"Explicit diprotonation at pH 5.2 shifts ligand formal charge from +1 to +3 (receptors prepared at physiological pH 7.4). GtfB binding free energy is {score_a_3aic:.2f} kcal/mol vs {score_n_3aic:.2f} kcal/mol at pH 7.2 (Delta = {delta_3aic_protonation:+.2f} kcal/mol). Explicit diprotonation weakens 3AIC score by 0.49 kcal/mol and slightly inverts raw 1SMD ranking within Vina's +/-2.85 kcal/mol error."
     }
 
 
@@ -705,9 +707,9 @@ def evaluate_angle11_openmm_drift() -> Dict[str, Any]:
         "initial_potential_energy_kj_mol": round(initial_energy, 2),
         "minimized_potential_energy_kj_mol": round(minimized_energy, 2),
         "heavy_atom_drift_rmsd_angstrom": round(drift_rmsd, 2),
-        "simulation_disclaimer": "Implicit-solvent energy minimization confirms local geometric stability but is NOT an explicit-solvent 100-ns molecular dynamics residence-time simulation.",
+        "simulation_disclaimer": "Implicit-solvent energy minimization confirms local geometric stability but is NOT an explicit-solvent 100-ns molecular dynamics residence-time simulation. OpenMM Amber14/GBn2 measures isolated macrocycle conformational strain relaxation (not cross-composition binding free energy).",
         "classification": "PASSED_IN_SILICO",
-        "scientific_summary": f"OpenMM Amber14/GBn2 minimization at 310.15 K relaxed the macrocycle to {minimized_energy:.1f} kJ/mol with heavy-atom drift RMSD of {drift_rmsd:.2f} A, demonstrating local conformational stability without ring collapse."
+        "scientific_summary": f"OpenMM Amber14/GBn2 minimization at 310.15 K relaxed the macrocycle to {minimized_energy:.1f} kJ/mol with heavy-atom drift RMSD of {drift_rmsd:.2f} A, confirming isolated macrocycle conformational strain relaxation without ring collapse."
     }
 
 

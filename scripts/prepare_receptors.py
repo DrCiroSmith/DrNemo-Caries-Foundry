@@ -20,7 +20,7 @@ class SMDChainSelect(Select):
         return residue.get_parent().id == "A" and residue.id[0] == " "
 
 def prepare_targets():
-    base_dir = Path("/home/drnemo/projects/portfolio_overhaul/DrNemo-Caries-Foundry")
+    base_dir = Path(__file__).resolve().parent.parent
     receptors_dir = base_dir / "demo_data" / "receptors"
     receptors_dir.mkdir(parents=True, exist_ok=True)
     

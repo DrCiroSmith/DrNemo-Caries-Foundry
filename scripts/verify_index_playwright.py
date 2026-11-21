@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
-html_path = Path("/home/drnemo/projects/portfolio_overhaul/DrNemo-Caries-Foundry/docs/index.html")
+html_path = Path(__file__).resolve().parent.parent / "docs" / "index.html"
 
 console_errors = []
 console_logs = []

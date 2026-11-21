@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-ROOT = Path("/home/drnemo/projects/portfolio_overhaul/DrNemo-Caries-Foundry")
+ROOT = Path(__file__).resolve().parent.parent
 RESULTS_DIR = ROOT / "demo_data" / "results"
 DOCS_HTML = ROOT / "docs" / "index.html"
 

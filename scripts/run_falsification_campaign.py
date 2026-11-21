@@ -24,7 +24,7 @@ from solubility_shield import (
     count_protease_cleavage_sites
 )
 
-BASE_DIR = Path("/home/drnemo/projects/portfolio_overhaul/DrNemo-Caries-Foundry")
+BASE_DIR = Path(__file__).resolve().parent.parent
 RECEPTORS_DIR = BASE_DIR / "demo_data" / "receptors"
 RESULTS_DIR = BASE_DIR / "demo_data" / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)

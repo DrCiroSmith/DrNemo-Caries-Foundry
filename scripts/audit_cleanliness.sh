@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # audit_cleanliness.sh - Precise forbidden-token scan (no false positives)
-cd /home/drnemo/projects/portfolio_overhaul/DrNemo-Caries-Foundry
+cd "$(dirname "$0")/.."
 
 echo "=== AUDIT: SCANNING CODE & METRICS (EXCLUDING ATOM COORDINATE FILES) ==="
 

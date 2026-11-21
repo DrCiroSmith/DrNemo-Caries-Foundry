@@ -172,7 +172,7 @@ def evaluate_candidate(seq: str, gen: int, vault: ContenderVault, priority_id: i
             openmm_kj = relax_with_openmm(pdb_ligand, temp_k=310.15)
         except Exception as e:
             logger.warning(f"OpenMM relaxation failed for {seq}: {e}")
-            openmm_kj = -950.0
+            openmm_kj = None
 
         # 5. Solubility & Oral Biochemistry
         q72 = calc_net_charge_at_ph(seq, 7.2)
@@ -183,14 +183,17 @@ def evaluate_candidate(seq: str, gen: int, vault: ContenderVault, priority_id: i
         protease = count_protease_cleavage_sites(seq)
         p_sites = protease["cleavage_site_count"]
 
-        # Falsification gates
+        # Hard physical gate on disulfide geometry
+        ss_ok = (ss_dist is not None and 1.95 <= ss_dist <= 2.25)
         donnan_ok = q60 <= MAX_DONNAN_CHARGE_PH6
         protease_ok = p_sites == 0
         stephan_ok = delta_q >= 1.0
         affinity_ok = vina_3aic < -7.5
         selectivity_ok = selectivity_ddg <= -0.80
 
-        if donnan_ok and protease_ok and stephan_ok and affinity_ok and selectivity_ok:
+        if not ss_ok:
+            status = "FALSIFIED_BROKEN_DISULFIDE"
+        elif donnan_ok and protease_ok and stephan_ok and affinity_ok and selectivity_ok:
             status = "CORROBORATED"
         elif not donnan_ok or not protease_ok or not stephan_ok:
             status = "FALSIFIED_ORAL_BARRIER"
