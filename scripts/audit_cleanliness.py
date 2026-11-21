@@ -10,6 +10,9 @@ TARGETS = [
     'falsification_engine.py',
     'gtfb_orchestrator.py',
     'solubility_shield.py',
+    'vault.py',
+    'foundry_manager.py',
+    'scripts/continuous_hunter.py',
     'scripts/build_readme_visuals.py',
     'scripts/run_exhaustive_disproof.py'
 ]
@@ -29,10 +32,10 @@ def check_file(rel_path):
             dash_matches.append((line_no, line))
         elif '---' in line:
             stripped = line.strip()
-            # allow LaTeX \hline or markdown horizontal rule if line is just ---
+            # allow LaTeX \hline or markdown horizontal rule if line is just --- or markdown table row
             if rel_path.endswith('.tex') and stripped == '---':
                 continue
-            if rel_path.endswith('.md') and stripped in ['---', '----', '-----']:
+            if rel_path.endswith('.md') and (stripped in ['---', '----', '-----'] or stripped.startswith('|')):
                 continue
             dash_matches.append((line_no, line))
         elif '--' in line:
@@ -40,7 +43,7 @@ def check_file(rel_path):
             if '<!--' in stripped or '-->' in stripped or '|--' in stripped or '--|' in stripped:
                 continue
             # check if it is a CLI flag or python comment
-            if not any(flag in line for flag in ['--receptor', '--ligand', '--center', '--size', '--cpu', '--exhaustiveness', '--out', '--server', '--host', '--port', '--stat', '--config', '--seed', '--help', '--score_only', '--scoring', '--headless', '--address', '--enable-webgl', '--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--use-gl', '--use-angle']):
+            if not any(flag in line for flag in ['--receptor', '--ligand', '--center', '--size', '--cpu', '--exhaustiveness', '--out', '--server', '--host', '--port', '--stat', '--config', '--seed', '--help', '--score_only', '--scoring', '--headless', '--address', '--enable-webgl', '--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--use-gl', '--use-angle', '--single-cycle']):
                 # In prose double hyphens like "word -- word" or "word--word"
                 if re.search(r'\w\s*--\s*\w', line):
                     dash_matches.append((line_no, line))

@@ -1,5 +1,5 @@
 """
-Foundry Manager — Core Controller for DrNemo Continuous Hunter & Custom Sequence Lab
+Foundry Manager: Core Controller for DrNemo Continuous Hunter & Custom Sequence Lab
 Author: Dr. Roi Castrellon, DDS (DrNemo Caries Foundry)
 
 Unified daemon management, process signaling (SIGSTOP/SIGCONT), priority queueing,
@@ -262,13 +262,32 @@ def run_immediate_cycle() -> Tuple[bool, str]:
         return False, f"Failed to launch immediate cycle: {e}"
 
 
+def compute_dynamic_box_size(seq: str) -> float:
+    """Computes dynamic search box size (in Angstroms) based on sequence length."""
+    seq_len = len(seq.strip())
+    # Baseline 28.0 A for <= 9 residues, expanding by 1.2 A per additional residue
+    return round(28.0 + max(0.0, (seq_len - 9) * 1.2), 2)
+
+
+def get_torsion_warning(seq: str) -> Optional[str]:
+    """Generates a warning if sequence length exceeds 20 residues due to Vina torsion explosion."""
+    seq_len = len(seq.strip())
+    if seq_len > 20:
+        return (
+            f"Caution: Macrocycle length ({seq_len} residues) exceeds 20 residues. "
+            "AutoDock Vina search efficiency degrades exponentially with high rotatable torsion counts. "
+            "Consider constraining key dihedrals or using rigid-core subsegments."
+        )
+    return None
+
+
 def validate_cyclic_sequence(seq: str) -> Tuple[bool, str]:
-    """Validates that a sequence is a valid cyclic peptide starting and ending with C."""
+    """Validates that a sequence is a valid cyclic peptide starting and ending with C (5 to 30 residues)."""
     seq = seq.strip().upper()
     if not seq:
         return False, "Sequence cannot be empty."
-    if len(seq) < 5 or len(seq) > 20:
-        return False, f"Sequence length {len(seq)} outside supported range (5-20 residues)."
+    if len(seq) < 5 or len(seq) > 30:
+        return False, f"Sequence length {len(seq)} outside supported range (5-30 residues)."
     if not (seq.startswith("C") and seq.endswith("C")):
         return False, "Cyclic peptide must start and end with Cysteine ('C')."
     invalid_chars = set(seq) - set(ALL_AA)
@@ -281,9 +300,10 @@ def precheck_sequence(seq: str) -> Dict[str, Any]:
     """
     Runs instant biophysical pre-checks:
     - Net Charge at pH 7.2, 6.0, 5.2
-    - Stephan ΔQ switch
+    - Stephan Delta Q switch
     - Donnan ceiling pass/fail (at pH 6.0)
     - Protease cleavage sites count
+    - Dynamic box sizing and torsion count warning
     """
     seq = seq.strip().upper()
     q72 = calc_net_charge_at_ph(seq, 7.2)
@@ -298,8 +318,12 @@ def precheck_sequence(seq: str) -> Dict[str, Any]:
     stephan_ok = delta_q >= 1.0
     protease_ok = p_sites == 0
 
+    box_size = compute_dynamic_box_size(seq)
+    torsion_warn = get_torsion_warning(seq)
+
     return {
         "sequence": seq,
+        "length": len(seq),
         "q_ph72": q72,
         "q_ph60": q60,
         "q_ph52": q52,
@@ -308,7 +332,9 @@ def precheck_sequence(seq: str) -> Dict[str, Any]:
         "donnan_pass": donnan_ok,
         "stephan_pass": stephan_ok,
         "protease_pass": protease_ok,
-        "precheck_passed": bool(donnan_ok and stephan_ok and protease_ok)
+        "precheck_passed": bool(donnan_ok and stephan_ok and protease_ok),
+        "box_size_angstrom": box_size,
+        "torsion_warning": torsion_warn
     }
 
 
@@ -364,7 +390,7 @@ def enqueue_sequence_for_docking(seq: str, generation: int = 4) -> Tuple[bool, s
         run_immediate_cycle()
         msg = f"Enqueued #{item_id}: {clean_seq} (Daemon stopped -> Launched dedicated background worker)"
     elif daemon["status"] == "PAUSED":
-        msg = f"Enqueued #{item_id}: {clean_seq} (Daemon is PAUSED — resume to begin processing)"
+        msg = f"Enqueued #{item_id}: {clean_seq} (Daemon is PAUSED: resume to begin processing)"
     else:
         msg = f"Enqueued #{item_id}: {clean_seq} (Active daemon will pick up on next cycle)"
 

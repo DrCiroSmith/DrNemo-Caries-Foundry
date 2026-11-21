@@ -13,8 +13,8 @@
       "vinardo_3aic_kcal": -5.186,
       "hungarian_rmsd_angstrom": 4.51,
       "centroid_displacement_angstrom": 3.03,
-      "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "Re-docking crystallographic acarbose into uncompressed 28 A grid reproduces the active binding groove (4.51 A Hungarian RMSD, -7.915 kcal/mol), confirming physical grid calibration."
+      "classification": "INCONCLUSIVE_WITHIN_NOISE",
+      "scientific_summary": "Re-docking crystallographic acarbose into uncompressed 28 A grid reproduces the active binding groove (4.51 A Hungarian RMSD, -7.915 kcal/mol). Cleft localized, but 4.51 A RMSD exceeds 2.0-4.0 A rigid redocking standard due to wide 28 A cleft and glycosidic torsion degeneracy."
     },
     {
       "angle": 2,
@@ -32,8 +32,8 @@
       "mean_pairwise_rmsd_angstrom": 9.24,
       "max_pairwise_rmsd_angstrom": 12.19,
       "centroid_sd_angstrom": 0.46,
-      "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "Across N=5 independent conformer and docking seeds, CAHWRPWHC converged with score mean -8.10 +/- 0.37 kcal/mol and mean pairwise RMSD 9.24 A, demonstrating robust binding pose convergence in the active site."
+      "classification": "PASSED_IN_SILICO",
+      "scientific_summary": "Across N=5 independent conformer and docking seeds, CAHWRPWHC converged with score mean -8.10 +/- 0.37 kcal/mol and tight active cleft centroid SD of 0.46 A, demonstrating reproducible localization in the catalytic cleft."
     },
     {
       "angle": 3,
@@ -191,8 +191,8 @@
         "selectivity_ddg_kcal": 0.435
       },
       "affinity_shift_upon_protonation_kcal": 0.485,
-      "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "Explicit diprotonation at pH 5.2 shifts formal charge from +1 to +3. GtfB binding free energy is -7.71 kcal/mol vs -8.19 kcal/mol at pH 7.2 (Delta = +0.48 kcal/mol), confirming that acidic protonation maintains active site engagement without compromising host selectivity."
+      "classification": "INCONCLUSIVE_WITHIN_NOISE",
+      "scientific_summary": "Explicit diprotonation at pH 5.2 shifts formal charge from +1 to +3. GtfB binding free energy is -7.71 kcal/mol vs -8.19 kcal/mol at pH 7.2 (Delta = +0.48 kcal/mol). Explicit diprotonation weakens 3AIC score by 0.49 kcal/mol and slightly inverts raw 1SMD ranking within Vina's +/-2.85 kcal/mol error."
     },
     {
       "angle": 8,
@@ -237,19 +237,19 @@
       "cyclization_benefit_kcal": 1.059,
       "rotatable_bonds_linear": 28,
       "rotatable_bonds_cyclic": 14,
-      "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "Linear non-cyclized peptide docked with -9.25 kcal/mol vs -8.19 kcal/mol for cyclic CAHWRPWHC (DeltaDeltaG = 1.06 kcal/mol). Cyclization halves the rotatable bond count (14 vs 28), providing rigid pre-organization and preventing aqueous conformational entropy loss."
+      "classification": "INCONCLUSIVE_WITHIN_NOISE",
+      "scientific_summary": "Linear non-cyclized peptide docked with -9.25 kcal/mol vs -8.19 kcal/mol for cyclic CAHWRPWHC (DeltaDeltaG = 1.06 kcal/mol). Raw Vina scores flexible linear peptide 1.06 kcal/mol stronger than macrocycle, demonstrating Vina's under-penalization of unfolded conformational entropy; requires wet-lab ITC Kd."
     },
     {
       "angle": 11,
       "name": "OpenMM Implicit-Solvent Unrestrained Relaxation Drift",
       "forcefield": "Amber14 / GBn2 implicit solvent at 310.15 K",
-      "initial_potential_energy_kj_mol": 855.83,
-      "minimized_potential_energy_kj_mol": -1258.43,
-      "heavy_atom_drift_rmsd_angstrom": 0.94,
+      "initial_potential_energy_kj_mol": 765.33,
+      "minimized_potential_energy_kj_mol": -1258.1,
+      "heavy_atom_drift_rmsd_angstrom": 0.92,
       "simulation_disclaimer": "Implicit-solvent energy minimization confirms local geometric stability but is NOT an explicit-solvent 100-ns molecular dynamics residence-time simulation.",
       "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "OpenMM Amber14/GBn2 minimization at 310.15 K relaxed the macrocycle to -1258.4 kJ/mol with heavy-atom drift RMSD of 0.94 A, demonstrating local conformational stability without ring collapse."
+      "scientific_summary": "OpenMM Amber14/GBn2 minimization at 310.15 K relaxed the macrocycle to -1258.1 kJ/mol with heavy-atom drift RMSD of 0.92 A, demonstrating local conformational stability without ring collapse."
     },
     {
       "angle": 12,
@@ -266,8 +266,8 @@
     }
   ],
   "classification_summary": {
-    "PASSED_IN_SILICO": 7,
-    "INCONCLUSIVE_WITHIN_NOISE": 4,
+    "PASSED_IN_SILICO": 5,
+    "INCONCLUSIVE_WITHIN_NOISE": 6,
     "AT_RISK": 1,
     "FALSIFIED": 0
   },

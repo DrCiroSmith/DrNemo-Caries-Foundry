@@ -1,5 +1,5 @@
 """
-Foundry Contender Vault — SQLite Database and Ledger for Cyclic Peptide Candidates
+Foundry Contender Vault: SQLite Database and Ledger for Cyclic Peptide Candidates
 Author: Dr. Roi Castrellon, DDS (DrNemo Caries Foundry)
 
 Schema: 20 fields recording AutoDock Vina, Vinardo, OpenMM relaxation,
@@ -64,6 +64,7 @@ class ContenderVault:
         cur.execute("CREATE INDEX IF NOT EXISTS idx_status ON contenders(falsification_status);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_vina ON contenders(vina_3aic_kcal);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_rank ON contenders(pareto_rank);")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_sequence ON contenders(sequence);")
 
         cur.execute("""
             CREATE TABLE IF NOT EXISTS priority_queue (
@@ -125,6 +126,15 @@ class ContenderVault:
         row = cur.fetchone()
         conn.close()
         return dict(row) if row else None
+
+    def has_sequence(self, sequence: str) -> bool:
+        """Checks if a sequence already exists in the vault with O(1) indexed lookup."""
+        conn = sqlite3.connect(self.db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT 1 FROM contenders WHERE sequence = ? LIMIT 1;", (sequence.strip().upper(),))
+        row = cur.fetchone()
+        conn.close()
+        return row is not None
 
     def get_all_contenders(self) -> List[Dict[str, Any]]:
         """Retrieves all contenders ordered by Pareto rank and Vina binding energy."""

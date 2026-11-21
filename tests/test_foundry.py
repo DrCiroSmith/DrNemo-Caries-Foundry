@@ -438,3 +438,145 @@ def test_foundry_manager_validation_and_mutation():
     assert pre["donnan_pass"] is True
     assert pre["protease_pass"] is True
 
+
+def test_vault_has_sequence_and_index():
+    """Verify O(1) indexed sequence lookup and sequence index creation in ContenderVault."""
+    import sqlite3
+    import tempfile
+    from vault import ContenderVault
+
+    with tempfile.TemporaryDirectory() as td:
+        db_path = Path(td) / "test_has_seq.sqlite"
+        vault = ContenderVault(db_path=db_path)
+
+        # Check idx_sequence index exists in SQLite
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_sequence';")
+        assert cur.fetchone() is not None, "idx_sequence index not found in schema"
+        conn.close()
+
+        # Check has_sequence before and after adding
+        assert vault.has_sequence("CAHWRPWHC") is False
+
+        vault.add_contender({
+            "sequence": "CAHWRPWHC",
+            "generation": 1,
+            "heavy_atoms": 84,
+            "vina_3aic_kcal": -8.191,
+            "vinardo_3aic_kcal": -4.990,
+            "ligand_efficiency": 0.098,
+            "vina_1smd_kcal": -7.343,
+            "selectivity_ddg": -0.848,
+            "openmm_relaxed_kj": -1234.68,
+            "ss_bond_angstrom": 2.06,
+            "q_ph72": 1.129,
+            "q_ph60": 2.046,
+            "q_ph52": 2.747,
+            "delta_q_stephan": 1.618,
+            "protease_sites": 0,
+            "pareto_rank": 1,
+            "falsification_status": "CORROBORATED",
+            "pose_sha256": "d476318723b90a0c6d622e46383b0815d8a5c805ac4d2a1631c77e112f57178b",
+            "evaluated_at_utc": "2026-11-20T12:00:00Z"
+        })
+
+        assert vault.has_sequence("CAHWRPWHC") is True
+        assert vault.has_sequence("cahwrpwhc") is True  # Case insensitive
+        assert vault.has_sequence("CRRRWWRRRRC") is False
+
+
+def test_variable_length_validation_and_dynamic_box_sizing():
+    """Verify validation up to 30 residues, dynamic box sizing, and torsion warning."""
+    from foundry_manager import (
+        validate_cyclic_sequence,
+        compute_dynamic_box_size,
+        get_torsion_warning,
+        precheck_sequence
+    )
+
+    # Valid lengths across 5 to 30 residues
+    ok_5, _ = validate_cyclic_sequence("CAAAC")
+    assert ok_5 is True
+
+    ok_9, _ = validate_cyclic_sequence("CAHWRPWHC")
+    assert ok_9 is True
+
+    ok_18, _ = validate_cyclic_sequence("CAHWRPWHCAHWRPWHAC")
+    assert ok_18 is True
+
+    ok_30, _ = validate_cyclic_sequence("C" + "A" * 28 + "C")
+    assert ok_30 is True
+
+    # Invalid lengths (< 5 or > 30)
+    bad_4, err4 = validate_cyclic_sequence("CAAC")
+    assert bad_4 is False
+    assert "outside supported range" in err4
+
+    bad_31, err31 = validate_cyclic_sequence("C" + "A" * 30 + "C")
+    assert bad_31 is False
+    assert "outside supported range" in err31
+
+    # Dynamic box sizing: 28.0 A for <= 9 residues, expands 1.2 A per additional residue
+    assert compute_dynamic_box_size("CAHWRPWHC") == 28.0
+    assert compute_dynamic_box_size("C" + "A" * 7 + "C") == 28.0
+    # Length 15: 28.0 + (15 - 9) * 1.2 = 28.0 + 7.2 = 35.2 A
+    assert compute_dynamic_box_size("C" + "A" * 13 + "C") == 35.2
+    # Length 30: 28.0 + (30 - 9) * 1.2 = 28.0 + 25.2 = 53.2 A
+    assert compute_dynamic_box_size("C" + "A" * 28 + "C") == 53.2
+
+    # Vina torsion warning above 20 residues
+    assert get_torsion_warning("CAHWRPWHC") is None
+    assert get_torsion_warning("C" + "A" * 18 + "C") is None  # 20 residues: no warning
+    warn = get_torsion_warning("C" + "A" * 19 + "C")  # 21 residues: warning
+    assert warn is not None
+    assert "exceeds 20 residues" in warn
+
+    # Precheck includes box_size and torsion_warning
+    pre = precheck_sequence("C" + "A" * 21 + "C")
+    assert pre["length"] == 23
+    assert pre["box_size_angstrom"] == 44.8
+    assert pre["torsion_warning"] is not None
+
+
+def test_continuous_hunter_indel_generation():
+    """Verify continuous hunter indel generator respects 6..18 residue bounds and O(1) vault check."""
+    import tempfile
+    from vault import ContenderVault
+    from scripts.continuous_hunter import generate_candidate
+
+    with tempfile.TemporaryDirectory() as td:
+        db_path = Path(td) / "test_hunter.sqlite"
+        vault = ContenderVault(db_path=db_path)
+
+        # Seed top contenders
+        for seq in ["CAHWRPWHC", "CPHWRPWHC", "CAHWRPWAC"]:
+            vault.add_contender({
+                "sequence": seq,
+                "generation": 1,
+                "heavy_atoms": 84,
+                "vina_3aic_kcal": -8.1,
+                "vinardo_3aic_kcal": -4.9,
+                "ligand_efficiency": 0.098,
+                "vina_1smd_kcal": -7.3,
+                "selectivity_ddg": -0.8,
+                "openmm_relaxed_kj": -1200.0,
+                "ss_bond_angstrom": 2.06,
+                "q_ph72": 1.1,
+                "q_ph60": 2.0,
+                "q_ph52": 2.7,
+                "delta_q_stephan": 1.6,
+                "protease_sites": 0,
+                "pareto_rank": 1,
+                "falsification_status": "CORROBORATED",
+                "pose_sha256": "dummy",
+                "evaluated_at_utc": "2026-11-20T12:00:00Z"
+            })
+
+        for _ in range(20):
+            cand, gen = generate_candidate(vault)
+            assert cand.startswith("C") and cand.endswith("C")
+            assert 6 <= len(cand) <= 18
+            assert vault.has_sequence(cand) is False
+
+

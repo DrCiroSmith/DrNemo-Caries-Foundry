@@ -813,26 +813,26 @@ with tab_popper:
                 "Summary": a.get("scientific_summary")
             })
         st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True, hide_index=True)
-        st.markdown(f"**Battery Verdict:** 7 Passed in Silico | 4 Inconclusive within Noise | 1 At Risk | 0 Falsified")
+        st.markdown(f"**Battery Verdict:** 5 Passed in Silico | 6 Inconclusive within Noise | 1 At Risk | 0 Falsified")
         st.divider()
 
     col_lead, col_naive = st.columns(2)
     with col_lead:
         st.info("### 🏆 Evaluated Candidate: `CAHWRPWHC` (P2A Hinge Variant)")
         st.markdown("""
-        * **Angle 1 (3AIC Pocket Binding):** **-8.191 kcal/mol** Vina / **-4.990 kcal/mol** Vinardo (Deep active-site cleft engagement; 4.51 Å Hungarian RMSD co-crystal calibration).
-        * **Angle 2 (Multi-Seed N=5):** Score mean **-8.10 ± 0.37 kcal/mol**, RMSD **9.24 Å** (`INCONCLUSIVE_WITHIN_NOISE`).
+        * **Angle 1 (3AIC Redocking Calibration):** **-7.915 kcal/mol**, RMSD **4.51 Å** (exceeds 2.0-4.0 Å rigid standard due to wide cleft and glycosidic flexibility; `INCONCLUSIVE_WITHIN_NOISE`).
+        * **Angle 2 (Multi-Seed N=5):** Score mean **-8.10 ± 0.37 kcal/mol**, centroid SD **0.46 Å** (`PASSED_IN_SILICO`).
         * **Angle 3 (Pose Mode Clustering):** Mode 1-2 gap **+0.10 kcal/mol**, centroid shift **1.74 Å** (`INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 4 (1SMD Selectivity Reality Check):** ΔΔG = **-0.85 kcal/mol** vs Vina SE ~2.85 kcal/mol (`INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 5 (Null Permutation, N=39):** Z = **+0.32σ**, p = **0.5897** (null mean -8.343 ± 0.470 kcal/mol; static docking fails to reject H0; `INCONCLUSIVE_WITHIN_NOISE`).
-        * **Angle 6 (Alanine Hotspot Scan):** His3 acid-switch (-7.869), His8 anchor (-7.978), Trp7 hydrophobic packing (-7.805).
-        * **Angle 7 (Explicit pH 5.2):** Diprotonated His **-7.706 kcal/mol** in 3AIC / **-7.891 kcal/mol** in 1SMD (`PASSED_IN_SILICO`).
+        * **Angle 6 (Alanine Hotspot Scan):** His3 acid-switch (-7.869), His8 anchor (-7.978), Trp7 hydrophobic packing (-7.805) (`PASSED_IN_SILICO`).
+        * **Angle 7 (Explicit pH 5.2):** Diprotonated His **-7.706 kcal/mol** in 3AIC / **-7.891 kcal/mol** in 1SMD (slight ranking inversion within Vina SE; `INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 8 (Protease Vulnerability):** Trypsin shielded by Pro6, but chymotrypsin/cathepsin G cleaves Trp4/Trp7 (`AT_RISK`).
         * **Angle 9 (Human Lysozyme 1LZ1):** **-6.67 kcal/mol** (ΔΔG = **-1.52 kcal/mol** vs 3AIC; `PASSED_IN_SILICO`).
-        * **Angle 10 (Conformational Control):** Cyclic CAHWRPWHC vs Linear AHWRPWH (14 vs 28 rotatable bonds; rigid pre-organization; `PASSED_IN_SILICO`).
-        * **Angle 11 (OpenMM Relaxation):** Amber14/GBn2 310.15 K minimization drift **0.94 Å** (`PASSED_IN_SILICO`).
+        * **Angle 10 (Conformational Control):** Linear AHWRPWH **-9.25 kcal/mol** vs cyclic **-8.19 kcal/mol** (Vina under-penalizes unfolded entropy; `INCONCLUSIVE_WITHIN_NOISE`).
+        * **Angle 11 (OpenMM Relaxation):** Amber14/GBn2 310.15 K minimization drift **0.92 Å** (`PASSED_IN_SILICO`).
         * **Angle 12 (Chitosan & Stephan Switch):** Net charge **+2.05 ≤ +4.0**, **ΔQ = +1.618** (`PASSED_IN_SILICO`).
-        * **Honest Verdict:** **7 Passed in Silico, 4 Inconclusive within Noise, 1 At Risk, 0 Falsified.**
+        * **Honest Verdict:** **5 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 0 Falsified.**
         """)
 
     with col_naive:

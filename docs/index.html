@@ -850,24 +850,24 @@
           <!-- Angle 1 -->
           <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <strong style="color: var(--teal-primary);">Angle 1: RCSB 3AIC Co-Crystal Redocking</strong>
+              <strong style="color: var(--amber-accent);">Angle 1: RCSB 3AIC Co-Crystal Redocking</strong>
               <div style="color: var(--text-muted); font-size: 11px;">Native Acarbose redocked in active site cleft (Asp477, Glu515, Asp588)</div>
             </div>
             <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
-              <span style="color: var(--emerald-accent); font-weight: 700;">PASSED</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">RMSD: 4.51 Å | -7.915 kcal/mol</span>
+              <span style="color: var(--amber-accent); font-weight: 700;">INCONCLUSIVE</span><br>
+              <span style="color: var(--text-sub); font-size: 11px;">RMSD: 4.51 Å > 2.0-4.0 Å std | -7.915 kcal/mol</span>
             </div>
           </div>
 
           <!-- Angle 2 -->
           <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <strong style="color: var(--amber-accent);">Angle 2: Multi-Seed Conformer &amp; Docking Reproducibility</strong>
+              <strong style="color: var(--teal-primary);">Angle 2: Multi-Seed Conformer &amp; Docking Reproducibility</strong>
               <div style="color: var(--text-muted); font-size: 11px;">N=5 independent conformer &amp; Vina seeds (42, 101, 202, 303, 404)</div>
             </div>
             <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
-              <span style="color: var(--amber-accent); font-weight: 700;">INCONCLUSIVE</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Mean: -8.10 ± 0.37 kcal/mol | RMSD: 9.24 Å</span>
+              <span style="color: var(--emerald-accent); font-weight: 700;">PASSED</span><br>
+              <span style="color: var(--text-sub); font-size: 11px;">Mean: -8.10 ± 0.37 kcal/mol | Centroid SD: 0.46 Å</span>
             </div>
           </div>
 
@@ -922,12 +922,12 @@
           <!-- Angle 7 -->
           <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <strong style="color: var(--teal-primary);">Angle 7: Explicit pH 5.2 Histidine Diprotonation</strong>
+              <strong style="color: var(--amber-accent);">Angle 7: Explicit pH 5.2 Histidine Diprotonation</strong>
               <div style="color: var(--text-muted); font-size: 11px;">Acidic plaque protonation (charge +1 -> +3) docked into 3AIC and 1SMD</div>
             </div>
             <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
-              <span style="color: var(--emerald-accent); font-weight: 700;">PASSED</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Acidic ΔG: -7.71 kcal/mol | Δ: +0.48 kcal</span>
+              <span style="color: var(--amber-accent); font-weight: 700;">INCONCLUSIVE</span><br>
+              <span style="color: var(--text-sub); font-size: 11px;">3AIC -7.71 vs 1SMD -7.89 | Slight inversion within noise</span>
             </div>
           </div>
 
@@ -958,12 +958,12 @@
           <!-- Angle 10 -->
           <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <strong style="color: var(--teal-primary);">Angle 10: Linear Control vs Cyclic Macrocycle</strong>
+              <strong style="color: var(--amber-accent);">Angle 10: Linear Control vs Cyclic Macrocycle</strong>
               <div style="color: var(--text-muted); font-size: 11px;">Linear AHWRPWH (28 rotatable bonds) vs cyclic CAHWRPWHC (14 bonds)</div>
             </div>
             <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
-              <span style="color: var(--emerald-accent); font-weight: 700;">PASSED</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Linear: -9.25 | Pre-org: 14 vs 28 Torsions</span>
+              <span style="color: var(--amber-accent); font-weight: 700;">INCONCLUSIVE</span><br>
+              <span style="color: var(--text-sub); font-size: 11px;">Linear: -9.25 vs -8.19 | Entropy under-penalization</span>
             </div>
           </div>
 
@@ -975,7 +975,7 @@
             </div>
             <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
               <span style="color: var(--emerald-accent); font-weight: 700;">PASSED</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Heavy Atom Drift RMSD: 0.94 Å</span>
+              <span style="color: var(--text-sub); font-size: 11px;">Heavy Atom Drift RMSD: 0.92 Å</span>
             </div>
           </div>
 
@@ -993,7 +993,7 @@
         </div>
 
         <div style="margin-top: 14px; padding: 12px 14px; background: var(--info-box-bg); border: 1px solid var(--info-box-border); border-radius: 6px; font-size: 12px; color: var(--info-box-text); line-height: 1.45;">
-          <strong>⚖️ Popperian Comparative Verdict:</strong> Rather than claiming heuristic perfection, candidate <code>CAHWRPWHC</code> was challenged across 12 exhaustive computational disproof angles (7 Passed in Silico, 4 Inconclusive within Noise, 1 At Risk, 0 Falsified). While it cleared 7 in-silico physical hurdles (co-crystal calibration, alanine hotspot anchors, explicit pH 5.2 protonation, lysozyme safety, conformational pre-organization, OpenMM local minimization, and Stephan-curve Donnan partition), strict scientific skepticism highlights 5 critical caveats: multi-seed conformer RMSD spread (Angle 2), pose mode clustering gap (Angle 3), host amylase selectivity (Angle 4), and scrambled sequence differentiation (Angle 5) fall within force-field uncertainty noise margins, and aromatic Trp4/Trp7 residues (Angle 8) present chymotryptic vulnerability requiring whole-saliva degradation assays. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
+          <strong>⚖️ Popperian Comparative Verdict:</strong> Rather than claiming heuristic perfection, candidate <code>CAHWRPWHC</code> was challenged across 12 exhaustive computational disproof angles (5 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 0 Falsified). While it cleared 5 in-silico physical hurdles (multi-seed cleft localization, alanine hotspot anchors, lysozyme safety, OpenMM local minimization, and Stephan-curve Donnan partition), strict scientific skepticism highlights key caveats: co-crystal redocking RMSD (Angle 1), pose mode clustering gap (Angle 3), host amylase selectivity (Angle 4), scrambled sequence differentiation (Angle 5), explicit pH 5.2 protonation inversion (Angle 7), and linear peptide entropy artifact (Angle 10) fall within force-field uncertainty noise margins, and aromatic Trp4/Trp7 residues (Angle 8) present chymotryptic vulnerability requiring whole-saliva degradation assays. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
         </div>
       </div>
 

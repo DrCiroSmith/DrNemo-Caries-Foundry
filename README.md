@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="assets/hero_banner.png" alt="DrNemo Caries Foundry - Targeted GtfB Macrocycle Inhibitor Design" width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/hero_banner_dark.png">
+    <img src="assets/hero_banner_light.png" alt="DrNemo Caries Foundry - Targeted GtfB Macrocycle Inhibitor Design" width="100%">
+  </picture>
 </p>
 
 <p align="center">
@@ -22,7 +25,10 @@ An autonomous computational biophysics pipeline that designs, filters, and falsi
 ## 1. Biological Target: *S. mutans* GtfB
 
 <p align="center">
-  <img src="assets/fig1_biological_mechanism.png" alt="Biological mechanism: uninhibited biofilm vs CAHWRPWHC targeted blockade" width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/fig1_biological_mechanism_dark.png">
+    <img src="assets/fig1_biological_mechanism_light.png" alt="Biological mechanism: uninhibited biofilm vs CAHWRPWHC targeted blockade" width="100%">
+  </picture>
 </p>
 
 Dental caries is driven by acidogenic biofilms. *Streptococcus mutans* secretes glucosyltransferase-B (GtfB), which synthesizes water-insoluble alpha-1,3-glucans (mutan) that cement bacteria to enamel and trap lactic acid against hydroxyapatite, driving demineralization.
@@ -34,7 +40,10 @@ The Foundry designs **arginine-rich cyclic disulfide macrocycles** that dock int
 ## 2. End-to-End Discovery Pipeline
 
 <p align="center">
-  <img src="assets/fig2_pipeline_architecture.png" alt="6-stage closed-loop discovery pipeline with Popperian falsification" width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/fig2_pipeline_architecture_dark.png">
+    <img src="assets/fig2_pipeline_architecture_light.png" alt="6-stage closed-loop discovery pipeline with Popperian falsification" width="100%">
+  </picture>
 </p>
 
 The discovery engine runs an iterative closed loop:
@@ -53,7 +62,10 @@ Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to 
 ## 3. Biophysical Results: Pareto Champion CAHWRPWHC
 
 <p align="center">
-  <img src="assets/fig3_pocket_and_funnel.png" alt="GtfB active site close-up and multi-gate attrition funnel" width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/fig3_pocket_and_funnel_dark.png">
+    <img src="assets/fig3_pocket_and_funnel_light.png" alt="GtfB active site close-up and multi-gate attrition funnel" width="100%">
+  </picture>
 </p>
 
 | Parameter | CRRRWWRRRRC | CPHWRPWHC (WT lead) | CPHWRAWHC (P6A) | **CAHWRPWHC (Champion)** | Popperian outcome |
@@ -78,27 +90,30 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 
 | Angle | Evaluation Angle | Quantitative Metric | Honest Classification |
 |---|---|---|---|
-| **1** | Co-Crystal Redocking Calibration (3AIC) | Hungarian RMSD 4.51 A, Vina -7.915 kcal/mol | `PASSED_IN_SILICO` |
-| **2** | Multi-Seed Conformer & Docking (N=5) | Mean -8.10 +/- 0.37 kcal/mol, RMSD = 9.24 A | `INCONCLUSIVE_WITHIN_NOISE` |
+| **1** | Co-Crystal Redocking Calibration (3AIC) | Hungarian RMSD 4.51 A, Vina -7.915 kcal/mol (exceeds 2.0-4.0 A standard; wide cleft & glycosidic torsions) | `INCONCLUSIVE_WITHIN_NOISE` |
+| **2** | Multi-Seed Conformer & Docking (N=5) | Mean -8.10 +/- 0.37 kcal/mol, cleft centroid SD = 0.46 A | `PASSED_IN_SILICO` |
 | **3** | Pose Mode Clustering & Energy Gap | Mode 1-2 Delta E = +0.10 kcal/mol, shift 1.74 A | `INCONCLUSIVE_WITHIN_NOISE` |
 | **4** | Force-Field Error Margin on 1SMD Selectivity | DeltaDeltaG = -0.85 kcal/mol vs Vina SE ~2.85 kcal/mol | `INCONCLUSIVE_WITHIN_NOISE` |
 | **5** | Charge-Matched Scrambled Null (N=39) | Lead -8.191 vs Null -8.343 +/- 0.470 (Z = +0.32, p = 0.5897) | `INCONCLUSIVE_WITHIN_NOISE` |
 | **6** | In-Silico Alanine-Scanning Mutagenesis | Identifies His3, Trp7, His8 catalytic anchors | `PASSED_IN_SILICO` |
-| **7** | Explicit pH 5.2 Histidine Diprotonation | Formal charge +1 -> +3; acidic 3AIC DG = -7.71 kcal/mol | `PASSED_IN_SILICO` |
+| **7** | Explicit pH 5.2 Histidine Diprotonation | Formal charge +1 -> +3; 3AIC -7.71 vs 1SMD -7.89 kcal/mol (Delta = +0.48, slight 1SMD inversion within noise) | `INCONCLUSIVE_WITHIN_NOISE` |
 | **8** | Broad Oral Protease & Peptidase Check | Trypsin shielded (Arg5-Pro6); Trp4/Trp7 vulnerable to chymotrypsin | `AT_RISK` |
 | **9** | Additional Host Screen (RCSB 1LZ1 Lysozyme) | Human lysozyme DG = -6.67 kcal/mol (DeltaDeltaG = -1.52) | `PASSED_IN_SILICO` |
-| **10** | Linear Control vs Cyclic Macrocycle | Linear AHWRPWH (-9.25 kcal/mol) vs cyclic (-8.19 kcal/mol; 14 vs 28 torsions) | `PASSED_IN_SILICO` |
-| **11** | OpenMM Implicit-Solvent Relaxation Drift | Amber14/GBn2 310.15 K heavy-atom drift RMSD = 0.94 A | `PASSED_IN_SILICO` |
+| **10** | Linear Control vs Cyclic Macrocycle | Linear AHWRPWH (-9.25 kcal/mol) vs cyclic (-8.19 kcal/mol; Vina under-penalizes unfolded entropy) | `INCONCLUSIVE_WITHIN_NOISE` |
+| **11** | OpenMM Implicit-Solvent Relaxation Drift | Amber14/GBn2 310.15 K heavy-atom drift RMSD = 0.92 A | `PASSED_IN_SILICO` |
 | **12** | Chitosan Donnan & Stephan Acid Switch | Saliva Q = +2.05 <= +4.0; Stephan Delta Q = +1.62 | `PASSED_IN_SILICO` |
 
-> **Scientific Skepticism Verdict:** While CAHWRPWHC cleared 7 physical hurdles in silico (7 Passed in Silico, 4 Inconclusive within Noise, 1 At Risk, 0 Falsified), strict scientific skepticism highlights 5 caveats: multi-seed conformer RMSD spread (Angle 2), pose mode clustering gap (Angle 3), host selectivity (Angle 4), and scrambled null differentiation (Angle 5) fall within force-field uncertainty boundaries, and aromatic residues Trp4/Trp7 (Angle 8) carry chymotryptic risk requiring whole-saliva degradation assays. All results are computational hypotheses requiring wet-lab enzymatic, whole human saliva, and cellular biofilm falsification.
+> **Scientific Skepticism Verdict:** CAHWRPWHC evaluation yields **5 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 0 Falsified**. Strict scientific skepticism highlights key caveats: co-crystal redocking RMSD (Angle 1), pose mode clustering gap (Angle 3), host selectivity margin (Angle 4), scrambled null differentiation (Angle 5), explicit pH 5.2 diprotonation ranking inversion (Angle 7), and linear control entropy artifact (Angle 10) fall within force-field uncertainty boundaries or indicate scoring limitations, while aromatic residues Trp4/Trp7 (Angle 8) carry chymotryptic risk requiring whole-saliva degradation assays. All results are strictly computational hypotheses requiring wet-lab enzymatic, whole human saliva, and cellular biofilm falsification.
 
 ---
 
 ## 5. Validation Figures
 
 <p align="center">
-  <img src="assets/fig4_falsification_plate.png" alt="4-panel biophysical validation: Pareto frontier, scrambled null histogram, alanine scan, Stephan pH titration" width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/fig4_falsification_plate_dark.png">
+    <img src="assets/fig4_falsification_plate_light.png" alt="4-panel biophysical validation: Pareto frontier, scrambled null histogram, alanine scan, Stephan pH titration" width="100%">
+  </picture>
 </p>
 
 - **Panel A, Pareto Frontier:** Vina 3AIC vs selectivity DDG across contenders; CAHWRPWHC is the non-dominated champion.

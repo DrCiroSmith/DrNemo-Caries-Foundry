@@ -9,6 +9,7 @@
 # Allow bundled demo dataset explicitly
 !demo_data/
 !demo_data/**
+demo_data/results/screenshots/
 !targets.json
 !expansion_stats.json
 

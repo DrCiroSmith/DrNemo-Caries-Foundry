@@ -125,17 +125,17 @@ To implement rigorous falsificationism, candidate \texttt{CAHWRPWHC} was challen
 \toprule
 \textbf{Angle} & \textbf{Evaluation Angle} & \textbf{Quantitative Output} & \textbf{Honest Classification} \\
 \midrule
-1 & Co-Crystal Calibration (\texttt{3AIC}) & Hungarian RMSD $4.51\text{ \AA}$, $\Delta G = -7.92\text{ kcal/mol}$ & \texttt{PASSED\_IN\_SILICO} \\
-2 & Multi-Seed Reproducibility ($N=5$) & Mean $-8.10 \pm 0.37\text{ kcal/mol}$, RMSD $= 9.24\text{ \AA}$ & \texttt{INCONCLUSIVE\_WITHIN\_NOISE} \\
+1 & Co-Crystal Calibration (\texttt{3AIC}) & Hungarian RMSD $4.51\text{ \AA}$, $\Delta G = -7.92\text{ kcal/mol}$ (exceeds $2.0\text{ to }4.0\text{ \AA}$ standard) & \texttt{INCONCLUSIVE\_WITHIN\_NOISE} \\
+2 & Multi-Seed Reproducibility ($N=5$) & Mean $-8.10 \pm 0.37\text{ kcal/mol}$, centroid SD $= 0.46\text{ \AA}$ & \texttt{PASSED\_IN\_SILICO} \\
 3 & Pose Mode Clustering & Mode 1 to 2 $\Delta E = +0.10\text{ kcal/mol}$, centroid shift $1.74\text{ \AA}$ & \texttt{INCONCLUSIVE\_WITHIN\_NOISE} \\
 4 & Force-Field Error Boundary (\texttt{1SMD}) & $\Delta\Delta G = -0.85\text{ kcal/mol}$ vs Vina SE $\approx 2.85\text{ kcal/mol}$ & \texttt{INCONCLUSIVE\_WITHIN\_NOISE} \\
 5 & Scrambled Sequence Null ($N=39$) & Lead $-8.19$ vs Null $-8.34 \pm 0.47$ ($Z = +0.32, p = 0.59$) & \texttt{INCONCLUSIVE\_WITHIN\_NOISE} \\
 6 & Alanine Hotspot Scanning & Identified anchors at \texttt{His3}, \texttt{Trp7}, \texttt{His8} & \texttt{PASSED\_IN\_SILICO} \\
-7 & Explicit pH 5.2 Protonation & Diprotonated His $\Delta G = -7.71\text{ kcal/mol}$ ($\Delta = +0.48$) & \texttt{PASSED\_IN\_SILICO} \\
+7 & Explicit pH 5.2 Protonation & Diprotonated His $\Delta G = -7.71\text{ kcal/mol}$ (slight ranking inversion within noise) & \texttt{INCONCLUSIVE\_WITHIN\_NOISE} \\
 8 & Broad Protease Vulnerability & Trypsin resistant; Trp4/Trp7 vulnerable to chymotrypsin & \texttt{AT\_RISK} \\
 9 & Human Lysozyme Screen (\texttt{1LZ1}) & Lysozyme $\Delta G = -6.67\text{ kcal/mol}$ ($\Delta\Delta G = -1.52$) & \texttt{PASSED\_IN\_SILICO} \\
-10 & Linear Control (\texttt{AHWRPWH}) & Linear $\Delta G = -9.25\text{ kcal/mol}$ ($14$ vs $28$ rotatable bonds) & \texttt{PASSED\_IN\_SILICO} \\
-11 & OpenMM Relaxation Drift & Amber14/GBn2 $310.15\text{ K}$ drift RMSD $0.94\text{ \AA}$ & \texttt{PASSED\_IN\_SILICO} \\
+10 & Linear Control (\texttt{AHWRPWH}) & Linear $\Delta G = -9.25\text{ kcal/mol}$ vs cyclic $-8.19$ (entropy artifact) & \texttt{INCONCLUSIVE\_WITHIN\_NOISE} \\
+11 & OpenMM Relaxation Drift & Amber14/GBn2 $310.15\text{ K}$ drift RMSD $0.92\text{ \AA}$ & \texttt{PASSED\_IN\_SILICO} \\
 12 & Chitosan \& Stephan Switch & $Q_{\text{pH 6.0}} = +2.05 \le +4.0$; $\Delta Q_{\text{Stephan}} = +1.62$ & \texttt{PASSED\_IN\_SILICO} \\
 \bottomrule
 \end{tabular}

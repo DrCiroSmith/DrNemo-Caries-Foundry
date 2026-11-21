@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DrNemo Caries Foundry — 24/7 Continuous Contender Hunter Daemon
+DrNemo Caries Foundry: 24/7 Continuous Contender Hunter Daemon
 Author: Dr. Roi Castrellon, DDS (DrNemo Caries Foundry)
 
 Continuous evolutionary discovery service running under WSL systemd:
@@ -75,14 +75,13 @@ MOTIFS = [
 
 
 def generate_candidate(vault: ContenderVault) -> tuple[str, int]:
-    """Generates a novel candidate by mutating top contenders or recombining motifs."""
+    """Generates a novel candidate with O(1) vault checking and indel mutations across 6..18 residues."""
     top_candidates = vault.get_top_contenders(limit=10)
-    existing_seqs = {c["sequence"] for c in vault.get_all_contenders()}
 
-    for _ in range(50):
+    for _ in range(100):
         mode = random.random()
-        if top_candidates and mode < 0.6:
-            # Point mutation of a top contender
+        if top_candidates and mode < 0.40:
+            # 1. Point mutation of a top contender
             parent = random.choice(top_candidates)
             seq = parent["sequence"]
             gen = parent["generation"] + 1
@@ -91,22 +90,40 @@ def generate_candidate(vault: ContenderVault) -> tuple[str, int]:
                 idx = random.randint(0, len(core) - 1)
                 core[idx] = random.choice(SAFE_AA)
                 new_seq = "C" + "".join(core) + "C"
-                if new_seq not in existing_seqs and 7 <= len(new_seq) <= 12:
+                if not vault.has_sequence(new_seq) and 6 <= len(new_seq) <= 18:
                     return new_seq, gen
+        elif top_candidates and mode < 0.65:
+            # 2. Variable-length indel mutation across 6..18 residues (4..16 core residues)
+            parent = random.choice(top_candidates)
+            seq = parent["sequence"]
+            gen = parent["generation"] + 1
+            core = list(seq[1:-1])
+            if len(core) > 4 and random.random() < 0.5:
+                # Deletion of an internal core residue (minimum 6 residues total)
+                del_idx = random.randint(0, len(core) - 1)
+                core.pop(del_idx)
+            elif len(core) < 16:
+                # Insertion of a safe amino acid (maximum 18 residues total)
+                ins_idx = random.randint(0, len(core))
+                core.insert(ins_idx, random.choice(SAFE_AA))
+            new_seq = "C" + "".join(core) + "C"
+            if not vault.has_sequence(new_seq) and 6 <= len(new_seq) <= 18:
+                return new_seq, gen
         elif mode < 0.85:
-            # Motif crossover
+            # 3. Motif crossover
             m1 = random.choice(MOTIFS)
             m2 = random.choice(MOTIFS)
-            mid = (m1[:3] + m2[:4])[:7]
+            core_len = random.randint(4, 16)
+            mid = ((m1 + m2) * 2)[:core_len]
             new_seq = f"C{mid}C"
-            if new_seq not in existing_seqs:
+            if not vault.has_sequence(new_seq) and 6 <= len(new_seq) <= 18:
                 return new_seq, 4
         else:
-            # Conservative random drift
-            core_len = random.choice([7, 8, 9])
+            # 4. Conservative random drift
+            core_len = random.randint(4, 16)
             mid = "".join(random.choice(SAFE_AA) for _ in range(core_len))
             new_seq = f"C{mid}C"
-            if new_seq not in existing_seqs:
+            if not vault.has_sequence(new_seq) and 6 <= len(new_seq) <= 18:
                 return new_seq, 4
 
     # Fallback default variant
@@ -268,7 +285,7 @@ def main():
         return
 
     logger.info("=" * 70)
-    logger.info("  DrNemo Caries Foundry — Continuous Hunter Daemon Starting")
+    logger.info("  DrNemo Caries Foundry: Continuous Hunter Daemon Starting")
     logger.info("=" * 70)
     logger.info(f"Connected to Contender Vault: {vault.get_count()} existing contenders.")
 
