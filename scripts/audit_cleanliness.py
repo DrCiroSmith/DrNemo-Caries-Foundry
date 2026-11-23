@@ -43,7 +43,7 @@ def check_file(rel_path):
             if '<!--' in stripped or '-->' in stripped or '|--' in stripped or '--|' in stripped:
                 continue
             # check if it is a CLI flag or python comment
-            if not any(flag in line for flag in ['--receptor', '--ligand', '--center', '--size', '--cpu', '--exhaustiveness', '--out', '--server', '--host', '--port', '--stat', '--config', '--seed', '--help', '--score_only', '--scoring', '--headless', '--address', '--enable-webgl', '--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--use-gl', '--use-angle', '--single-cycle']):
+            if not any(flag in line for flag in ['--receptor', '--ligand', '--center', '--size', '--cpu', '--exhaustiveness', '--out', '--server', '--host', '--port', '--stat', '--config', '--seed', '--help', '--score_only', '--scoring', '--headless', '--address', '--enable-webgl', '--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--use-gl', '--use-angle', '--single-cycle', '--dock-sequence']):
                 # In prose double hyphens like "word -- word" or "word--word"
                 if re.search(r'\w\s*--\s*\w', line):
                     dash_matches.append((line_no, line))
