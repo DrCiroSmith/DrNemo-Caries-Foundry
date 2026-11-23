@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""GtfB Autonomous Biophysical Orchestrator.
+"""GtfB Deterministic Biophysical Screening and Falsification Pipeline.
 
-State machine workflow wiring cyclic peptide generation, solubility shielding,
-empirical AutoDock Vina + Vinardo grid docking, OpenMM Amber14/GBn2 relaxation,
+Deterministic biophysical screening and falsification pipeline (with optional
+LangGraph state-graph orchestration) wiring cyclic peptide generation, solubility shielding,
+empirical AutoDock Vina + Vinardo grid docking, OpenMM Amber14/GBn2 isolated ligand steric relaxation (200 steps),
 and 6-angle Karl Popper biophysical falsification into ContenderVault.
 Zero synthetic mock scores, zero fake fallbacks, zero unverified heuristics.
 """
@@ -138,7 +139,7 @@ def evaluate_solubility_node(state: GtfBEvolutionState) -> Dict[str, Any]:
 
 
 def evaluate_biophysics_node(state: GtfBEvolutionState) -> Dict[str, Any]:
-    """Executes empirical AutoDock Vina + Vinardo docking and OpenMM relaxation."""
+    """Executes empirical AutoDock Vina + Vinardo docking and OpenMM isolated ligand relaxation."""
     poses_dir = REPO_ROOT / "data" / "poses"
     poses_dir.mkdir(parents=True, exist_ok=True)
     
@@ -156,8 +157,9 @@ def evaluate_biophysics_node(state: GtfBEvolutionState) -> Dict[str, Any]:
             continue
             
         ligand_pdbqt = str(poses_dir / f"live_{seq}.pdbqt")
+        ligand_pdb = str(poses_dir / f"live_{seq}.pdb")
         try:
-            heavy_atoms = build_macrocycle_3d(seq, ligand_pdbqt)
+            heavy_atoms = build_macrocycle_3d(seq, ligand_pdbqt, out_pdb=ligand_pdb)
             cand_data["heavy_atoms"] = heavy_atoms
             
             dock_3aic = run_docking_vina_and_vinardo(ligand_pdbqt, target="3AIC", exhaustiveness=8)
@@ -171,7 +173,7 @@ def evaluate_biophysics_node(state: GtfBEvolutionState) -> Dict[str, Any]:
             cand_data["vina_1smd_kcal"] = dock_1smd["vina_kcal"]
             cand_data["selectivity_ddg"] = round(dock_3aic["vina_kcal"] - dock_1smd["vina_kcal"], 3)
             
-            openmm_kj = relax_with_openmm(ligand_pdbqt)
+            openmm_kj = relax_with_openmm(ligand_pdb)
             cand_data["openmm_relaxed_kj"] = openmm_kj
         except Exception as e:
             cand_data["biophysics_error"] = str(e)

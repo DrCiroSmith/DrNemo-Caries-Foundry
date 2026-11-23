@@ -68,7 +68,8 @@ class FalsificationEngine:
             "affinity_kcal_mol": CO_CRYSTAL_CONTROL_DELTA_G,
             "redocking_rmsd_angstrom": CO_CRYSTAL_REDOCKING_RMSD,
             "centroid_displacement_angstrom": CO_CRYSTAL_CENTROID_DIST,
-            "passed_calibration": CO_CRYSTAL_REDOCKING_RMSD < 5.0 and CO_CRYSTAL_CONTROL_DELTA_G < -7.0
+            "passed_calibration": CO_CRYSTAL_REDOCKING_RMSD < 2.0 and CO_CRYSTAL_CONTROL_DELTA_G < -7.0,
+            "classification": "CALIBRATION_WARNING" if CO_CRYSTAL_REDOCKING_RMSD >= 2.0 else "PASSED_IN_SILICO"
         }
 
     def evaluate_biophysics(self, seq: str) -> Dict[str, Any]:
@@ -158,21 +159,31 @@ class FalsificationEngine:
             "n_isomers": 39,
             "mean_kcal": -8.343,
             "std_kcal": 0.470,
-            "z_score": 0.60,
-            "p_value": 0.6750,
-            "b_count": 26
+            "z_score": 0.32,
+            "p_value": 0.5897,
+            "b_count": 23
         })
 
         ala_scan = benchmark.get("alanine_scan", {})
+
+        gate1_rmsd = benchmark.get("co_crystal_control", {}).get("redocking_rmsd_angstrom", CO_CRYSTAL_REDOCKING_RMSD)
+        gate1_delta_g = benchmark.get("co_crystal_control", {}).get("vina_3aic_kcal", CO_CRYSTAL_CONTROL_DELTA_G)
+        gate1_passed = bool(gate1_rmsd < 2.0 and gate1_delta_g < -7.0)
+
+        gate3_z = scrambled_data.get("z_score", 0.32)
+        gate3_p = scrambled_data.get("p_value", 0.5897)
+        gate3_passed = bool(gate3_p < 0.05 and gate3_z < -1.96)
 
         # 6 Falsification Gate Verdicts
         gates = {
             "gate1_cocrystal_calibration": {
                 "name": "Angle 1: RCSB 3AIC Co-Crystal Redocking Calibration",
-                "passed": True,
-                "delta_g": benchmark.get("co_crystal_control", {}).get("vina_3aic_kcal", CO_CRYSTAL_CONTROL_DELTA_G),
-                "rmsd": benchmark.get("co_crystal_control", {}).get("redocking_rmsd_angstrom", CO_CRYSTAL_REDOCKING_RMSD),
-                "criterion": "RMSD < 5.0 A and Delta G < -7.0 kcal/mol"
+                "passed": gate1_passed,
+                "delta_g": gate1_delta_g,
+                "rmsd": gate1_rmsd,
+                "classification": "PASSED_IN_SILICO" if gate1_passed else "CALIBRATION_WARNING",
+                "reality_check": "Acarbose redocking RMSD = 4.51 A exceeds standard crystallographic threshold (< 2.0 A); force-field poses carry elevated structural uncertainty",
+                "criterion": "RMSD < 2.0 A and Delta G < -7.0 kcal/mol"
             },
             "gate2_offtarget_selectivity": {
                 "name": "Angle 2: 1SMD Salivary Amylase Selectivity",
@@ -186,17 +197,17 @@ class FalsificationEngine:
             },
             "gate3_scrambled_null_permutation": {
                 "name": "Angle 3: Charge-Matched Scrambled Sequence Permutation Test",
-                "lead_passed": True,
+                "lead_passed": gate3_passed,
                 "lead_affinity": lead_affinity_3aic,
                 "null_mean": scrambled_data["mean_kcal"],
                 "null_std": scrambled_data["std_kcal"],
-                "z_score": scrambled_data["z_score"],
-                "p_value": scrambled_data["p_value"],
-                "b_count": scrambled_data.get("b_count", 26),
+                "z_score": gate3_z,
+                "p_value": gate3_p,
+                "b_count": scrambled_data.get("b_count", 23),
                 "linear_loss_delta": benchmark.get("linear_control", {}).get("cyclization_delta_kcal", -0.803),
-                "classification": "INCONCLUSIVE",
+                "classification": "INCONCLUSIVE_WITHIN_NOISE",
                 "null_reality_check": "H0 not rejected (Z = +0.32, p = 0.5897); rigid-receptor static docking under-penalizes aqueous conformational entropy",
-                "criterion": "Empirical N=39 null permutation battery (mean -8.343 +/- 0.470 kcal/mol)"
+                "criterion": "Statistical significance: p < 0.05 and Z < -1.96 vs empirical N=39 null permutation battery"
             },
             "gate4_alanine_hotspot_scan": {
                 "name": "Angle 4: In-Silico Alanine-Scanning Mutagenesis",
@@ -262,7 +273,8 @@ def print_falsification_report(audit: Dict[str, Any]):
                 print(f"    - {field}: {val}")
 
     print("\n" + "=" * 76)
-    print(f"FINAL FALSIFICATION VERDICT: {'CLEARED ALL GATES (CORROBORATED)' if audit['overall_falsification_passed'] else 'FALSIFIED / REJECTED'}")
+    verdict = "CLEARED ALL GATES (CORROBORATED)" if audit["overall_falsification_passed"] else "NOT_CORROBORATED (INCONCLUSIVE_WITHIN_NOISE)"
+    print(f"FINAL FALSIFICATION VERDICT: {verdict}")
     print("=" * 76)
 
 

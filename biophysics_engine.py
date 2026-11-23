@@ -8,11 +8,12 @@ Zero synthetic formulas, zero mock shortcuts:
 - Dual scoring: AutoDock Vina (--scoring vina) + Vinardo (--scoring vinardo)
 - Ligand Efficiency: LE = -E_vina / heavy_atoms
 - Disulfide S-S geometry verification in output pose (2.00 - 2.15 A)
-- OpenMM all-atom Amber14 (amber14-all.xml + implicit/gbn2.xml) minimization at 310.15 K (37 C oral temp)
+- OpenMM all-atom Amber14 (amber14-all.xml + implicit/gbn2.xml) isolated ligand-only steric minimization (200 steps)
 - Solubility Shield: Donnan equilibrium (Q_pH6 <= +4.0) & Stephan acid-switch (Delta Q >= +1.0)
 """
 import os
 import sys
+import shutil
 import hashlib
 import subprocess
 import math
@@ -208,6 +209,22 @@ def measure_disulfide_bond(pdbqt_path: str) -> Optional[float]:
     return None
 
 
+def get_vina_path() -> str:
+    """Resolves AutoDock Vina binary from PATH or raises FileNotFoundError."""
+    path = shutil.which("vina")
+    if not path:
+        raise FileNotFoundError("AutoDock Vina executable ('vina') not found on system PATH")
+    return path
+
+
+def get_vina_split_path() -> str:
+    """Resolves AutoDock Vina split binary from PATH or raises FileNotFoundError."""
+    path = shutil.which("vina_split")
+    if not path:
+        raise FileNotFoundError("AutoDock Vina split executable ('vina_split') not found on system PATH")
+    return path
+
+
 def run_docking_vina_and_vinardo(
     ligand_pdbqt: str,
     target: str = "3AIC",
@@ -238,7 +255,7 @@ def run_docking_vina_and_vinardo(
     # 1. Dock with Vina scoring if not already present
     if vina_score is None:
         cmd_vina = [
-            "/usr/bin/vina",
+            get_vina_path(),
             "--receptor", cfg["receptor"],
             "--ligand", ligand_pdbqt,
             "--center_x", str(cx), "--center_y", str(cy), "--center_z", str(cz),
@@ -263,14 +280,14 @@ def run_docking_vina_and_vinardo(
 
     # 2. Rescore top pose with Vinardo
     split_prefix = out_pdbqt.replace(".pdbqt", "_split_")
-    split_cmd = ["/usr/bin/vina_split", "--input", out_pdbqt, "--ligand", split_prefix]
+    split_cmd = [get_vina_split_path(), "--input", out_pdbqt, "--ligand", split_prefix]
     subprocess.run(split_cmd, capture_output=True, text=True)
     mode1_pdbqt = f"{split_prefix}1.pdbqt"
 
     vinardo_score = None
     if os.path.exists(mode1_pdbqt):
         cmd_vinardo = [
-            "/usr/bin/vina",
+            get_vina_path(),
             "--receptor", cfg["receptor"],
             "--ligand", mode1_pdbqt,
             "--center_x", str(cx), "--center_y", str(cy), "--center_z", str(cz),
@@ -294,7 +311,7 @@ def run_docking_vina_and_vinardo(
         # Fallback to autobox if ligand drifted slightly outside fixed box
         if vinardo_score is None:
             cmd_vinardo_auto = [
-                "/usr/bin/vina",
+                get_vina_path(),
                 "--receptor", cfg["receptor"],
                 "--ligand", mode1_pdbqt,
                 "--scoring", "vinardo",
@@ -333,8 +350,9 @@ def run_docking_vina_and_vinardo(
 
 def relax_with_openmm(pdb_path: str, temp_k: float = 310.15) -> float:
     """
-    Computes all-atom Amber14/GBn2 (310.15 K oral body temperature) macrocycle
-    conformational and implicit-solvation potential energy (kJ/mol) on the 3D pose.
+    Runs isolated ligand-only Amber14/GBn2 energy minimization (200 steps)
+    for steric relaxation and implicit-solvation potential energy (kJ/mol) on the 3D pose.
+    Does NOT run bound receptor-ligand molecular dynamics at 310.15 K.
     """
     from pdbfixer import PDBFixer
     fixer = PDBFixer(filename=pdb_path)

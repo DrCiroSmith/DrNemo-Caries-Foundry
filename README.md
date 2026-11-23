@@ -18,7 +18,7 @@
   <a href="https://openmm.org"><img src="https://img.shields.io/badge/ForceField-OpenMM_Amber14-blueviolet.svg" alt="OpenMM Amber14"></a>
 </p>
 
-An autonomous computational biophysics pipeline that designs, filters, and falsifies cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). It couples LangGraph state machines with AutoDock Vina v1.2.7 and Vinardo empirical grid docking, OpenMM Amber14/GBn2 all-atom relaxation at 310.15 K, and an exhaustive 12-angle Karl Popper falsification battery evaluating candidate **CAHWRPWHC** over 259 total contenders in the vault, including N=39 scrambled nulls. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
+A deterministic biophysical screening and falsification pipeline (with optional LangGraph state-graph orchestration) that designs, filters, and evaluates cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). It couples AutoDock Vina v1.2.7 and Vinardo empirical grid docking, OpenMM Amber14/GBn2 isolated ligand all-atom steric relaxation (200 steps), and an exhaustive 12-angle Karl Popper falsification battery evaluating reference scaffold **CAHWRPWHC** over 259 total contenders in the vault, including N=39 scrambled nulls. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
 
 ---
 
@@ -42,7 +42,7 @@ The Foundry designs **arginine-rich cyclic disulfide macrocycles** that dock int
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/fig2_pipeline_architecture_dark.png">
-    <img src="assets/fig2_pipeline_architecture_light.png" alt="6-stage closed-loop discovery pipeline with Popperian falsification" width="100%">
+    <img src="assets/fig2_pipeline_architecture_light.png" alt="Biophysical screening and falsification pipeline architecture" width="100%">
   </picture>
 </p>
 
@@ -51,15 +51,15 @@ The discovery engine runs an iterative closed loop:
 1. **Evolutionary Generator**: C-X-7-C scaffold with P2A hinge; evaluates 259 contenders across discovery and null controls.
 2. **Oral Shield Gate**: Donnan Q <= +4.0, Stephan DQ >= +1.0, 0 protease sites.
 3. **28.0 A Dual Docking**: AutoDock Vina + Vinardo on RCSB 3AIC (target) and 1SMD (human alpha-amylase off-target).
-4. **OpenMM 310.15 K Relaxation**: Amber14/GBn2 all-atom minimization.
+4. **OpenMM Steric Relaxation**: Amber14/GBn2 isolated ligand all-atom minimization (200 steps).
 5. **12-Angle Popper Falsification**: 1SMD DDG <= -0.80, N=39 scrambled nulls, alanine scan, Acarbose counter-screen.
-6. **SQLite Contender Vault and SPPS Protocol**: solid-phase synthesis plan for the corroborated lead.
+6. **SQLite Contender Vault and SPPS Protocol**: solid-phase synthesis plan for candidate evaluation.
 
 Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to mutate the hinge.
 
 ---
 
-## 3. Biophysical Results: Pareto Champion CAHWRPWHC
+## 3. Biophysical Results: Reference Scaffold CAHWRPWHC
 
 <p align="center">
   <picture>
@@ -68,7 +68,7 @@ Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to 
   </picture>
 </p>
 
-| Parameter | CRRRWWRRRRC | CPHWRPWHC (WT lead) | CPHWRAWHC (P6A) | **CAHWRPWHC (Champion)** | Popperian outcome |
+| Parameter | CRRRWWRRRRC | CPHWRPWHC (WT lead) | CPHWRAWHC (P6A) | **CAHWRPWHC (Reference Scaffold)** | Popperian outcome |
 |---|---:|---:|---:|---:|---|
 | **GtfB (3AIC) Vina DG** | -7.586 kcal/mol | -8.062 kcal/mol | -8.890 kcal/mol | **-8.191 kcal/mol** | High target affinity |
 | **Amylase (1SMD) Vina DG** | -7.580 kcal/mol | -7.902 kcal/mol | -7.300 kcal/mol | **-7.343 kcal/mol** | Host off-target counter-screen |
@@ -77,7 +77,7 @@ Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to 
 | **Chitosan Donnan Q (pH 6)** | +7.00 (> +4.0 fail) | +2.046 | +2.046 | **+2.046 (<= +4.0)** | Baseline falsified (entrapment) |
 | **Stephan DQ (acid switch)** | 0.00 | +1.62 | +1.62 | **+1.62** | Acid-activated in cariogenic niche |
 | **Disulfide S-S** | unconstrained | 2.06 A | 2.06 A | **2.06 A** | Intact macrocyclic restraint |
-| **OpenMM 310.15 K** | N/A | -1,165.5 kJ/mol | -1,271.48 kJ/mol | **-1,234.68 kJ/mol** | Stable minimized conformation |
+| **OpenMM Amber14/GBn2 Min** | N/A | -1,165.5 kJ/mol | -1,271.48 kJ/mol | **-1,234.68 kJ/mol** | Isolated ligand steric relaxation |
 | **Verdict** | FALSIFIED (multiple gates) | FALSIFIED (amylase) | FALSIFIED (trypsin site) | **IN SILICO HYPOTHESIS** | Candidate advance with 3 caveats |
 
 P2A (Pro2 to Ala) hinge relaxation preserves GtfB binding while sterically excluding the inhibitor from human amylase (DDG = -0.85 kcal/mol). P6A (Pro6 to Ala) gives raw affinity -8.890 kcal/mol but breaks the proline steric shield, creating a tryptic cleavage site, falsified on Angle 5.
@@ -100,7 +100,7 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 | **8** | Broad Oral Protease & Peptidase Check | Trypsin shielded (Arg5-Pro6); Trp4/Trp7 vulnerable to chymotrypsin | `AT_RISK` |
 | **9** | Additional Host Screen (RCSB 1LZ1 Lysozyme) | Human lysozyme DG = -6.67 kcal/mol (DeltaDeltaG = -1.52) | `PASSED_IN_SILICO` |
 | **10** | Linear Control vs Cyclic Macrocycle | Linear AHWRPWH (-9.25 kcal/mol) vs cyclic (-8.19 kcal/mol; Vina under-penalizes unfolded entropy) | `INCONCLUSIVE_WITHIN_NOISE` |
-| **11** | OpenMM Implicit-Solvent Relaxation Drift | Amber14/GBn2 310.15 K heavy-atom drift RMSD = 0.92 A | `PASSED_IN_SILICO` |
+| **11** | OpenMM Implicit-Solvent Relaxation Drift | Amber14/GBn2 heavy-atom minimization drift RMSD = 0.92 A | `PASSED_IN_SILICO` |
 | **12** | Chitosan Donnan & Stephan Acid Switch | Saliva Q = +2.05 <= +4.0; Stephan Delta Q = +1.62 | `PASSED_IN_SILICO` |
 
 > **Scientific Skepticism Verdict:** CAHWRPWHC evaluation yields **5 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 0 Falsified**. Strict scientific skepticism highlights key caveats: co-crystal redocking RMSD (Angle 1), pose mode clustering gap (Angle 3), host selectivity margin (Angle 4), scrambled null differentiation (Angle 5), explicit pH 5.2 diprotonation ranking inversion (Angle 7), and linear control entropy artifact (Angle 10) fall within force-field uncertainty boundaries or indicate scoring limitations, while aromatic residues Trp4/Trp7 (Angle 8) carry chymotryptic risk requiring whole-saliva degradation assays. All results are strictly computational hypotheses requiring wet-lab enzymatic, whole human saliva, and cellular biofilm falsification.
@@ -116,7 +116,7 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
   </picture>
 </p>
 
-- **Panel A, Pareto Frontier:** Vina 3AIC vs selectivity DDG across contenders; CAHWRPWHC is the non-dominated champion.
+- **Panel A, Pareto Frontier:** Vina 3AIC vs selectivity DDG across contenders; CAHWRPWHC is the non-dominated candidate.
 - **Panel B, Scrambled Null Histogram (N=39):** charge-matched sequence permutations establish empirical significance (mean = -8.343 +/- 0.470 kcal/mol, Z = +0.32 sigma, p = 0.5897).
 - **Panel C, Alanine Hotspot Scan:** His3, Trp7, His8 are catalytic anchors; Pro2/Pro6 are conformational gates. P6A flagged for Arg5 trypsin lysis.
 - **Panel D, Stephan Acid-Switch:** DQ = +1.62 activates the inhibitor in the cariogenic acidic niche (pH approximately 5.2). CRRRWWRRRRC shows flat charge, no acid activation.
@@ -174,7 +174,7 @@ DrNemo-Caries-Foundry/
 ├── falsification_engine.py              # Karl Popper falsification suite
 ├── foundry_cli.py                       # Foundry command-line interface
 ├── foundry_manager.py                   # Contender validation and parameter bounds
-├── gtfb_orchestrator.py                 # LangGraph discovery state machine
+├── gtfb_orchestrator.py                 # Biophysical discovery and falsification pipeline
 ├── solubility_shield.py                 # Chitosan-native and Donnan pre-filter
 ├── targets.json                         # Oral pathogen virulence targets
 ├── vault.py                             # SQLite contender vault
