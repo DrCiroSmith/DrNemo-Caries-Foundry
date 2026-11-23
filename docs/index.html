@@ -9,13 +9,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
-  <!-- 3Dmol.js CDN -->
-  <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+  <!-- 3Dmol.js (Local Vendor with CDN Fallback) -->
+  <script src="./vendor/3Dmol-min.js"></script>
+  <script>
+    if (typeof $3Dmol === 'undefined') {
+      document.write('<script src="https://3Dmol.org/build/3Dmol-min.js"><\/script>');
+    }
+  </script>
 
   <style>
     :root {
       --bg-page: #F8FAFC;
       --bg-card: #FFFFFF;
+      --bg-elevated: #F1F5F9;
       --border-card: #E2E8F0;
       --border-accent: #CBD5E1;
       --text-main: #0F172A;
@@ -39,11 +45,15 @@
       --amber-light: #FEF3C7;
       --red-accent: #DC2626;
       --red-light: #FEE2E2;
+      --toggle-active-bg: #0F172A;
+      --toggle-active-text: #FFFFFF;
+      --toggle-active-border: #0F172A;
     }
 
     [data-theme="dark"] {
       --bg-page: #0B0F19;
       --bg-card: #131B2A;
+      --bg-elevated: #1E293B;
       --border-card: #1E293B;
       --border-accent: #334155;
       --text-main: #F1F5F9;
@@ -67,12 +77,16 @@
       --amber-light: #78350F;
       --red-accent: #F87171;
       --red-light: #7F1D1D;
+      --toggle-active-bg: #0D9488;
+      --toggle-active-text: #FFFFFF;
+      --toggle-active-border: #14B8A6;
     }
 
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         --bg-page: #0B0F19;
         --bg-card: #131B2A;
+        --bg-elevated: #1E293B;
         --border-card: #1E293B;
         --border-accent: #334155;
         --text-main: #F1F5F9;
@@ -96,6 +110,9 @@
         --amber-light: #78350F;
         --red-accent: #F87171;
         --red-light: #7F1D1D;
+        --toggle-active-bg: #0D9488;
+        --toggle-active-text: #FFFFFF;
+        --toggle-active-border: #14B8A6;
       }
     }
 
@@ -222,8 +239,9 @@
     }
 
     .btn-secondary:hover {
-      background: #F1F5F9;
+      background: var(--bg-elevated);
       color: var(--text-main);
+      border-color: var(--border-accent);
     }
 
     .btn-primary {
@@ -364,7 +382,7 @@
       padding: 6px 12px;
       border-radius: 6px;
       border: 1px solid var(--border-card);
-      background: #F1F5F9;
+      background: var(--bg-elevated);
       font-family: 'JetBrains Mono', monospace;
       font-size: 12.5px;
       font-weight: 600;
@@ -377,6 +395,7 @@
     .lead-chip:hover {
       border-color: var(--teal-primary);
       color: var(--teal-primary);
+      background: var(--bg-card);
     }
 
     .lead-chip.active {
@@ -391,7 +410,7 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-top: 6px;
-      background: #F8FAFC;
+      background: var(--metric-box-bg);
       padding: 14px;
       border-radius: 8px;
       border: 1px solid var(--border-card);
@@ -429,10 +448,16 @@
       transition: all 0.12s ease;
     }
 
+    .toggle-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--text-main);
+    }
+
     .toggle-btn.active {
-      background: #0F172A;
-      color: #F8FAFC;
-      border-color: #0F172A;
+      background: var(--toggle-active-bg);
+      color: var(--toggle-active-text);
+      border-color: var(--toggle-active-border);
+      font-weight: 600;
     }
 
     /* Metrics Summary Grid */
@@ -444,7 +469,7 @@
     }
 
     .metric-cell {
-      background: #F8FAFC;
+      background: var(--metric-box-bg);
       border: 1px solid var(--border-card);
       border-radius: 8px;
       padding: 12px 14px;
@@ -518,7 +543,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      background: #F8FAFC;
+      background: var(--metric-box-bg);
       border: 1px solid var(--border-card);
       padding: 14px 18px;
       border-radius: 8px;
@@ -529,7 +554,7 @@
       height: 38px;
       border-radius: 50%;
       background: var(--teal-primary);
-      color: white;
+      color: #FFFFFF;
       border: none;
       font-size: 15px;
       display: flex;
@@ -570,7 +595,7 @@
       border: 1px solid var(--border-card);
       border-radius: 8px;
       padding: 14px 16px;
-      background: #FFFFFF;
+      background: var(--bg-card);
     }
 
     .chart-title {
@@ -591,7 +616,7 @@
 
     /* Live Sequence Inspector */
     .inspector-box {
-      background: #F8FAFC;
+      background: var(--metric-box-bg);
       border: 1px solid var(--border-card);
       border-radius: 8px;
       padding: 16px;
@@ -615,8 +640,8 @@
       border-radius: 6px;
       letter-spacing: 2px;
       text-transform: uppercase;
-      color: #0F172A;
-      background: #FFFFFF;
+      color: var(--text-main);
+      background: var(--bg-card);
     }
 
     .seq-input:focus {
@@ -636,15 +661,17 @@
       padding: 4px 10px;
       border-radius: 4px;
       border: 1px solid var(--border-card);
-      background: #FFFFFF;
+      background: var(--bg-card);
       color: var(--text-sub);
       cursor: pointer;
       font-weight: 500;
+      transition: all 0.15s ease;
     }
 
     .preset-btn:hover {
-      background: #F1F5F9;
+      background: var(--bg-elevated);
       color: var(--text-main);
+      border-color: var(--border-accent);
     }
 
     .audit-grid {
@@ -654,7 +681,7 @@
     }
 
     .audit-card {
-      background: #FFFFFF;
+      background: var(--bg-card);
       border: 1px solid var(--border-card);
       border-radius: 6px;
       padding: 10px 12px;
@@ -682,6 +709,7 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 14.5px;
       font-weight: 700;
+      color: var(--text-main);
       margin-top: 2px;
     }
 
@@ -1072,7 +1100,7 @@
             </div>
           </div>
 
-          <div id="inspector-feedback" style="font-size: 13px; color: var(--text-sub); padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid var(--border-card);">
+          <div id="inspector-feedback" style="font-size: 13px; color: var(--text-sub); padding: 8px 12px; background: var(--bg-card); border-radius: 6px; border: 1px solid var(--border-card);">
             Candidate conforms to oral mucoadhesive chitosan matrix rules: zero anionic Asp/Glu residues, zero Ile/Lys crosslinker traps, and full disulfide cyclization.
           </div>
         </div>
@@ -1282,72 +1310,126 @@
       }
     }
 
+    function hslToHex(h, s, l) {
+      s /= 100;
+      l /= 100;
+      const k = n => (n + h / 30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+      const toHex = x => Math.round(x * 255).toString(16).padStart(2, '0');
+      return '#' + toHex(f(0)) + toHex(f(8)) + toHex(f(4));
+    }
+
     function applyStyles() {
       if (!viewer) return;
       viewer.removeAllSurfaces();
       viewer.removeAllShapes();
 
-      const confColorFunc = function(atom) {
-        if (atom.chain === 'B') {
-          const b = atom.b;
-          if (b >= 90) return '#38BDF8'; // High confidence (cyan)
-          if (b >= 80) return '#34D399'; // High (green)
-          if (b >= 70) return '#FBBF24'; // Medium (yellow)
-          return '#F87171'; // Low (red)
-        }
-        // Chain A GtfB 3AIC pocket:
-        const b = atom.b;
-        if (b >= 95) return '#EC4899'; // Triad
-        if (b >= 90) return '#64748B'; // Marine slate
-        return '#475569';
+      // 1. Residue Polarity Colorfunc (Biochemically Rigorous Physicochemical Classes)
+      const polarityColorFunc = function(atom) {
+        const resn = (atom.resn || '').trim().toUpperCase();
+        if (resn === 'CYS') return '#FACC15'; // Disulfide Gold
+        if (['ARG', 'LYS', 'HIS'].includes(resn)) return '#38BDF8'; // Basic Cationic (Electric Blue)
+        if (['ASP', 'GLU'].includes(resn)) return '#F87171'; // Acidic Anionic (Coral Red)
+        if (['TRP', 'PHE', 'TYR', 'ALA', 'PRO', 'VAL', 'LEU', 'ILE', 'MET'].includes(resn)) return '#34D399'; // Aromatic/Hydrophobic (Emerald)
+        if (['SER', 'THR', 'ASN', 'GLN', 'GLY'].includes(resn)) return '#A78BFA'; // Polar Uncharged (Violet)
+        return '#94A3B8';
       };
 
+      // 2. Chain B Spectrum Colorfunc (Dynamic N->C Rainbow)
+      let maxBResi = 9;
+      try {
+        const bAtoms = viewer.selectedAtoms({ chain: 'B' });
+        bAtoms.forEach(a => { if (a.resi && a.resi > maxBResi) maxBResi = a.resi; });
+      } catch (e) {}
+
+      const spectrumBColorFunc = function(atom) {
+        const resi = atom.resi || 1;
+        const t = Math.max(0, Math.min(1, (resi - 1) / Math.max(1, maxBResi - 1)));
+        const hue = 240 * (1 - t); // 240 (Blue N-terminus) -> 120 (Green) -> 60 (Yellow) -> 0 (Red C-terminus)
+        return hslToHex(hue, 90, 52);
+      };
+
+      const isPolarity = (currentColoring === 'confidence' || currentColoring === 'polarity');
+      const isChain = (currentColoring === 'chain');
+
       if (currentRep === 'complex') {
-        // Structural Biology Mol* Ribbon Visualization:
-        // Chain A: Crisp AlphaFold marine-slate cartoon ribbons
-        if (currentColoring === 'confidence') {
-          viewer.setStyle({ chain: 'A' }, { cartoon: { color: '#475569', opacity: 0.95 } });
-        } else if (currentColoring === 'chain') {
-          viewer.setStyle({ chain: 'A' }, { cartoon: { color: '#334155', opacity: 0.95 } });
-        } else {
-          viewer.setStyle({ chain: 'A' }, { cartoon: { color: 'spectrum', opacity: 0.95 } });
+        // Chain A Styles
+        if (isPolarity) {
+          viewer.setStyle({ chain: 'A' }, {
+            cartoon: { colorfunc: polarityColorFunc, opacity: 0.92 }
+          });
+          viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
+            stick: { colorfunc: polarityColorFunc, radius: 0.28 },
+            cartoon: { colorfunc: polarityColorFunc }
+          });
+        } else if (isChain) {
+          viewer.setStyle({ chain: 'A' }, {
+            cartoon: { color: '#6366F1', opacity: 0.95 }
+          });
+          viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
+            stick: { colorscheme: 'magentaCarbon', radius: 0.28 },
+            cartoon: { color: '#EC4899' }
+          });
+        } else { // spectrum
+          viewer.setStyle({ chain: 'A' }, {
+            cartoon: { color: 'spectrum', opacity: 0.95 }
+          });
+          viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
+            stick: { color: 'spectrum', radius: 0.28 }
+          });
         }
 
-        // Highlight catalytic triad (Asp477, Glu515, Asp588) with magenta stick representations
-        viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
-          stick: { colorscheme: 'magentaCarbon', radius: 0.28 },
-          cartoon: { color: '#EC4899' }
-        });
+        // Chain B Styles
+        if (isPolarity) {
+          viewer.setStyle({ chain: 'B' }, {
+            stick: { colorfunc: polarityColorFunc, radius: 0.26 },
+            sphere: { colorfunc: polarityColorFunc, radius: 0.52 }
+          });
+          viewer.setStyle({ chain: 'B', atom: 'SG' }, {
+            sphere: { color: '#FACC15', radius: 0.72 },
+            stick: { color: '#FACC15', radius: 0.32 }
+          });
+        } else if (isChain) {
+          viewer.setStyle({ chain: 'B' }, {
+            stick: { color: '#06B6D4', radius: 0.26 },
+            sphere: { color: '#10B981', radius: 0.52 }
+          });
+          viewer.setStyle({ chain: 'B', atom: 'SG' }, {
+            sphere: { color: '#F59E0B', radius: 0.72 },
+            stick: { color: '#F59E0B', radius: 0.32 }
+          });
+        } else { // spectrum
+          viewer.setStyle({ chain: 'B' }, {
+            stick: { colorfunc: spectrumBColorFunc, radius: 0.26 },
+            sphere: { colorfunc: spectrumBColorFunc, radius: 0.52 }
+          });
+          viewer.setStyle({ chain: 'B', atom: 'SG' }, {
+            sphere: { colorfunc: spectrumBColorFunc, radius: 0.65 },
+            stick: { colorfunc: spectrumBColorFunc, radius: 0.30 }
+          });
+        }
 
-        // Chain B: Vibrant high-contrast cyan/amber ball-and-stick
-        viewer.setStyle({ chain: 'B' }, {
-          stick: { color: '#06B6D4', radius: 0.24 },
-          sphere: { color: '#38BDF8', radius: 0.52 }
-        });
-
-        // Disulfide bridge highlight (Cys1 SG - Cys11 SG)
-        viewer.setStyle({ chain: 'B', atom: 'SG' }, {
-          sphere: { color: '#F59E0B', radius: 0.72 },
-          stick: { color: '#F59E0B', radius: 0.32 }
-        });
-
-        // Subtle translucent (opacity: 0.32) white/ice molecular pocket surface around active-site cavity
+        // Subtle cavity surface around active site
         try {
-          viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.32, color: '#F8FAFC' }, { chain: 'A', within: { distance: 11.5, sel: { chain: 'B' } } });
+          let cavityColor = '#F8FAFC';
+          if (isChain) cavityColor = '#818CF8';
+          else if (!isPolarity) cavityColor = 'spectrum';
+          viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.25, color: cavityColor }, { chain: 'A', within: { distance: 11.5, sel: { chain: 'B' } } });
         } catch (e) {
           console.warn("Surface generation note:", e);
         }
 
-        // Add dashed golden H-bond contact lines from Arg guanidinium nitrogens to catalytic Asp/Glu oxygens
+        // Dashed golden H-bond contact lines
         try {
           const bAtoms = viewer.selectedAtoms({ chain: 'B' });
           const aTriad = viewer.selectedAtoms({ chain: 'A', resi: [477, 515, 588] });
           bAtoms.forEach(b => {
-            if (b.atom === 'NH1' || b.atom === 'NH2' || b.atom === 'NE') {
+            if (['NH1', 'NH2', 'NE', 'NZ'].includes(b.atom)) {
               aTriad.forEach(a => {
                 if (['OD1', 'OD2', 'OE1', 'OE2'].includes(a.atom)) {
                   const d = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
-                  if (d >= 2.70 && d <= 3.65) {
+                  if (d >= 2.60 && d <= 3.75) {
                     viewer.addLine({
                       start: { x: b.x, y: b.y, z: b.z },
                       end: { x: a.x, y: a.y, z: a.z },
@@ -1364,19 +1446,99 @@
         }
 
       } else if (currentRep === 'target') {
-        viewer.setStyle({ chain: 'A' }, { cartoon: { color: '#38BDF8' } });
-        viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, { stick: { colorscheme: 'magentaCarbon', radius: 0.3 } });
+        // GtfB Pocket Only
         viewer.setStyle({ chain: 'B' }, {});
+        if (isPolarity) {
+          viewer.setStyle({ chain: 'A' }, { cartoon: { colorfunc: polarityColorFunc, opacity: 0.95 } });
+          viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
+            stick: { colorfunc: polarityColorFunc, radius: 0.3 },
+            cartoon: { colorfunc: polarityColorFunc }
+          });
+        } else if (isChain) {
+          viewer.setStyle({ chain: 'A' }, { cartoon: { color: '#6366F1', opacity: 0.95 } });
+          viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
+            stick: { colorscheme: 'magentaCarbon', radius: 0.3 },
+            cartoon: { color: '#EC4899' }
+          });
+        } else { // spectrum
+          viewer.setStyle({ chain: 'A' }, { cartoon: { color: 'spectrum', opacity: 0.95 } });
+          viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
+            stick: { color: 'spectrum', radius: 0.3 }
+          });
+        }
+
       } else if (currentRep === 'ligand') {
+        // Cyclic Peptide Only
         viewer.setStyle({ chain: 'A' }, {});
-        viewer.setStyle({ chain: 'B' }, {
-          stick: { color: '#06B6D4', radius: 0.28 },
-          sphere: { color: '#F59E0B', radius: 0.58 }
-        });
+        if (isPolarity) {
+          viewer.setStyle({ chain: 'B' }, {
+            stick: { colorfunc: polarityColorFunc, radius: 0.28 },
+            sphere: { colorfunc: polarityColorFunc, radius: 0.58 }
+          });
+          viewer.setStyle({ chain: 'B', atom: 'SG' }, {
+            sphere: { color: '#FACC15', radius: 0.76 },
+            stick: { color: '#FACC15', radius: 0.34 }
+          });
+        } else if (isChain) {
+          viewer.setStyle({ chain: 'B' }, {
+            stick: { color: '#06B6D4', radius: 0.28 },
+            sphere: { color: '#10B981', radius: 0.58 }
+          });
+          viewer.setStyle({ chain: 'B', atom: 'SG' }, {
+            sphere: { color: '#F59E0B', radius: 0.76 },
+            stick: { color: '#F59E0B', radius: 0.34 }
+          });
+        } else { // spectrum
+          viewer.setStyle({ chain: 'B' }, {
+            stick: { colorfunc: spectrumBColorFunc, radius: 0.28 },
+            sphere: { colorfunc: spectrumBColorFunc, radius: 0.58 }
+          });
+        }
+
       } else if (currentRep === 'surface') {
-        viewer.setStyle({ chain: 'A' }, { cartoon: { color: '#1E293B' } });
-        viewer.setStyle({ chain: 'B' }, { stick: { color: '#38BDF8', radius: 0.25 } });
-        viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.85, color: '#94A3B8' }, { chain: 'A' });
+        // Surface Electrostatics
+        if (isPolarity) {
+          viewer.setStyle({ chain: 'A' }, { cartoon: { colorfunc: polarityColorFunc, opacity: 0.7 } });
+          try {
+            viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.85, colorfunc: polarityColorFunc }, { chain: 'A' });
+          } catch (se) {
+            console.warn("Surface render error:", se);
+          }
+          viewer.setStyle({ chain: 'B' }, {
+            stick: { colorfunc: polarityColorFunc, radius: 0.26 },
+            sphere: { colorfunc: polarityColorFunc, radius: 0.52 }
+          });
+          viewer.setStyle({ chain: 'B', atom: 'SG' }, {
+            sphere: { color: '#FACC15', radius: 0.72 },
+            stick: { color: '#FACC15', radius: 0.32 }
+          });
+        } else if (isChain) {
+          viewer.setStyle({ chain: 'A' }, { cartoon: { color: '#6366F1', opacity: 0.7 } });
+          try {
+            viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.85, color: '#818CF8' }, { chain: 'A' });
+          } catch (se) {
+            console.warn("Surface render error:", se);
+          }
+          viewer.setStyle({ chain: 'B' }, {
+            stick: { color: '#06B6D4', radius: 0.26 },
+            sphere: { color: '#10B981', radius: 0.52 }
+          });
+          viewer.setStyle({ chain: 'B', atom: 'SG' }, {
+            sphere: { color: '#F59E0B', radius: 0.72 },
+            stick: { color: '#F59E0B', radius: 0.32 }
+          });
+        } else { // spectrum
+          viewer.setStyle({ chain: 'A' }, { cartoon: { color: 'spectrum', opacity: 0.7 } });
+          try {
+            viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.85, color: 'spectrum' }, { chain: 'A' });
+          } catch (se) {
+            console.warn("Surface render error:", se);
+          }
+          viewer.setStyle({ chain: 'B' }, {
+            stick: { colorfunc: spectrumBColorFunc, radius: 0.26 },
+            sphere: { colorfunc: spectrumBColorFunc, radius: 0.52 }
+          });
+        }
       }
 
       viewer.render();
@@ -1511,16 +1673,16 @@
         <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="var(--chart-grid)" stroke-width="1"/>
         <line x1="${padL}" y1="${padT + plotH}" x2="${padL + plotW}" y2="${padT + plotH}" stroke="var(--chart-grid)" stroke-width="1"/>
         <!-- Threshold 90 Line -->
-        <line x1="${padL}" y1="${padT + plotH - ((90 - 60) / 40) * plotH}" x2="${padL + plotW}" y2="${padT + plotH - ((90 - 60) / 40) * plotH}" stroke="#0D9488" stroke-dasharray="3,3" stroke-width="1"/>
-        <text x="${padL + 4}" y="${padT + plotH - ((90 - 60) / 40) * plotH - 4}" font-size="9" fill="#0D9488" font-family="JetBrains Mono">Composite 0.80 Threshold</text>
+        <line x1="${padL}" y1="${padT + plotH - ((90 - 60) / 40) * plotH}" x2="${padL + plotW}" y2="${padT + plotH - ((90 - 60) / 40) * plotH}" stroke="var(--teal-primary)" stroke-dasharray="3,3" stroke-width="1"/>
+        <text x="${padL + 4}" y="${padT + plotH - ((90 - 60) / 40) * plotH - 4}" font-size="9" fill="var(--teal-primary)" font-family="JetBrains Mono">Composite 0.80 Threshold</text>
         
         <!-- Trajectory lines -->
-        <path d="${pathMean}" fill="none" stroke="#94A3B8" stroke-width="1.8"/>
-        <path d="${pathMax}" fill="none" stroke="#0D9488" stroke-width="2.4"/>
+        <path d="${pathMean}" fill="none" stroke="var(--text-muted)" stroke-width="1.8"/>
+        <path d="${pathMax}" fill="none" stroke="var(--teal-primary)" stroke-width="2.4"/>
         
         <!-- Active Gen marker -->
-        <line x1="${activeX}" y1="${padT}" x2="${activeX}" y2="${padT + plotH}" stroke="#0284C7" stroke-width="1.5" stroke-dasharray="2,2"/>
-        <circle cx="${activeX}" cy="${activeY}" r="5" fill="#0284C7" stroke="#FFFFFF" stroke-width="2"/>
+        <line x1="${activeX}" y1="${padT}" x2="${activeX}" y2="${padT + plotH}" stroke="var(--blue-accent)" stroke-width="1.5" stroke-dasharray="2,2"/>
+        <circle cx="${activeX}" cy="${activeY}" r="5" fill="var(--blue-accent)" stroke="var(--bg-card)" stroke-width="2"/>
         
         <!-- Axes Labels -->
         <text x="${padL}" y="${h - 10}" font-size="10" fill="var(--chart-axis)" font-family="JetBrains Mono">Gen 1</text>
@@ -1548,9 +1710,9 @@
         const x = padL + ((c.score - 60) / 40) * plotW;
         const y = padT + plotH - ((c.interaction - 0.40) / 0.60) * plotH;
         const isPass = c.chitosan.includes('PASS');
-        const color = isPass ? (c.score >= 90 ? '#0D9488' : '#0284C7') : '#DC2626';
+        const color = isPass ? (c.score >= 90 ? 'var(--teal-primary)' : 'var(--blue-accent)') : 'var(--red-accent)';
 
-        dotsHtml += `<circle cx="${x}" cy="${y}" r="${c.score >= 90 ? 5 : 3.5}" fill="${color}" stroke="#FFFFFF" stroke-width="1.2" opacity="0.85"><title>${c.seq}: Composite ${c.composite}</title></circle>`;
+        dotsHtml += `<circle cx="${x}" cy="${y}" r="${c.score >= 90 ? 5 : 3.5}" fill="${color}" stroke="var(--bg-card)" stroke-width="1.2" opacity="0.9"><title>${c.seq}: Composite ${c.composite}</title></circle>`;
       });
 
       // Gold Box rect: Metric >= 90, Interaction >= 0.80
