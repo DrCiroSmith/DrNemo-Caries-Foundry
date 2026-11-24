@@ -129,6 +129,17 @@ def test_gtfb_orchestrator_demo_execution():
     assert "PIPELINE EXECUTION SUMMARY" in res.stdout
 
 
+def test_gtfb_orchestrator_dock_sequence():
+    """Verify that gtfb_orchestrator.py --dock-sequence executes for a single sequence."""
+    cmd = [sys.executable, str(REPO_ROOT / "gtfb_orchestrator.py"), "--dock-sequence", "CRRRWWRRRRC"]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    assert res.returncode == 0, f"gtfb_orchestrator --dock-sequence failed: {res.stderr}"
+    assert "Executing live biophysical pipeline for sequence: CRRRWWRRRRC" in res.stdout
+    assert "Seq: CRRRWWRRRRC" in res.stdout
+    assert "FALSIFIED_ORAL_BARRIER" in res.stdout
+    assert "CPHWRPWHC" not in res.stdout
+
+
 def test_demo_dataset_integrity():
     """Verify the 20-generation demo dataset bundled in demo_data/."""
     demo_dir = REPO_ROOT / "demo_data"
@@ -585,7 +596,7 @@ def test_single_source_of_truth_integrity():
     from vault import ContenderVault
     vault = ContenderVault()
     all_rows = vault.get_all_contenders()
-    assert len(all_rows) == 259, f"Expected 259 contenders in vault, found {len(all_rows)}"
+    assert len(all_rows) == 260, f"Expected 260 contenders in vault, found {len(all_rows)}"
 
     for r in all_rows:
         ss = r["ss_bond_angstrom"]
@@ -595,7 +606,7 @@ def test_single_source_of_truth_integrity():
 
     # 2. Check README.md matches contender count exactly
     readme_text = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    assert "259" in readme_text, "README.md must cite exact 259 contender count"
+    assert "260" in readme_text, "README.md must cite exact 260 contender count"
 
     # 3. Live 1-ligand Vina smoke test (score_only) using shutil.which("vina")
     vina_bin = shutil.which("vina")

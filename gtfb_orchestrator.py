@@ -4,7 +4,7 @@
 Deterministic 4-stage biophysical screening and falsification pipeline wiring
 cyclic peptide generation, solubility shielding, empirical AutoDock Vina + Vinardo grid docking,
 OpenMM Amber14/GBn2 isolated ligand steric relaxation (200 steps),
-and 6-angle Karl Popper biophysical falsification into ContenderVault.
+and 6-angle biophysical falsification into ContenderVault.
 Zero synthetic mock scores, zero fake fallbacks, zero unverified heuristics.
 """
 
@@ -158,20 +158,6 @@ def evaluate_biophysics_node(state: GtfBEvolutionState) -> Dict[str, Any]:
         existing = vault.get_contender(seq)
         if not existing and hasattr(vault, "get_contender_by_sequence"):
             existing = vault.get_contender_by_sequence(seq)
-        if not existing and seq == "CRRRWWRRRRC":
-            existing = {
-                "sequence": "CRRRWWRRRRC",
-                "vina_3aic_kcal": -7.586,
-                "vina_1smd_kcal": -6.500,
-                "vinardo_3aic_kcal": -4.200,
-                "selectivity_ddg": -1.086,
-                "ss_bond_angstrom": 2.06,
-                "heavy_atoms": 96,
-                "ligand_efficiency": 0.079,
-                "openmm_relaxed_kj": None,
-                "falsification_status": "FALSIFIED_ORAL_BARRIER",
-                "pareto_rank": 2
-            }
         if existing:
             cand_data.update(existing)
             updated.append(cand_data)
@@ -313,7 +299,7 @@ def verify_vault():
     
     if champ:
         print("\n" + "-" * 70)
-        print("PARETO CHAMPION (Non-Dominated Lead):")
+        print("PARETO REFERENCE SCAFFOLD (Non-Dominated Candidate):")
         print(f"  Sequence:         {champ['sequence']}")
         print(f"  GtfB (3AIC):      {champ['vina_3aic_kcal']} kcal/mol")
         print(f"  Amylase (1SMD):   {champ['vina_1smd_kcal']} kcal/mol")
@@ -411,15 +397,17 @@ def main():
 
     orchestrator = build_gtfb_orchestrator()
     if args.dock_sequence:
+        cleaned_seq = args.dock_sequence.strip().upper()
         init_state: GtfBEvolutionState = {
             "generation": 1,
-            "contenders": [{"sequence": args.dock_sequence.strip().upper(), "generation": 1}],
+            "candidates": [cleaned_seq],
+            "contenders": [{"sequence": cleaned_seq, "generation": 1}],
             "target": "3AIC",
             "counter_target": "1SMD",
             "winning_candidate": None,
             "audit_results": []
         }
-        print(f"\nExecuting live biophysical pipeline for sequence: {args.dock_sequence}...")
+        print(f"\nExecuting live biophysical pipeline for sequence: {cleaned_seq}...")
         res = orchestrator.invoke(init_state)
         print("\nPipeline Result:")
         for c in res["contenders"]:

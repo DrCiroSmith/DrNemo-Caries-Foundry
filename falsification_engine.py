@@ -152,8 +152,8 @@ class FalsificationEngine:
         # Naive baseline empirical numbers (CRRRWWRRRRC)
         naive_rec = self.get_contender_record("CRRRWWRRRRC")
         naive_3aic = naive_rec.get("vina_3aic_kcal", -7.586)
-        naive_1smd = naive_rec.get("vina_1smd_kcal", -6.500)
-        naive_selectivity = naive_rec.get("selectivity_ddg", round(naive_3aic - naive_1smd, 2))
+        naive_1smd = naive_rec.get("vina_1smd_kcal", -7.580)
+        naive_selectivity = naive_rec.get("selectivity_ddg", round(naive_3aic - naive_1smd, 3))
 
         scrambled_data = benchmark.get("scrambled_null_test", {
             "n_isomers": 39,
@@ -259,9 +259,9 @@ class FalsificationEngine:
 
 
 def print_falsification_report(audit: Dict[str, Any]):
-    """Pretty prints the full Karl Popper falsification audit report."""
+    """Pretty prints the full biophysical falsification audit report."""
     print("=" * 76)
-    print("  OPERATION KARL POPPER: BIOPHYSICAL FALSIFICATION BENCHMARK AUDIT")
+    print("  BIOPHYSICAL FALSIFICATION BENCHMARK AUDIT")
     print("=" * 76)
     gates = audit["gates"]
     for k, g in gates.items():

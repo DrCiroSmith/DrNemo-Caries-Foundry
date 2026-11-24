@@ -17,7 +17,7 @@
   <a href="https://openmm.org"><img src="https://img.shields.io/badge/ForceField-OpenMM_Amber14-blueviolet.svg" alt="OpenMM Amber14"></a>
 </p>
 
-An open-source computational falsification case study and deterministic screening pipeline evaluating cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). Built on AutoDock Vina v1.2.7 / Vinardo empirical grid docking and OpenMM Amber14/GBn2 isolated-ligand steric minimization (200 steps), the platform demonstrates how automated negative controls (4.51 A co-crystal redocking drift, p = 0.5897 scrambled null permutation, and pH 5.2 histidine diprotonation inversion) systematically catch false-positive docking leads, establishing a rigorous NOT_CORROBORATED verdict across 259 total contenders in the vault. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
+An open-source computational falsification case study and deterministic screening pipeline evaluating cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). Built on AutoDock Vina v1.2.7 / Vinardo empirical grid docking and OpenMM Amber14/GBn2 isolated-ligand steric minimization (200 steps), the platform demonstrates how automated negative controls (4.51 A co-crystal redocking drift, p = 0.5897 scrambled null permutation, and pH 5.2 histidine diprotonation inversion) systematically catch false-positive docking leads, establishing a rigorous NOT_CORROBORATED verdict across 260 total contenders in the vault. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
 
 ---
 
@@ -47,9 +47,9 @@ The Foundry designs **arginine-rich cyclic disulfide macrocycles** that dock int
 
 The discovery engine executes a deterministic 4-stage Python screening pipeline (`gtfb_orchestrator.py`):
 
-1. **Cycle Designer**: C-X-7-C scaffold with P2A hinge; evaluates 259 contenders across discovery and null controls.
+1. **Cycle Designer**: C-X-7-C scaffold with P2A hinge; evaluates 260 contenders across discovery and null controls.
 2. **Solubility Shield**: Donnan Q <= +4.0, Stephan DQ >= +1.0, 0 protease cleavage sites.
-3. **Biophysics Engine**: AutoDock Vina + Vinardo uncompressed 28.0 A dual grid docking on RCSB 3AIC (target) and 1SMD (human alpha-amylase off-target), with OpenMM Amber14/GBn2 200-step isolated-ligand steric minimization prior to docking.
+3. **Biophysics Engine**: AutoDock Vina + Vinardo uncompressed 28.0 A dual grid docking on RCSB 3AIC (target) and 1SMD (human alpha-amylase off-target), with isolated-ligand 200-step Amber14/GBn2 steric relaxation check (informational only; not used in docking pose selection).
 4. **Popperian Falsification**: Amylase counter-screen (1SMD DDG <= -0.80), N=39 scrambled null permutations, alanine scan, and co-crystal calibration controls.
 
 Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to mutate the hinge.
@@ -138,7 +138,7 @@ DrNemo-Caries-Foundry/
 │   ├── fig4_falsification_plate_dark.png
 │   └── fig4_falsification_plate_light.png
 ├── data/
-│   ├── contenders_ledger.csv            # 259 contenders (220 design + 39 nulls)
+│   ├── contenders_ledger.csv            # 260 contenders (220 design + 39 nulls + 1 naive control)
 │   ├── foundry_contenders.sqlite        # Persistent SQLite contender vault
 │   ├── exhaustive_disproof_report.json  # 12-angle Popperian disproof report
 │   └── poses/                           # Docked PDBQT poses
