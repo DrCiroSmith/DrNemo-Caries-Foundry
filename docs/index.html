@@ -1587,7 +1587,7 @@
           <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 4px;">
             <li><strong>CycleDesigner Node:</strong> Generates conformationally constrained cyclic disulfide peptides (C...C).</li>
             <li><strong>Chitosan Shield:</strong> Excludes I, K, D, E to prevent entrapment within topical mucoadhesive chitosan nanoparticles.</li>
-            <li><strong>AutoDock Vina &amp; OpenMM:</strong> Resolves 28 Å uncompressed grid docking and all-atom Amber14/GBn2 relaxation against the GtfB catalytic triad (Asp477, Glu515, Asp588).</li>
+            <li><strong>AutoDock Vina &amp; OpenMM:</strong> Resolves 28 Å uncompressed grid docking and isolated-ligand Amber14/GBn2 200-step steric relaxation prior to docking.</li>
             <li><strong>IGSC Biosecurity Gate:</strong> Confirms sequence safety prior to solid-phase synthesis formatting.</li>
           </ul>
 
@@ -1684,7 +1684,7 @@
         seq: "CAHWRPWHC",
         pdb: "3AIC_docked_complex_CAHWRPWHC.pdb",
         vinardo: "-4.99 kcal/mol",
-        openmm: "-1234.68 kJ/mol",
+        openmm: "200-step steric relaxation",
         vina: "-8.191 kcal/mol",
         amylase: "ΔΔG -0.85 kcal/mol",
         scrambled: "Z = +0.32σ (p=0.5897)",

@@ -118,14 +118,15 @@ def test_cycle_designer_generation():
 
 
 def test_gtfb_orchestrator_demo_execution():
-    """Verify that gtfb_orchestrator.py --demo runs the full LangGraph state machine and exits 0."""
+    """Verify that gtfb_orchestrator.py --demo runs the deterministic pipeline and exits 0."""
     cmd = [sys.executable, str(REPO_ROOT / "gtfb_orchestrator.py"), "--demo"]
     res = subprocess.run(cmd, capture_output=True, text=True)
     assert res.returncode == 0, f"gtfb_orchestrator --demo failed: {res.stderr}"
-    assert "FOUNDRY SUCCESS" in res.stdout
     assert "CRRRWWRRRRC" in res.stdout
     assert "CPHWRPWHC" in res.stdout
-    assert "PepSy" in res.stdout
+    assert "CAHWRPWHC" in res.stdout
+    assert "NOT_CORROBORATED" in res.stdout
+    assert "PIPELINE EXECUTION SUMMARY" in res.stdout
 
 
 def test_demo_dataset_integrity():
@@ -644,4 +645,46 @@ def test_vina_path_resolution_and_portability():
     assert os.path.exists(split_path)
     assert os.path.basename(split_path).startswith("vina_split")
 
+def test_orchestrator_nodes_and_demo_execution():
+    """Verify evaluate_solubility_node + falsify_and_rank_node runs without TypeError on non-cached sequences,
+    and verify run_demo executes the real deterministic 4-node pipeline without crashing."""
+    from gtfb_orchestrator import evaluate_solubility_node, falsify_and_rank_node, run_demo
+    
+    # 1. Non-cached sequence test verifying unpack of is_viable tuple and calc_stephan_switch dict
+    non_cached_seq = "CRRRWWDRRRC"
+    state = {
+        "generation": 1,
+        "contenders": [
+            {
+                "sequence": non_cached_seq,
+                "generation": 1,
+                "vina_3aic_kcal": -7.2,
+                "vina_1smd_kcal": -6.8,
+                "selectivity_ddg": -0.4,
+                "ss_bond_angstrom": 2.06
+            }
+        ]
+    }
+    
+    # Must not raise TypeError: '<' not supported between instances of 'dict' and 'float'
+    solub_state = evaluate_solubility_node(state)
+    assert len(solub_state["contenders"]) == 1
+    c_solub = solub_state["contenders"][0]
+    assert isinstance(c_solub["delta_q_stephan"], float)
+    assert isinstance(c_solub["is_viable"], bool)
+    
+    ranked_state = falsify_and_rank_node(solub_state)
+    assert len(ranked_state["contenders"]) == 1
+    c_ranked = ranked_state["contenders"][0]
+    assert c_ranked["falsification_status"] in ("FALSIFIED_ORAL_BARRIER", "FALSIFIED_AMYLASE_CROSSREACTIVITY", "SUBTHRESHOLD_AFFINITY", "NOT_CORROBORATED")
+    
+    # 2. Test run_demo() execution
+    demo_res = run_demo()
+    assert isinstance(demo_res, dict)
+    assert "contenders" in demo_res
+    assert len(demo_res["contenders"]) == 3
+    # Check CAHWRPWHC receives NOT_CORROBORATED verdict
+    cah_record = next(c for c in demo_res["contenders"] if c["sequence"] == "CAHWRPWHC")
+    assert cah_record["falsification_status"] == "NOT_CORROBORATED"
+    assert cah_record["pareto_rank"] == 1
 

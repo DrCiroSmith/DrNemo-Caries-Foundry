@@ -124,11 +124,21 @@ class ContenderVault:
             writer.writerow({f: data.get(f) for f in fields})
 
     def get_contender(self, contender_id: str) -> Optional[Dict[str, Any]]:
-        """Retrieves a single contender record by ID."""
+        """Retrieves a single contender record by ID or sequence."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        cur.execute("SELECT * FROM contenders WHERE contender_id = ?", (contender_id,))
+        cur.execute("SELECT * FROM contenders WHERE contender_id = ? OR sequence = ? LIMIT 1;", (contender_id, contender_id))
+        row = cur.fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def get_contender_by_sequence(self, sequence: str) -> Optional[Dict[str, Any]]:
+        """Retrieves a single contender record by sequence."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM contenders WHERE sequence = ? LIMIT 1;", (sequence.strip().upper(),))
         row = cur.fetchone()
         conn.close()
         return dict(row) if row else None

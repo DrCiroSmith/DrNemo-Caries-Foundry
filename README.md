@@ -14,11 +14,10 @@
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
   <a href="https://vina.scripps.edu"><img src="https://img.shields.io/badge/Biophysics-AutoDock_Vina_v1.2.7-76B900.svg" alt="AutoDock Vina"></a>
-  <a href="https://langchain-ai.github.io/langgraph/"><img src="https://img.shields.io/badge/Orchestration-LangGraph-orange.svg" alt="LangGraph"></a>
   <a href="https://openmm.org"><img src="https://img.shields.io/badge/ForceField-OpenMM_Amber14-blueviolet.svg" alt="OpenMM Amber14"></a>
 </p>
 
-A deterministic biophysical screening and falsification pipeline (with optional LangGraph state-graph orchestration) that designs, filters, and evaluates cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). It couples AutoDock Vina v1.2.7 and Vinardo empirical grid docking, OpenMM Amber14/GBn2 isolated ligand all-atom steric relaxation (200 steps), and an exhaustive 12-angle Karl Popper falsification battery evaluating reference scaffold **CAHWRPWHC** over 259 total contenders in the vault, including N=39 scrambled nulls. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
+An open-source computational falsification case study and deterministic screening pipeline evaluating cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). Built on AutoDock Vina v1.2.7 / Vinardo empirical grid docking and OpenMM Amber14/GBn2 isolated-ligand steric minimization (200 steps), the platform demonstrates how automated negative controls (4.51 A co-crystal redocking drift, p = 0.5897 scrambled null permutation, and pH 5.2 histidine diprotonation inversion) systematically catch false-positive docking leads, establishing a rigorous NOT_CORROBORATED verdict across 259 total contenders in the vault. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
 
 ---
 
@@ -46,14 +45,12 @@ The Foundry designs **arginine-rich cyclic disulfide macrocycles** that dock int
   </picture>
 </p>
 
-The discovery engine runs an iterative closed loop:
+The discovery engine executes a deterministic 4-stage Python screening pipeline (`gtfb_orchestrator.py`):
 
-1. **Evolutionary Generator**: C-X-7-C scaffold with P2A hinge; evaluates 259 contenders across discovery and null controls.
-2. **Oral Shield Gate**: Donnan Q <= +4.0, Stephan DQ >= +1.0, 0 protease sites.
-3. **28.0 A Dual Docking**: AutoDock Vina + Vinardo on RCSB 3AIC (target) and 1SMD (human alpha-amylase off-target).
-4. **OpenMM Steric Relaxation**: Amber14/GBn2 isolated ligand all-atom minimization (200 steps).
-5. **12-Angle Popper Falsification**: 1SMD DDG <= -0.80, N=39 scrambled nulls, alanine scan, Acarbose counter-screen.
-6. **SQLite Contender Vault and SPPS Protocol**: solid-phase synthesis plan for candidate evaluation.
+1. **Cycle Designer**: C-X-7-C scaffold with P2A hinge; evaluates 259 contenders across discovery and null controls.
+2. **Solubility Shield**: Donnan Q <= +4.0, Stephan DQ >= +1.0, 0 protease cleavage sites.
+3. **Biophysics Engine**: AutoDock Vina + Vinardo uncompressed 28.0 A dual grid docking on RCSB 3AIC (target) and 1SMD (human alpha-amylase off-target), with OpenMM Amber14/GBn2 200-step isolated-ligand steric minimization prior to docking.
+4. **Popperian Falsification**: Amylase counter-screen (1SMD DDG <= -0.80), N=39 scrambled null permutations, alanine scan, and co-crystal calibration controls.
 
 Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to mutate the hinge.
 
@@ -77,7 +74,7 @@ Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to 
 | **Chitosan Donnan Q (pH 6)** | +7.00 (> +4.0 fail) | +2.046 | +2.046 | **+2.046 (<= +4.0)** | Baseline falsified (entrapment) |
 | **Stephan DQ (acid switch)** | 0.00 | +1.62 | +1.62 | **+1.62** | Acid-activated in cariogenic niche |
 | **Disulfide S-S** | unconstrained | 2.06 A | 2.06 A | **2.06 A** | Intact macrocyclic restraint |
-| **OpenMM Amber14/GBn2 Min** | N/A | -1,165.5 kJ/mol | -1,271.48 kJ/mol | **-1,234.68 kJ/mol** | Isolated ligand steric relaxation |
+| **OpenMM Amber14/GBn2** | N/A | 200-step relaxed | 200-step relaxed | **200-step relaxed** | Isolated ligand steric minimization |
 | **Verdict** | FALSIFIED (multiple gates) | FALSIFIED (amylase) | FALSIFIED (trypsin site) | **IN SILICO HYPOTHESIS** | Candidate advance with 3 caveats |
 
 P2A (Pro2 to Ala) hinge relaxation preserves GtfB binding while sterically excluding the inhibitor from human amylase (DDG = -0.85 kcal/mol). P6A (Pro6 to Ala) gives raw affinity -8.890 kcal/mol but breaks the proline steric shield, creating a tryptic cleavage site, falsified on Angle 5.
