@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DrNemo: Targeted GtfB Macrocycle Biophysics | Interactive 3D Studio</title>
+  <!-- Inline Favicon -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🦷%3C/text%3E%3C/svg%3E">
+
   <meta name="description" content="Autonomous molecular discovery for Streptococcus mutans GtfB remineralization blockers. Live 3Dmol.js WebGL dual-chain viewer, 20-generation evolution scrubber, and chitosan biosecurity inspector.">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -840,11 +843,20 @@
     /* Sandbox Zone Card & Residue Strip */
     .sandbox-card {
       grid-column: 1 / -1;
-      margin-bottom: 4px;
+      order: 3;
+      margin-top: 4px;
       background: var(--bg-card);
       border: 1px solid var(--border-card);
       border-radius: 12px;
       padding: 18px 22px;
+    }
+
+    #stage-card {
+      order: 1;
+    }
+
+    #analysis-tabs-card {
+      order: 2;
     }
 
     .sandbox-input-section {
@@ -1035,38 +1047,73 @@
 
     @media (max-width: 900px) {
       header {
-        padding: 14px 16px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-      }
-      .header-links {
-        width: 100%;
-        justify-content: flex-start;
-        flex-wrap: wrap;
+        padding: 8px 12px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         gap: 8px;
+        position: relative;
       }
-      main {
-        padding: 0 12px;
-        gap: 14px;
+      .brand-group {
+        gap: 1px;
+        max-width: calc(100% - 95px);
       }
-      .studio-card {
-        padding: 14px 14px;
-      }
-      .sandbox-card {
-        padding: 14px 14px;
+      .brand-badges {
+        display: none;
       }
       .brand-title {
-        font-size: 20px;
+        font-size: 15px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .brand-desc {
-        font-size: 12px;
+        display: none;
+      }
+      .header-links {
+        width: auto;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+      .header-links .btn {
+        padding: 5px 8px;
+        font-size: 11px;
+      }
+      .header-links .btn-primary {
+        display: none;
+      }
+      .theme-toggle-btn {
+        padding: 5px 8px;
+        font-size: 11px;
+      }
+      main {
+        margin: 6px auto;
+        padding: 0 8px;
+        gap: 12px;
+        grid-template-columns: 1fr;
+      }
+      .studio-card {
+        padding: 10px 10px;
+      }
+      .sandbox-card {
+        padding: 10px 10px;
+        order: 2;
+      }
+      #stage-card {
+        order: 1;
+      }
+      #analysis-tabs-card {
+        order: 3;
+      }
+      .molecular-stage-container {
+        height: 350px;
       }
       .stage-atom-readout {
-        max-width: calc(100% - 28px);
-        font-size: 10.5px;
-        bottom: 46px;
-        left: 14px;
+        max-width: calc(100% - 20px);
+        font-size: 10px;
+        bottom: 42px;
+        left: 10px;
       }
     }
 
@@ -1160,85 +1207,8 @@
   <!-- Main Grid -->
   <main>
 
-    <!-- TOP: Interactive Peptide Input & 259-Vault Lookup Zone -->
-    <section class="studio-card sandbox-card" id="sandbox-zone">
-      <div class="card-header" style="margin-bottom: 12px;">
-        <div>
-          <h2 class="card-title">Interactive Peptide Input &amp; 259-Contender Vault Lookup</h2>
-          <span class="card-subtitle">Live oral biophysics engine (Donnan barrier, Stephan acid-switch, protease cuts) &amp; empirical 3D docking vault lookup</span>
-        </div>
-        <div class="badge-pill" id="vault-match-badge" style="background: var(--teal-light); color: var(--teal-dark); border-color: rgba(13,148,136,0.2);">Live Oral Chemistry</div>
-      </div>
-
-      <!-- Quick-Test Pills & Sequence Input Row -->
-      <div class="sandbox-input-section">
-        <div class="sandbox-pills-row">
-          <span class="toolbar-label" style="align-self: center;">Quick Test:</span>
-          <button class="preset-btn" onclick="loadSandboxSeq('CHPWPHWAC')">CHPWPHWAC (-9.05 Vault #1)</button>
-          <button class="preset-btn" onclick="loadSandboxSeq('CAHWRPWHC')">CAHWRPWHC (-8.19 Ref Lead)</button>
-          <button class="preset-btn" onclick="loadSandboxSeq('CPHWRPWHC')">CPHWRPWHC (Amylase Fail)</button>
-          <button class="preset-btn" onclick="loadSandboxSeq('CPHWRAWHC')">CPHWRAWHC (P6A Trypsin Fail)</button>
-          <button class="preset-btn" onclick="loadSandboxSeq('CRRRWWRRRRC')">CRRRWWRRRRC (Naive +7.0 Fail)</button>
-        </div>
-
-        <div class="sandbox-controls-row">
-          <div class="sandbox-input-wrapper">
-            <label class="toolbar-label" for="sandbox-seq-input">Sequence Input (5-30 Residues, Disulfide C...C):</label>
-            <input type="text" id="sandbox-seq-input" class="seq-input" value="CAHWRPWHC" maxlength="30" oninput="onSandboxSeqChange(this.value)" autocomplete="off" spellcheck="false">
-          </div>
-          <div class="sandbox-mutations-wrapper">
-            <span class="toolbar-label">1-Click Mutations:</span>
-            <div class="preset-btn-row">
-              <button class="preset-btn" onclick="applyMutation('P6A')">+P6A</button>
-              <button class="preset-btn" onclick="applyMutation('P2A')">+P2A</button>
-              <button class="preset-btn" onclick="applyMutation('R5K')">+R5K</button>
-              <button class="preset-btn" onclick="applyMutation('W4A')">+W4A</button>
-              <button class="preset-btn" onclick="applyMutation('RESET')">Reset</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Residue Color Strip -->
-        <div class="sandbox-strip-container">
-          <span class="toolbar-label">Residue-by-Residue Motif Map:</span>
-          <div class="sandbox-residue-strip" id="sandbox-residue-strip">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
-      </div>
-
-      <!-- Live Calculations & 259-Vault Telemetry Grid -->
-      <div class="sandbox-telemetry-grid">
-        <div class="audit-card" id="sb-card-cyclization">
-          <span class="audit-label">Cyclization (C...C)</span>
-          <span class="audit-val" id="sb-val-cyclization">PASS (S-S Lock)</span>
-        </div>
-        <div class="audit-card" id="sb-card-donnan">
-          <span class="audit-label">Donnan Q(pH 6.0) &le; +4.0</span>
-          <span class="audit-val" id="sb-val-donnan">+2.05 (Safe)</span>
-        </div>
-        <div class="audit-card" id="sb-card-stephan">
-          <span class="audit-label">Stephan Surge &Delta;Q (7.2 &rarr; 5.2)</span>
-          <span class="audit-val" id="sb-val-stephan">+1.62 (Acid Switch)</span>
-        </div>
-        <div class="audit-card" id="sb-card-trypsin">
-          <span class="audit-label">Trypsin Sites (R/K)</span>
-          <span class="audit-val" id="sb-val-trypsin">0 Sites (RP Shielded)</span>
-        </div>
-        <div class="audit-card" id="sb-card-chymotrypsin">
-          <span class="audit-label">Chymotrypsin Sites (W/Y/F)</span>
-          <span class="audit-val" id="sb-val-chymotrypsin">2 Sites (At Risk)</span>
-        </div>
-      </div>
-
-      <!-- 259-Contender Vault Match Card -->
-      <div class="vault-match-box" id="vault-match-box">
-        <!-- Dynamic content populated by JS -->
-      </div>
-    </section>
-
     <!-- LEFT: 3D WebGL Molecular Viewport -->
-    <div class="studio-card">
+    <div class="studio-card" id="stage-card">
       <div class="card-header">
         <div>
           <h2 class="card-title">Dual-Chain Catalytic Pocket Stage</h2>
@@ -1324,7 +1294,7 @@
     </div>
 
     <!-- RIGHT: Evolution Scrubber & Chitosan Inspector -->
-    <div class="studio-card">
+    <div class="studio-card" id="analysis-tabs-card">
       <!-- Tabs Nav -->
       <div class="tab-nav">
         <button class="tab-btn active" onclick="switchTab('tab-falsification')">⚖️ Karl Popper Falsification</button>
@@ -1599,6 +1569,83 @@
       </div>
 
     </div>
+    <!-- BOTTOM: Interactive Peptide Input & 259-Vault Lookup Zone -->
+    <section class="studio-card sandbox-card" id="sandbox-zone">
+      <div class="card-header" style="margin-bottom: 12px;">
+        <div>
+          <h2 class="card-title">Interactive Peptide Input &amp; 259-Contender Vault Lookup</h2>
+          <span class="card-subtitle">Live oral biophysics engine (Donnan barrier, Stephan acid-switch, protease cuts) &amp; empirical 3D docking vault lookup</span>
+        </div>
+        <div class="badge-pill" id="vault-match-badge" style="background: var(--teal-light); color: var(--teal-dark); border-color: rgba(13,148,136,0.2);">Live Oral Chemistry</div>
+      </div>
+
+      <!-- Quick-Test Pills & Sequence Input Row -->
+      <div class="sandbox-input-section">
+        <div class="sandbox-pills-row">
+          <span class="toolbar-label" style="align-self: center;">Quick Test:</span>
+          <button class="preset-btn" onclick="loadSandboxSeq('CHPWPHWAC')">CHPWPHWAC (-9.05 Vault #1)</button>
+          <button class="preset-btn" onclick="loadSandboxSeq('CAHWRPWHC')">CAHWRPWHC (-8.19 Ref Lead)</button>
+          <button class="preset-btn" onclick="loadSandboxSeq('CPHWRPWHC')">CPHWRPWHC (Amylase Fail)</button>
+          <button class="preset-btn" onclick="loadSandboxSeq('CPHWRAWHC')">CPHWRAWHC (P6A Trypsin Fail)</button>
+          <button class="preset-btn" onclick="loadSandboxSeq('CRRRWWRRRRC')">CRRRWWRRRRC (Naive +7.0 Fail)</button>
+        </div>
+
+        <div class="sandbox-controls-row">
+          <div class="sandbox-input-wrapper">
+            <label class="toolbar-label" for="sandbox-seq-input">Sequence Input (5-30 Residues, Disulfide C...C):</label>
+            <input type="text" id="sandbox-seq-input" class="seq-input" value="CAHWRPWHC" maxlength="30" oninput="onSandboxSeqChange(this.value)" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="sandbox-mutations-wrapper">
+            <span class="toolbar-label">1-Click Mutations:</span>
+            <div class="preset-btn-row">
+              <button class="preset-btn" onclick="applyMutation('P6A')">+P6A</button>
+              <button class="preset-btn" onclick="applyMutation('P2A')">+P2A</button>
+              <button class="preset-btn" onclick="applyMutation('R5K')">+R5K</button>
+              <button class="preset-btn" onclick="applyMutation('W4A')">+W4A</button>
+              <button class="preset-btn" onclick="applyMutation('RESET')">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Residue Color Strip -->
+        <div class="sandbox-strip-container">
+          <span class="toolbar-label">Residue-by-Residue Motif Map:</span>
+          <div class="sandbox-residue-strip" id="sandbox-residue-strip">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Calculations & 259-Vault Telemetry Grid -->
+      <div class="sandbox-telemetry-grid">
+        <div class="audit-card" id="sb-card-cyclization">
+          <span class="audit-label">Cyclization (C...C)</span>
+          <span class="audit-val" id="sb-val-cyclization">PASS (S-S Lock)</span>
+        </div>
+        <div class="audit-card" id="sb-card-donnan">
+          <span class="audit-label">Donnan Q(pH 6.0) &le; +4.0</span>
+          <span class="audit-val" id="sb-val-donnan">+2.05 (Safe)</span>
+        </div>
+        <div class="audit-card" id="sb-card-stephan">
+          <span class="audit-label">Stephan Surge &Delta;Q (7.2 &rarr; 5.2)</span>
+          <span class="audit-val" id="sb-val-stephan">+1.62 (Acid Switch)</span>
+        </div>
+        <div class="audit-card" id="sb-card-trypsin">
+          <span class="audit-label">Trypsin Sites (R/K)</span>
+          <span class="audit-val" id="sb-val-trypsin">0 Sites (RP Shielded)</span>
+        </div>
+        <div class="audit-card" id="sb-card-chymotrypsin">
+          <span class="audit-label">Chymotrypsin Sites (W/Y/F)</span>
+          <span class="audit-val" id="sb-val-chymotrypsin">2 Sites (At Risk)</span>
+        </div>
+      </div>
+
+      <!-- 259-Contender Vault Match Card -->
+      <div class="vault-match-box" id="vault-match-box">
+        <!-- Dynamic content populated by JS -->
+      </div>
+    </section>
+
   </main>
 
   <!-- Footer -->
@@ -1750,17 +1797,6 @@
     let isSpinning = false;
     let viewer = null;
     let playInterval = null;
-
-    // Inject preserveDrawingBuffer and antialias for WebGL screenshot fidelity
-    (function() {
-      const origGetContext = HTMLCanvasElement.prototype.getContext;
-      HTMLCanvasElement.prototype.getContext = function(type, attrs) {
-        if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') {
-          attrs = Object.assign({}, attrs || {}, { preserveDrawingBuffer: true, antialias: true, alpha: true });
-        }
-        return origGetContext.call(this, type, attrs);
-      };
-    })();
 
     // === 3Dmol Viewer Initialization ===
     function initViewer() {
@@ -2543,10 +2579,39 @@
     }
 
     function updateSandbox(seq) {
-      if (!seq) return;
+      const strip = document.getElementById('sandbox-residue-strip');
+      const cardCyc = document.getElementById('sb-card-cyclization');
+      const valCyc = document.getElementById('sb-val-cyclization');
+      const cardDon = document.getElementById('sb-card-donnan');
+      const valDon = document.getElementById('sb-val-donnan');
+      const cardSteph = document.getElementById('sb-card-stephan');
+      const valSteph = document.getElementById('sb-val-stephan');
+      const cardTryp = document.getElementById('sb-card-trypsin');
+      const valTryp = document.getElementById('sb-val-trypsin');
+      const cardChymo = document.getElementById('sb-card-chymotrypsin');
+      const valChymo = document.getElementById('sb-val-chymotrypsin');
+      const vaultBox = document.getElementById('vault-match-box');
+      const badge = document.getElementById('vault-match-badge');
+
+      if (!seq) {
+        if (strip) strip.innerHTML = '<span style="color: var(--text-muted); font-size: 12px; font-style: italic;">Enter a peptide sequence above (e.g. CAHWRPWHC)</span>';
+        if (cardCyc && valCyc) { cardCyc.className = 'audit-card'; valCyc.innerText = 'None'; }
+        if (cardDon && valDon) { cardDon.className = 'audit-card'; valDon.innerText = 'None'; }
+        if (cardSteph && valSteph) { cardSteph.className = 'audit-card'; valSteph.innerText = 'None'; }
+        if (cardTryp && valTryp) { cardTryp.className = 'audit-card'; valTryp.innerText = 'None'; }
+        if (cardChymo && valChymo) { cardChymo.className = 'audit-card'; valChymo.innerText = 'None'; }
+        if (badge) {
+          badge.style.background = 'var(--bg-elevated)';
+          badge.style.color = 'var(--text-muted)';
+          badge.innerText = 'No Sequence';
+        }
+        if (vaultBox) {
+          vaultBox.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 12px 0;">Enter a 5-30 residue peptide sequence to check 259-contender vault metrics and oral biophysics.</div>';
+        }
+        return;
+      }
       
       // 1. Render residue strip
-      const strip = document.getElementById('sandbox-residue-strip');
       if (strip) {
         let chipsHtml = '';
         for (let i = 0; i < seq.length; i++) {
@@ -2614,47 +2679,37 @@
       }
 
       // Update Telemetry Cards
-      const cardCyc = document.getElementById('sb-card-cyclization');
-      const valCyc = document.getElementById('sb-val-cyclization');
       if (cardCyc && valCyc) {
         cardCyc.className = `audit-card ${isCyclic ? 'pass' : 'fail'}`;
         valCyc.innerText = isCyclic ? 'PASS (Disulfide Lock)' : 'FAIL (Uncyclized Linear)';
       }
 
-      const cardDon = document.getElementById('sb-card-donnan');
-      const valDon = document.getElementById('sb-val-donnan');
       if (cardDon && valDon) {
         const donPass = (q_ph60 <= 4.0);
         cardDon.className = `audit-card ${donPass ? 'pass' : 'fail'}`;
-        valDon.innerText = `${donPass ? 'PASS' : 'FAIL'} (+${q_ph60.toFixed(2)} ${donPass ? '<= +4.0' : '> +4.0 Limit'})`;
+        const donSign = q_ph60 >= 0 ? '+' : '';
+        valDon.innerText = `${donPass ? 'PASS' : 'FAIL'} (${donSign}${q_ph60.toFixed(2)} ${donPass ? '<= +4.0' : '> +4.0 Limit'})`;
       }
 
-      const cardSteph = document.getElementById('sb-card-stephan');
-      const valSteph = document.getElementById('sb-val-stephan');
       if (cardSteph && valSteph) {
         const hasSwitch = (deltaQ >= 0.5);
         cardSteph.className = `audit-card ${hasSwitch ? 'pass' : 'fail'}`;
-        valSteph.innerText = `+${deltaQ.toFixed(2)} (${hasSwitch ? 'Active Acid Switch' : 'Flat Protonation'})`;
+        const stephSign = deltaQ >= 0 ? '+' : '';
+        valSteph.innerText = `${stephSign}${deltaQ.toFixed(2)} (${hasSwitch ? 'Active Acid Switch' : 'Flat Protonation'})`;
       }
 
-      const cardTryp = document.getElementById('sb-card-trypsin');
-      const valTryp = document.getElementById('sb-val-trypsin');
       if (cardTryp && valTryp) {
         const trypSafe = (trypsinCount === 0);
         cardTryp.className = `audit-card ${trypSafe ? 'pass' : 'fail'}`;
         valTryp.innerText = trypSafe ? '0 Sites (RP Shielded)' : `${trypsinCount} Unshielded Sites`;
       }
 
-      const cardChymo = document.getElementById('sb-card-chymotrypsin');
-      const valChymo = document.getElementById('sb-val-chymotrypsin');
       if (cardChymo && valChymo) {
         cardChymo.className = `audit-card ${chymotrypsinCount === 0 ? 'pass' : 'fail'}`;
         valChymo.innerText = `${chymotrypsinCount} Sites (At Risk in Whole Saliva)`;
       }
 
       // 3. Vault Lookup
-      const vaultBox = document.getElementById('vault-match-box');
-      const badge = document.getElementById('vault-match-badge');
       const entry = (typeof VAULT_LOOKUP !== 'undefined') ? VAULT_LOOKUP[seq] : null;
       
       if (entry) {
@@ -2749,8 +2804,23 @@
     }
 
     function auditSequence(rawSeq) {
-      const seq = rawSeq.toUpperCase().trim();
-      if (!seq) return;
+      const seq = (rawSeq || '').toUpperCase().trim();
+      const cardChitosan = document.getElementById('card-chitosan');
+      const valChitosan = document.getElementById('val-chitosan');
+      const cardCharge = document.getElementById('card-charge');
+      const valCharge = document.getElementById('val-charge');
+      const valGravy = document.getElementById('val-gravy');
+      const valPepsy = document.getElementById('val-pepsy');
+      const feedback = document.getElementById('inspector-feedback');
+
+      if (!seq) {
+        if (cardChitosan && valChitosan) { cardChitosan.className = 'audit-card'; valChitosan.innerText = 'None'; }
+        if (cardCharge && valCharge) { cardCharge.className = 'audit-card'; valCharge.innerText = 'None'; }
+        if (valGravy) valGravy.innerText = 'None';
+        if (valPepsy) valPepsy.innerText = 'None';
+        if (feedback) feedback.innerText = 'Enter a peptide sequence to evaluate oral biophysical gates.';
+        return;
+      }
       const sInput = document.getElementById('sandbox-seq-input');
       if (sInput && sInput.value !== seq) {
         sInput.value = seq;
@@ -2805,22 +2875,23 @@
       }
 
       // Update UI cards
-      const cardChitosan = document.getElementById('card-chitosan');
-      const valChitosan = document.getElementById('val-chitosan');
-      cardChitosan.className = `audit-card ${isChitosanSafe ? 'pass' : 'fail'}`;
-      valChitosan.innerText = isChitosanSafe ? 'PASS (Donnan Safe)' : 'FAIL (Anionic/Charge)';
+      if (cardChitosan && valChitosan) {
+        cardChitosan.className = `audit-card ${isChitosanSafe ? 'pass' : 'fail'}`;
+        valChitosan.innerText = isChitosanSafe ? 'PASS (Donnan Safe)' : 'FAIL (Anionic/Charge)';
+      }
 
-      const cardCharge = document.getElementById('card-charge');
-      const valCharge = document.getElementById('val-charge');
-      cardCharge.className = `audit-card ${q_ph60 <= 4.0 ? 'pass' : 'fail'}`;
-      valCharge.innerText = `+${q_ph60.toFixed(2)} (pH 6.0)`;
+      if (cardCharge && valCharge) {
+        cardCharge.className = `audit-card ${q_ph60 <= 4.0 ? 'pass' : 'fail'}`;
+        const chargeSign = q_ph60 >= 0 ? '+' : '';
+        valCharge.innerText = `${chargeSign}${q_ph60.toFixed(2)} (pH 6.0)`;
+      }
 
-      document.getElementById('val-gravy').innerText = `${gravy} (${gravy < 0 ? 'Soluble' : 'Hydrophobic'})`;
-      document.getElementById('val-pepsy').innerText = `${cleavageSites} Protease Sites`;
-
-      const feedback = document.getElementById('inspector-feedback');
+      if (valGravy) valGravy.innerText = `${gravy} (${gravy < 0 ? 'Soluble' : 'Hydrophobic'})`;
+      if (valPepsy) valPepsy.innerText = `${cleavageSites} Protease Sites`;
+      const qSign = q_ph60 >= 0 ? '+' : '';
+      const dSign = deltaQ >= 0 ? '+' : '';
       feedback.innerText = isChitosanSafe
-        ? `Candidate conforms to biophysical gates: Net charge +${q_ph60.toFixed(2)} at pH 6.0 (<= +4.0 limit), Stephan curve ΔQ = +${deltaQ.toFixed(2)} (acid switch active), and ${cleavageSites} unshielded protease cleavage sites.`
+        ? `Candidate conforms to biophysical gates: Net charge ${qSign}${q_ph60.toFixed(2)} at pH 6.0 (<= +4.0 limit), Stephan curve ΔQ = ${dSign}${deltaQ.toFixed(2)} (acid switch active), and ${cleavageSites} unshielded protease cleavage sites.`
         : failureReason;
     }
 
