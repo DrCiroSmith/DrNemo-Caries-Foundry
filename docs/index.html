@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DrNemo: Targeted GtfB Macrocycle Biophysics | Interactive 3D Studio</title>
+  <title>DrNemo: S. mutans GtfB Cyclic Peptide Falsification Studio</title>
   <!-- Inline Favicon -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🦷%3C/text%3E%3C/svg%3E">
 
-  <meta name="description" content="Autonomous molecular discovery for Streptococcus mutans GtfB remineralization blockers. Live 3Dmol.js WebGL dual-chain viewer, 20-generation evolution scrubber, and chitosan biosecurity inspector.">
+  <meta name="description" content="Popperian falsification and negative-control benchmark for Streptococcus mutans GtfB (3AIC) vs human salivary amylase (1SMD) using AutoDock Vina, Vinardo, and OpenMM Amber14.">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
   <!-- 3Dmol.js (Local Vendor with CDN Fallback) -->
   <script src="./vendor/3Dmol-min.js"></script>
   <script>
@@ -25,32 +25,37 @@
       --bg-page: #F8FAFC;
       --bg-card: #FFFFFF;
       --bg-elevated: #F1F5F9;
-      --border-card: #E2E8F0;
-      --border-accent: #CBD5E1;
+      --border-card: #CBD5E1;
+      --border-accent: #94A3B8;
       --text-main: #0F172A;
-      --text-muted: #64748B;
-      --text-sub: #475569;
+      --text-muted: #475569;
+      --text-sub: #334155;
       --stage-bg: #060B14;
-      --metric-box-bg: #F8FAFC;
+      --metric-box-bg: #F1F5F9;
       --info-box-bg: #FFFBEB;
       --info-box-border: #FDE68A;
-      --info-box-text: #92400E;
-      --chart-grid: #E2E8F0;
-      --chart-axis: #64748B;
-      --teal-primary: #0D9488;
+      --info-box-text: #78350F;
+      --chart-grid: #CBD5E1;
+      --chart-axis: #475569;
+      --teal-primary: #0F766E;
       --teal-light: #CCFBF1;
       --teal-dark: #115E59;
-      --blue-accent: #0284C7;
+      --solid-teal-bg: #0F766E;
+      --solid-teal-hover: #115E59;
+      --blue-accent: #0369A1;
       --blue-light: #E0F2FE;
-      --emerald-accent: #059669;
+      --emerald-accent: #047857;
       --emerald-light: #D1FAE5;
-      --amber-accent: #D97706;
+      --amber-accent: #B45309;
       --amber-light: #FEF3C7;
-      --red-accent: #DC2626;
+      --red-accent: #B91C1C;
       --red-light: #FEE2E2;
       --toggle-active-bg: #0F172A;
       --toggle-active-text: #FFFFFF;
       --toggle-active-border: #0F172A;
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --duration-fast: 160ms;
+      --duration-normal: 240ms;
     }
 
     [data-theme="dark"] {
@@ -67,20 +72,22 @@
       --info-box-bg: #1E2218;
       --info-box-border: #4D4516;
       --info-box-text: #FDE68A;
-      --chart-grid: #1E293B;
-      --chart-axis: #94A3B8;
-      --teal-primary: #14B8A6;
+      --chart-grid: #334155;
+      --chart-axis: #CBD5E1;
+      --teal-primary: #2DD4BF;
       --teal-light: #134E4A;
-      --teal-dark: #2DD4BF;
-      --blue-accent: #38BDF8;
+      --teal-dark: #5EEAD4;
+      --solid-teal-bg: #0F766E;
+      --solid-teal-hover: #115E59;
+      --blue-accent: #7DD3FC;
       --blue-light: #0C4A6E;
       --emerald-accent: #34D399;
       --emerald-light: #064E3B;
       --amber-accent: #FBBF24;
       --amber-light: #78350F;
-      --red-accent: #F87171;
+      --red-accent: #FCA5A5;
       --red-light: #7F1D1D;
-      --toggle-active-bg: #0D9488;
+      --toggle-active-bg: #0F766E;
       --toggle-active-text: #FFFFFF;
       --toggle-active-border: #14B8A6;
     }
@@ -100,20 +107,22 @@
         --info-box-bg: #1E2218;
         --info-box-border: #4D4516;
         --info-box-text: #FDE68A;
-        --chart-grid: #1E293B;
-        --chart-axis: #94A3B8;
-        --teal-primary: #14B8A6;
+        --chart-grid: #334155;
+        --chart-axis: #CBD5E1;
+        --teal-primary: #2DD4BF;
         --teal-light: #134E4A;
-        --teal-dark: #2DD4BF;
-        --blue-accent: #38BDF8;
+        --teal-dark: #5EEAD4;
+        --solid-teal-bg: #0F766E;
+        --solid-teal-hover: #115E59;
+        --blue-accent: #7DD3FC;
         --blue-light: #0C4A6E;
         --emerald-accent: #34D399;
         --emerald-light: #064E3B;
         --amber-accent: #FBBF24;
         --amber-light: #78350F;
-        --red-accent: #F87171;
+        --red-accent: #FCA5A5;
         --red-light: #7F1D1D;
-        --toggle-active-bg: #0D9488;
+        --toggle-active-bg: #0F766E;
         --toggle-active-text: #FFFFFF;
         --toggle-active-border: #14B8A6;
       }
@@ -125,47 +134,58 @@
       padding: 0;
     }
 
-    html, html, body {
-      max-width: 100%;
-      overflow-x: hidden;
-    }
-
-    body {
-      overflow-x: hidden;
-      max-width: 100vw;
-    }
-
     html, body {
       max-width: 100%;
       overflow-x: hidden;
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
       background: var(--bg-page);
       color: var(--text-main);
-      line-height: 1.5;
+      line-height: 1.55;
       -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background: rgba(2, 132, 199, 0.22);
+      color: var(--text-main);
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid var(--blue-accent);
+      outline-offset: 2px;
+    }
+
+    button:not(:disabled):active,
+    .btn:active {
+      transform: scale(0.97);
     }
 
     /* Header Bar */
     header {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-card);
-      padding: 18px 36px;
+      padding: 14px 32px;
       position: sticky;
       top: 0;
       z-index: 50;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
 
     .brand-group {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
+      min-width: 0;
     }
 
     .brand-badges {
@@ -177,21 +197,21 @@
 
     .badge-pill {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      padding: 3px 8px;
+      letter-spacing: 0.6px;
+      padding: 4px 10px;
       border-radius: 4px;
       background: var(--teal-light);
       color: var(--teal-dark);
-      border: 1px solid rgba(13, 148, 136, 0.2);
+      border: 1px solid rgba(15, 118, 110, 0.25);
     }
 
     .badge-pill.blue {
       background: var(--blue-light);
       color: var(--blue-accent);
-      border-color: rgba(2, 132, 199, 0.2);
+      border-color: rgba(3, 105, 161, 0.25);
     }
 
     .brand-title {
@@ -199,50 +219,57 @@
       font-size: 26px;
       font-weight: 700;
       color: var(--text-main);
-      letter-spacing: -0.3px;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
     }
 
     .brand-desc {
-      font-size: 13.5px;
+      font-size: 14px;
       color: var(--text-muted);
     }
 
     .theme-toggle-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       padding: 8px 14px;
+      min-height: 40px;
       border-radius: 6px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
       background: var(--bg-card);
       color: var(--text-main);
       border: 1px solid var(--border-card);
     }
+
     .theme-toggle-btn:hover {
       background: var(--metric-box-bg);
       border-color: var(--border-accent);
     }
-    
+
     .header-links {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      flex-shrink: 0;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       padding: 8px 16px;
+      min-height: 40px;
       border-radius: 6px;
       font-size: 13.5px;
       font-weight: 600;
       text-decoration: none;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
       border: 1px solid transparent;
     }
 
@@ -259,12 +286,12 @@
     }
 
     .btn-primary {
-      background: var(--teal-primary);
+      background: var(--solid-teal-bg);
       color: #FFFFFF;
     }
 
     .btn-primary:hover {
-      background: var(--teal-dark);
+      background: var(--solid-teal-hover);
     }
 
     /* Main Container */
@@ -275,6 +302,8 @@
       display: grid;
       grid-template-columns: 1.15fr 0.85fr;
       gap: 24px;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     @media (max-width: 1180px) {
@@ -283,7 +312,7 @@
       }
     }
 
-    /* Studio Card */
+    /* Studio Card (single flat container layer) */
     .studio-card {
       background: var(--bg-card);
       border: 1px solid var(--border-card);
@@ -292,15 +321,20 @@
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
       border-bottom: 1px solid var(--border-card);
-      padding-bottom: 12px;
+      padding-bottom: 10px;
     }
 
     .card-title {
@@ -314,7 +348,7 @@
     }
 
     .card-subtitle {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text-muted);
     }
 
@@ -327,7 +361,7 @@
       border-radius: 10px;
       overflow: hidden;
       border: 1px solid #1E293B;
-      box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);
+      /* clean flat stage edge */
     }
 
     #molecular-viewport {
@@ -339,9 +373,11 @@
       position: absolute;
       top: 14px;
       left: 14px;
-      background: rgba(15, 23, 42, 0.85);
+      max-width: calc(100% - 28px);
+      white-space: normal;
+      background: rgba(15, 23, 42, 0.88);
       backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.16);
       border-radius: 6px;
       padding: 6px 12px;
       color: #F8FAFC;
@@ -356,27 +392,28 @@
       bottom: 14px;
       right: 14px;
       display: flex;
-      gap: 6px;
+      gap: 8px;
       z-index: 10;
     }
 
     .overlay-btn {
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.22);
       color: #F8FAFC;
       border-radius: 6px;
-      padding: 5px 10px;
+      padding: 8px 12px;
+      min-height: 36px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       backdrop-filter: blur(8px);
-      transition: all 0.15s ease;
+      transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
     }
 
     .overlay-btn:hover {
-      background: rgba(30, 41, 59, 0.95);
+      background: rgba(30, 41, 59, 0.96);
       border-color: #38BDF8;
-      color: #38BDF8;
+      color: #7DD3FC;
     }
 
     /* Leads Selector Bar */
@@ -384,16 +421,20 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin: 16px 0 12px 0;
+      margin: 12px 0 12px 0;
       overflow-x: auto;
-      padding-bottom: 4px;
-      flex-wrap: wrap;
+      padding-bottom: 6px;
+      flex-wrap: nowrap;
       max-width: 100%;
       box-sizing: border-box;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+      scrollbar-width: thin;
     }
 
     .lead-chip {
-      padding: 6px 12px;
+      padding: 8px 12px;
+      min-height: 36px;
       border-radius: 6px;
       border: 1px solid var(--border-card);
       background: var(--bg-elevated);
@@ -403,7 +444,9 @@
       color: var(--text-sub);
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.15s ease;
+      flex-shrink: 0;
+      scroll-snap-align: start;
+      transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
     }
 
     .lead-chip:hover {
@@ -413,34 +456,34 @@
     }
 
     .lead-chip.active {
-      background: var(--teal-primary);
-      border-color: var(--teal-primary);
+      background: var(--solid-teal-bg);
+      border-color: var(--solid-teal-bg);
       color: #FFFFFF;
     }
 
-    /* 3D Viewport Toolbar */
+    /* 3D Viewport Toolbar (flat inner surface, no nested card border) */
     .viewport-toolbar {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 6px;
+      gap: 14px;
+      margin-top: 10px;
       background: var(--metric-box-bg);
       padding: 14px;
       border-radius: 8px;
-      border: 1px solid var(--border-card);
     }
 
     .toolbar-group {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
+      min-width: 0;
     }
 
     .toolbar-label {
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.7px;
+      letter-spacing: 0.6px;
       color: var(--text-muted);
     }
 
@@ -451,15 +494,17 @@
     }
 
     .toggle-btn {
-      padding: 5px 10px;
+      padding: 6px 12px;
+      min-height: 36px;
       border-radius: 4px;
       border: 1px solid var(--border-card);
       background: var(--bg-card);
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 500;
       color: var(--text-sub);
       cursor: pointer;
-      transition: all 0.12s ease;
+      white-space: nowrap;
+      transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
     }
 
     .toggle-btn:hover {
@@ -477,33 +522,33 @@
     /* Metrics Summary Grid */
     .metrics-summary-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
       margin-top: 16px;
     }
 
     .metric-cell {
       background: var(--metric-box-bg);
-      border: 1px solid var(--border-card);
-      border-radius: 8px;
+      border-radius: 6px;
       padding: 12px 14px;
       display: flex;
       flex-direction: column;
     }
 
     .metric-cell-label {
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--text-muted);
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
+      letter-spacing: 0.4px;
+      margin-bottom: 3px;
     }
 
     .metric-cell-val {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
       color: var(--text-main);
     }
 
@@ -519,10 +564,14 @@
       gap: 8px;
       border-bottom: 1px solid var(--border-card);
       margin-bottom: 18px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
     }
 
     .tab-btn {
       padding: 10px 16px;
+      min-height: 44px;
       font-size: 13.5px;
       font-weight: 600;
       color: var(--text-muted);
@@ -530,7 +579,10 @@
       background: transparent;
       border-bottom: 2px solid transparent;
       cursor: pointer;
-      transition: all 0.15s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+      scroll-snap-align: start;
+      transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
     }
 
     .tab-btn:hover {
@@ -552,47 +604,83 @@
       display: flex;
     }
 
+    .matrix-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .matrix-row {
+      background: var(--metric-box-bg);
+      border-radius: 6px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .matrix-row-desc {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .matrix-row-stat {
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+
+    .matrix-row-metric {
+      color: var(--text-sub);
+      font-size: 12px;
+    }
+
     /* Scrubber Controls */
     .scrubber-controls {
       display: flex;
       align-items: center;
       gap: 14px;
       background: var(--metric-box-bg);
-      border: 1px solid var(--border-card);
       padding: 14px 18px;
       border-radius: 8px;
     }
 
     .play-btn {
-      width: 38px;
-      height: 38px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background: var(--teal-primary);
+      background: var(--solid-teal-bg);
       color: #FFFFFF;
       border: none;
-      font-size: 15px;
+      font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       flex-shrink: 0;
-      transition: background 0.15s ease;
+      transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
     }
 
     .play-btn:hover {
-      background: var(--teal-dark);
+      background: var(--solid-teal-hover);
     }
 
     .slider-container {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
+      min-width: 0;
     }
 
     .slider-label-row {
       display: flex;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
       font-size: 12.5px;
       color: var(--text-muted);
       font-family: 'JetBrains Mono', monospace;
@@ -602,25 +690,27 @@
       width: 100%;
       accent-color: var(--teal-primary);
       cursor: pointer;
+      min-height: 28px;
     }
 
     /* SVG Charts */
     .chart-box {
-      border: 1px solid var(--border-card);
-      border-radius: 8px;
-      padding: 14px 16px;
-      background: var(--bg-card);
+      border-top: 1px solid var(--border-card);
+      padding: 14px 4px 4px 4px;
+      background: transparent;
     }
 
     .chart-title {
       font-size: 12.5px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
       color: var(--text-sub);
       margin-bottom: 8px;
       display: flex;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .svg-chart {
@@ -631,18 +721,30 @@
     /* Live Sequence Inspector */
     .inspector-box {
       background: var(--metric-box-bg);
-      border: 1px solid var(--border-card);
       border-radius: 8px;
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
 
-    .input-row {
+    .active-seq-banner {
       display: flex;
-      flex-direction: column;
-      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border-radius: 6px;
+    }
+
+    .active-seq-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--text-main);
     }
 
     .seq-input {
@@ -650,42 +752,53 @@
       font-size: 16px;
       font-weight: 700;
       padding: 10px 14px;
+      min-height: 44px;
       border: 1px solid var(--border-accent);
       border-radius: 6px;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--text-main);
       background: var(--bg-card);
+      transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
     }
 
-    .seq-input:focus {
-      outline: none;
+    .seq-input:focus-visible {
+      outline: 2px solid var(--teal-primary);
+      outline-offset: 2px;
       border-color: var(--teal-primary);
-      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
     }
 
     .preset-btn-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 8px;
     }
 
     .preset-btn {
-      font-size: 12px;
-      padding: 4px 10px;
+      font-size: 12.5px;
+      padding: 6px 12px;
+      min-height: 36px;
       border-radius: 4px;
       border: 1px solid var(--border-card);
       background: var(--bg-card);
       color: var(--text-sub);
       cursor: pointer;
       font-weight: 500;
-      transition: all 0.15s ease;
+      white-space: nowrap;
+      transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
     }
 
-    .preset-btn:hover {
+    .preset-btn:hover:not(:disabled) {
       background: var(--bg-elevated);
       color: var(--text-main);
       border-color: var(--border-accent);
+    }
+
+    .preset-btn:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
     }
 
     .audit-grid {
@@ -696,7 +809,6 @@
 
     .audit-card {
       background: var(--bg-card);
-      border: 1px solid var(--border-card);
       border-radius: 6px;
       padding: 10px 12px;
       display: flex;
@@ -704,18 +816,20 @@
     }
 
     .audit-card.pass {
-      border-left: 4px solid var(--emerald-accent);
+      background: rgba(4, 120, 87, 0.08);
+      border: 1px solid rgba(4, 120, 87, 0.35);
     }
 
     .audit-card.fail {
-      border-left: 4px solid var(--red-accent);
+      background: rgba(185, 28, 28, 0.08);
+      border: 1px solid rgba(185, 28, 28, 0.35);
     }
 
     .audit-label {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       color: var(--text-muted);
     }
 
@@ -723,8 +837,9 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 14.5px;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
       color: var(--text-main);
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
     /* Context Drawer Content */
@@ -732,14 +847,14 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      font-size: 13.5px;
+      font-size: 14px;
       color: var(--text-sub);
       line-height: 1.6;
     }
 
-    .context-h4 {
+    .context-h3 {
       font-family: 'Newsreader', Georgia, serif;
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 700;
       color: var(--text-main);
       margin-top: 8px;
@@ -754,8 +869,10 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
       color: var(--text-muted);
-      font-size: 13.5px;
+      font-size: 14px;
     }
 
     /* Interactive 3D Atom Readout Pill */
@@ -763,15 +880,15 @@
       position: absolute;
       bottom: 14px;
       left: 14px;
-      max-width: calc(100% - 190px);
-      background: rgba(15, 23, 42, 0.90);
+      max-width: calc(100% - 220px);
+      background: rgba(15, 23, 42, 0.92);
       backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.22);
       border-radius: 6px;
       padding: 6px 12px;
       color: #F8FAFC;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
+      font-size: 12px;
       z-index: 10;
       pointer-events: none;
       white-space: nowrap;
@@ -786,24 +903,23 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
-      margin-top: 8px;
+      margin-top: 10px;
       background: var(--metric-box-bg);
       padding: 10px 14px;
       border-radius: 8px;
-      border: 1px solid var(--border-card);
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--text-main);
       max-width: 100%;
       box-sizing: border-box;
-      transition: all 0.15s ease;
+      transition: background-color var(--duration-fast) var(--ease-out);
     }
 
     .legend-title {
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
       color: var(--text-muted);
-      font-size: 11px;
+      font-size: 12px;
       margin-right: 2px;
       display: flex;
       align-items: center;
@@ -815,7 +931,7 @@
       align-items: center;
       gap: 6px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-sub);
       white-space: nowrap;
     }
@@ -826,7 +942,7 @@
       border-radius: 50%;
       display: inline-block;
       flex-shrink: 0;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
     }
 
     .legend-gradient-pill {
@@ -835,8 +951,8 @@
       height: 12px;
       width: 140px;
       border-radius: 6px;
-      background: linear-gradient(to right, #3B82F6, #10B981, #EAB308, #EF4444);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      background: linear-gradient(to right, #0284C7, #10B981, #EAB308, #EF4444);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
       flex-shrink: 0;
     }
 
@@ -848,7 +964,10 @@
       background: var(--bg-card);
       border: 1px solid var(--border-card);
       border-radius: 12px;
-      padding: 18px 22px;
+      padding: 20px 24px;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     #stage-card {
@@ -862,7 +981,7 @@
     .sandbox-input-section {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
 
     .sandbox-pills-row {
@@ -898,6 +1017,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      min-width: 0;
     }
 
     .sandbox-strip-container {
@@ -910,12 +1030,11 @@
     .sandbox-residue-strip {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      padding: 8px 12px;
+      gap: 8px;
+      padding: 10px 12px;
       background: var(--metric-box-bg);
-      border: 1px solid var(--border-card);
       border-radius: 8px;
-      min-height: 48px;
+      min-height: 54px;
       align-items: center;
       box-sizing: border-box;
       max-width: 100%;
@@ -926,88 +1045,89 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 4px 8px;
+      padding: 6px 10px;
       border-radius: 6px;
       border: 1px solid var(--border-card);
-      min-width: 38px;
-      transition: transform 0.1s ease;
+      min-width: 64px;
+      flex-shrink: 0;
+      transition: transform var(--duration-fast) var(--ease-out);
     }
 
     .res-chip-aa {
       font-family: 'JetBrains Mono', monospace;
       font-size: 14px;
       font-weight: 700;
-      line-height: 1.1;
+      line-height: 1.15;
     }
 
     .res-chip-sub {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
+      font-size: 12px;
       font-weight: 600;
-      line-height: 1.1;
+      line-height: 1.2;
       margin-top: 2px;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
     }
 
     .res-chip.gold {
-      background: rgba(250, 204, 21, 0.15);
-      border-color: #FACC15;
-      color: #CA8A04;
+      background: rgba(250, 204, 21, 0.16);
+      border-color: #CA8A04;
+      color: #854D0E;
     }
 
     [data-theme="dark"] .res-chip.gold {
       background: rgba(250, 204, 21, 0.18);
       border-color: #FACC15;
-      color: #FDE047;
+      color: #FEF08A;
     }
 
     .res-chip.blue {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: #38BDF8;
-      color: #0284C7;
+      background: rgba(2, 132, 199, 0.14);
+      border-color: #0284C7;
+      color: #075985;
     }
 
     [data-theme="dark"] .res-chip.blue {
       background: rgba(56, 189, 248, 0.18);
       border-color: #38BDF8;
-      color: #7DD3FC;
+      color: #BAE6FD;
     }
 
     .res-chip.emerald {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: #10B981;
-      color: #059669;
+      background: rgba(5, 150, 105, 0.14);
+      border-color: #059669;
+      color: #065F46;
     }
 
     [data-theme="dark"] .res-chip.emerald {
       background: rgba(16, 185, 129, 0.18);
       border-color: #10B981;
-      color: #6EE7B7;
+      color: #A7F3D0;
     }
 
     .res-chip.red {
-      background: rgba(239, 68, 68, 0.15);
-      border-color: #EF4444;
-      color: #DC2626;
+      background: rgba(220, 38, 38, 0.14);
+      border-color: #DC2626;
+      color: #991B1B;
     }
 
     [data-theme="dark"] .res-chip.red {
       background: rgba(239, 68, 68, 0.18);
       border-color: #EF4444;
-      color: #FCA5A5;
+      color: #FECACA;
     }
 
     .res-chip.amber {
-      background: rgba(245, 158, 11, 0.15);
-      border-color: #F59E0B;
-      color: #D97706;
+      background: rgba(217, 119, 6, 0.14);
+      border-color: #D97706;
+      color: #92400E;
     }
 
     [data-theme="dark"] .res-chip.amber {
       background: rgba(245, 158, 11, 0.18);
       border-color: #F59E0B;
-      color: #FCD34D;
+      color: #FDE68A;
     }
 
     .res-chip.neutral {
@@ -1039,141 +1159,190 @@
       margin-top: 14px;
       padding: 14px 18px;
       border-radius: 8px;
-      border: 1px solid var(--border-card);
       background: var(--metric-box-bg);
-      transition: all 0.15s ease;
+      transition: background-color var(--duration-normal) var(--ease-out);
     }
 
+    .vault-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .vault-stat-cell {
+      background: var(--bg-card);
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
 
     @media (max-width: 900px) {
       header {
-        padding: 8px 12px;
+        padding: 10px 12px;
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
         gap: 8px;
         position: relative;
       }
+
       .brand-group {
-        gap: 1px;
-        max-width: calc(100% - 95px);
+        gap: 2px;
+        max-width: calc(100% - 140px);
       }
+
       .brand-badges {
         display: none;
       }
+
       .brand-title {
-        font-size: 15px;
-        line-height: 1.2;
+        font-size: 16px;
+        line-height: 1.25;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
+
       .brand-desc {
         display: none;
       }
+
       .header-links {
         width: auto;
         justify-content: flex-end;
         gap: 6px;
       }
-      .header-links .btn {
-        padding: 5px 8px;
-        font-size: 11px;
+
+      .header-links .btn,
+      .theme-toggle-btn {
+        padding: 8px 12px;
+        min-height: 44px;
+        font-size: 12px;
       }
+
       .header-links .btn-primary {
         display: none;
       }
-      .theme-toggle-btn {
-        padding: 5px 8px;
-        font-size: 11px;
-      }
+
       main {
-        margin: 6px auto;
-        padding: 0 8px;
-        gap: 12px;
+        margin: 8px auto;
+        padding: 0 10px;
+        gap: 14px;
         grid-template-columns: 1fr;
       }
-      .studio-card {
-        padding: 10px 10px;
-      }
+
+      .studio-card,
       .sandbox-card {
-        padding: 10px 10px;
-        order: 2;
+        padding: 14px 12px;
       }
+
       #stage-card {
         order: 1;
       }
+
+      .sandbox-card {
+        order: 2;
+      }
+
       #analysis-tabs-card {
         order: 3;
       }
+
       .molecular-stage-container {
-        height: 350px;
+        height: 340px;
       }
+
+      .overlay-btn {
+        min-height: 44px;
+        padding: 10px 14px;
+        font-size: 12px;
+      }
+
       .stage-atom-readout {
         max-width: calc(100% - 20px);
-        font-size: 10px;
-        bottom: 42px;
+        font-size: 12px;
+        bottom: 64px;
         left: 10px;
       }
-    }
 
+      .leads-bar,
+      .toggle-row,
+      .preset-btn-row,
+      .sandbox-pills-row,
+      .tab-nav,
+      .sandbox-residue-strip {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+      }
 
-    /* Grid & Studio Card Mobile Width Resets */
-    main {
-      min-width: 0;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
+      .leads-bar::-webkit-scrollbar,
+      .toggle-row::-webkit-scrollbar,
+      .preset-btn-row::-webkit-scrollbar,
+      .sandbox-pills-row::-webkit-scrollbar,
+      .tab-nav::-webkit-scrollbar,
+      .sandbox-residue-strip::-webkit-scrollbar {
+        display: none;
+      }
 
-    .studio-card, .sandbox-card {
-      min-width: 0;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
+      .lead-chip,
+      .toggle-btn,
+      .preset-btn,
+      .tab-btn {
+        min-height: 44px;
+        padding: 10px 14px;
+        font-size: 12.5px;
+        flex-shrink: 0;
+        scroll-snap-align: start;
+      }
 
-    .leads-bar {
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      max-width: 100%;
-    }
+      .res-chip {
+        scroll-snap-align: start;
+      }
 
-    .stage-overlay-badge {
-      max-width: calc(100% - 28px);
-      white-space: normal;
+      .viewport-toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .vault-stats-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 600px) {
       .metrics-summary-grid {
-        grid-template-columns: 1fr !important;
-      }
-      .tab-nav {
-        overflow-x: auto;
-        white-space: nowrap;
-        flex-wrap: nowrap;
-        padding-bottom: 4px;
-        -webkit-overflow-scrolling: touch;
-      }
-      .tab-btn {
-        padding: 8px 12px;
-        font-size: 12px;
-        flex-shrink: 0;
-      }
-      .viewport-toolbar {
         grid-template-columns: 1fr;
       }
-      .res-chip {
-        padding: 3px 6px;
-        min-width: 32px;
+
+      .audit-grid {
+        grid-template-columns: 1fr;
       }
-      .res-chip-aa {
-        font-size: 12px;
+
+      .matrix-row {
+        flex-direction: column;
+        align-items: flex-start;
       }
-      .res-chip-sub {
-        font-size: 8.5px;
+
+      .matrix-row-stat {
+        text-align: left;
       }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1187,7 +1356,7 @@
         <span class="badge-pill">Chitosan Nanoparticle Carrier</span>
       </div>
       <h1 class="brand-title">DrNemo: Targeted GtfB Macrocycle Biophysics</h1>
-      <p class="brand-desc">Autonomous Molecular Discovery &amp; Karl Popper Biophysical Falsification Suite | Zero Backend WebGL Studio</p>
+      <p class="brand-desc">Popperian Falsification &amp; Negative-Control Benchmark (S. mutans GtfB 3AIC vs. Salivary Amylase 1SMD; AutoDock Vina, Vinardo, OpenMM Amber14)</p>
     </div>
     <div class="header-links">
       <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle Light / Dark Mode">
@@ -1234,8 +1403,8 @@
         <div class="stage-atom-readout" id="hovered-atom-readout">Hover or click any 3D atom to inspect residue &amp; role</div>
         <div id="molecular-viewport"></div>
         <div class="stage-controls-overlay">
-          <button class="overlay-btn" onclick="toggleSpin()">🔄 Auto-Spin</button>
-          <button class="overlay-btn" onclick="resetCamera()">🎯 Recenter</button>
+          <button type="button" class="overlay-btn" id="btn-auto-spin" aria-pressed="true" onclick="toggleSpin()">Auto-Spin: On</button>
+          <button type="button" class="overlay-btn" onclick="resetCamera()">Recenter</button>
         </div>
       </div>
 
@@ -1306,157 +1475,157 @@
       <!-- TAB 0: KARL POPPER FALSIFICATION MATRIX -->
       <div class="tab-pane active" id="tab-falsification">
         <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-          <span style="font-size: 13px; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">12-Angle Exhaustive Disproof Matrix</span>
+          <span style="font-size: 13.5px; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">12-Angle Exhaustive Disproof Matrix</span>
           <span class="badge-pill" style="background: var(--teal-light); color: var(--teal-dark); border-color: rgba(13,148,136,0.2);">Popperian Battery</span>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 7px; font-size: 12px;">
+        <div class="matrix-list">
           <!-- Angle 1 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--amber-accent);">Angle 1: RCSB 3AIC Co-Crystal Redocking</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">Native Acarbose redocked in active site cleft (Asp477, Glu515, Asp588)</div>
+              <div class="matrix-row-desc">Native Acarbose redocked in active site cleft (Asp477, Glu515, Asp588)</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--amber-accent); font-weight: 700;">INCONCLUSIVE</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">RMSD: 4.51 Å > 2.0-4.0 Å std | -7.915 kcal/mol</span>
+              <span class="matrix-row-metric">RMSD: 4.51 Å > 2.0-4.0 Å std | -7.915 kcal/mol</span>
             </div>
           </div>
 
           <!-- Angle 2 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--teal-primary);">Angle 2: Multi-Seed Conformer &amp; Docking Reproducibility</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">N=5 independent conformer &amp; Vina seeds (42, 101, 202, 303, 404)</div>
+              <div class="matrix-row-desc">N=5 independent conformer &amp; Vina seeds (42, 101, 202, 303, 404)</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--emerald-accent); font-weight: 700;">PASSED</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Mean: -8.10 ± 0.37 kcal/mol | Centroid SD: 0.46 Å</span>
+              <span class="matrix-row-metric">Mean: -8.10 ± 0.37 kcal/mol | Centroid SD: 0.46 Å</span>
             </div>
           </div>
 
           <!-- Angle 3 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--amber-accent);">Angle 3: Pose Mode Clustering &amp; Entropy Gap</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">All 9 Vina output modes: Mode 1 energy gap vs Modes 2-9</div>
+              <div class="matrix-row-desc">All 9 Vina output modes: Mode 1 energy gap vs Modes 2-9</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--amber-accent); font-weight: 700;">INCONCLUSIVE</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">ΔE Mode 1-2: +0.10 kcal/mol | Centroid: 1.74 Å</span>
+              <span class="matrix-row-metric">ΔE Mode 1-2: +0.10 kcal/mol | Centroid: 1.74 Å</span>
             </div>
           </div>
 
           <!-- Angle 4 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--amber-accent);">Angle 4: Force-Field Uncertainty on 1SMD Selectivity</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">AutoDock Vina force-field standard error margin (~2.85 kcal/mol)</div>
+              <div class="matrix-row-desc">AutoDock Vina force-field standard error margin (~2.85 kcal/mol)</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--amber-accent); font-weight: 700;">INCONCLUSIVE</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">ΔΔG: -0.85 vs ±2.85 SE</span>
+              <span class="matrix-row-metric">ΔΔG: -0.85 vs ±2.85 SE</span>
             </div>
           </div>
 
           <!-- Angle 5 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--amber-accent);">Angle 5: Charge-Matched Scrambled Null (N=39)</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">Sequence permutation null distribution vs cyclic macrocycle geometry</div>
+              <div class="matrix-row-desc">Sequence permutation null distribution vs cyclic macrocycle geometry</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--amber-accent); font-weight: 700;">INCONCLUSIVE (H0)</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Z = +0.32σ | p = 0.5897</span>
+              <span class="matrix-row-metric">Z = +0.32σ | p = 0.5897</span>
             </div>
           </div>
 
           <!-- Angle 6 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--teal-primary);">Angle 6: In-Silico Alanine-Scanning Mutagenesis</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">Single-point Ala mutants across all 7 internal cyclic positions</div>
+              <div class="matrix-row-desc">Single-point Ala mutants across all 7 internal cyclic positions</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--emerald-accent); font-weight: 700;">PASSED</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Anchors: His3, Trp7, His8</span>
+              <span class="matrix-row-metric">Anchors: His3, Trp7, His8</span>
             </div>
           </div>
 
           <!-- Angle 7 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--amber-accent);">Angle 7: Explicit pH 5.2 Histidine Diprotonation</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">Acidic plaque protonation (charge +1 -> +3) docked into 3AIC and 1SMD</div>
+              <div class="matrix-row-desc">Acidic plaque protonation (charge +1 -> +3) docked into 3AIC and 1SMD</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--amber-accent); font-weight: 700;">INCONCLUSIVE</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">3AIC -7.71 vs 1SMD -7.89 | Slight inversion within noise</span>
+              <span class="matrix-row-metric">3AIC -7.71 vs 1SMD -7.89 | Slight inversion within noise</span>
             </div>
           </div>
 
           <!-- Angle 8 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--red-accent);">Angle 8: Broad Oral Protease &amp; Peptidase Vulnerability</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">Salivary trypsin, chymotrypsin, cathepsin G &amp; bacterial peptidases</div>
+              <div class="matrix-row-desc">Salivary trypsin, chymotrypsin, cathepsin G &amp; bacterial peptidases</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--red-accent); font-weight: 700;">AT RISK</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Trp4, Trp7 Chymotryptic sites</span>
+              <span class="matrix-row-metric">Trp4, Trp7 Chymotryptic sites</span>
             </div>
           </div>
 
           <!-- Angle 9 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--teal-primary);">Angle 9: Human Salivary Lysozyme Screen (RCSB 1LZ1)</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">Off-target counter-docking against innate host defense enzyme</div>
+              <div class="matrix-row-desc">Off-target counter-docking against innate host defense enzyme</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--emerald-accent); font-weight: 700;">PASSED</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">1LZ1 ΔG: -6.67 kcal/mol (ΔΔG: -1.52)</span>
+              <span class="matrix-row-metric">1LZ1 ΔG: -6.67 kcal/mol (ΔΔG: -1.52)</span>
             </div>
           </div>
 
           <!-- Angle 10 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--amber-accent);">Angle 10: Linear Control vs Cyclic Macrocycle</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">Linear AHWRPWH (28 rotatable bonds) vs cyclic CAHWRPWHC (14 bonds)</div>
+              <div class="matrix-row-desc">Linear AHWRPWH (28 rotatable bonds) vs cyclic CAHWRPWHC (14 bonds)</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--amber-accent); font-weight: 700;">INCONCLUSIVE</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Linear: -9.25 vs -8.19 | Entropy under-penalization</span>
+              <span class="matrix-row-metric">Linear: -9.25 vs -8.19 | Entropy under-penalization</span>
             </div>
           </div>
 
           <!-- Angle 11 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--teal-primary);">Angle 11: OpenMM Implicit-Solvent Relaxation Drift</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">Amber14 / GBn2 isolated ligand all-atom minimization (200 steps)</div>
+              <div class="matrix-row-desc">Amber14 / GBn2 isolated ligand all-atom minimization (200 steps)</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--emerald-accent); font-weight: 700;">PASSED</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Heavy Atom Drift RMSD: 0.92 Å</span>
+              <span class="matrix-row-metric">Heavy Atom Drift RMSD: 0.92 Å</span>
             </div>
           </div>
 
           <!-- Angle 12 -->
-          <div style="background: var(--metric-box-bg); border: 1px solid var(--border-card); border-radius: 8px; padding: 9px 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="matrix-row">
             <div>
               <strong style="color: var(--teal-primary);">Angle 12: Chitosan Donnan &amp; Stephan Acid Switch</strong>
-              <div style="color: var(--text-muted); font-size: 11px;">Nanoparticle carrier partition &amp; plaque-specific histidine protonation</div>
+              <div class="matrix-row-desc">Nanoparticle carrier partition &amp; plaque-specific histidine protonation</div>
             </div>
-            <div style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+            <div class="matrix-row-stat">
               <span style="color: var(--emerald-accent); font-weight: 700;">PASSED</span><br>
-              <span style="color: var(--text-sub); font-size: 11px;">Charge +2.05 <= +4.0 | ΔQ = +1.62</span>
+              <span class="matrix-row-metric">Charge +2.05 <= +4.0 | ΔQ = +1.62</span>
             </div>
           </div>
         </div>
 
-        <div style="margin-top: 14px; padding: 12px 14px; background: var(--info-box-bg); border: 1px solid var(--info-box-border); border-radius: 6px; font-size: 12px; color: var(--info-box-text); line-height: 1.45;">
+        <div style="margin-top: 14px; padding: 14px 16px; background: var(--info-box-bg); border-radius: 8px; font-size: 13px; color: var(--info-box-text); line-height: 1.5;">
           <strong>⚖️ Popperian Comparative Verdict:</strong> Rather than claiming heuristic perfection, candidate <code>CAHWRPWHC</code> was challenged across 12 exhaustive computational disproof angles (5 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 0 Falsified). While it cleared 5 in-silico physical hurdles (multi-seed cleft localization, alanine hotspot anchors, lysozyme safety, OpenMM local minimization, and Stephan-curve Donnan partition), strict scientific skepticism highlights key caveats: co-crystal redocking RMSD (Angle 1), pose mode clustering gap (Angle 3), host amylase selectivity (Angle 4), scrambled sequence differentiation (Angle 5), explicit pH 5.2 protonation inversion (Angle 7), and linear peptide entropy artifact (Angle 10) fall within force-field uncertainty noise margins, and aromatic Trp4/Trp7 residues (Angle 8) present chymotryptic vulnerability requiring whole-saliva degradation assays. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
         </div>
       </div>
@@ -1478,7 +1647,7 @@
         <div class="chart-box">
           <div class="chart-title">
             <span>Evolutionary Fitness Trajectory (Gen 1-20)</span>
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--teal-primary);">Target Composite Score > 0.800</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--teal-primary);">Target Composite Score > 0.800</span>
           </div>
           <svg class="svg-chart" id="convergence-svg" viewBox="0 0 460 160">
             <!-- Rendered by JS -->
@@ -1489,7 +1658,7 @@
         <div class="chart-box">
           <div class="chart-title">
             <span>Population Structural Distribution (Current Generation)</span>
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue-accent);">Gold Box: Composite ≥ 0.80, Vina ≤ -7.5 kcal/mol</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue-accent);">Gold Box: Composite ≥ 0.80, Vina ≤ -7.5 kcal/mol</span>
           </div>
           <svg class="svg-chart" id="scatter-svg" viewBox="0 0 460 160">
             <!-- Rendered by JS -->
@@ -1500,18 +1669,21 @@
       <!-- TAB 2: LIVE CHITOSAN INSPECTOR -->
       <div class="tab-pane" id="tab-inspector">
         <div class="inspector-box">
-          <div class="input-row">
-            <label class="toolbar-label" for="peptide-input">Mutate Sequence (Cyclic C...C):</label>
-            <input type="text" id="peptide-input" class="seq-input" value="CRRRWWRRRRC" maxlength="24" oninput="auditSequence(this.value)">
+          <div class="active-seq-banner">
+            <div>
+              <div class="toolbar-label">Active Sequence (Synced with Sandbox)</div>
+              <code id="inspector-active-seq" class="active-seq-code">CAHWRPWHC</code>
+            </div>
+            <button type="button" class="preset-btn" onclick="focusSandboxInput()">Edit Sequence in Sandbox</button>
           </div>
 
           <div class="preset-btn-row">
             <span class="toolbar-label" style="margin-right: 4px; align-self: center;">Test Variants:</span>
-            <button class="preset-btn" onclick="setPreset('CAHWRPWHC')">Reference Scaffold</button>
-            <button class="preset-btn" onclick="setPreset('CRRRWWRRRRC')">Naive Baseline</button>
-            <button class="preset-btn" onclick="setPreset('CRRRWWDRRRC')">+ Asp (Anionic Fail)</button>
-            <button class="preset-btn" onclick="setPreset('CRRRWIKRRRC')">+ Ile/Lys (Entrapment Fail)</button>
-            <button class="preset-btn" onclick="setPreset('ARRRWWRRRRA')">Linear (No Cys Bridge)</button>
+            <button type="button" class="preset-btn" onclick="loadSandboxSeq('CAHWRPWHC')">Reference Scaffold</button>
+            <button type="button" class="preset-btn" onclick="loadSandboxSeq('CRRRWWRRRRC')">Naive Baseline</button>
+            <button type="button" class="preset-btn" onclick="loadSandboxSeq('CRRRWWDRRRC')">+ Asp (Anionic Fail)</button>
+            <button type="button" class="preset-btn" onclick="loadSandboxSeq('CRRRWIKRRRC')">+ Ile/Lys (Entrapment Fail)</button>
+            <button type="button" class="preset-btn" onclick="loadSandboxSeq('ARRRWWRRRRA')">Linear (No Cys Bridge)</button>
           </div>
 
           <div class="audit-grid">
@@ -1536,7 +1708,7 @@
             </div>
           </div>
 
-          <div id="inspector-feedback" style="font-size: 13px; color: var(--text-sub); padding: 8px 12px; background: var(--bg-card); border-radius: 6px; border: 1px solid var(--border-card);">
+          <div id="inspector-feedback" style="font-size: 14px; color: var(--text-sub); padding: 10px 14px; background: var(--bg-card); border-radius: 6px;">
             Candidate conforms to oral mucoadhesive chitosan matrix rules: zero anionic Asp/Glu residues, zero Ile/Lys crosslinker traps, and full disulfide cyclization.
           </div>
         </div>
@@ -1545,12 +1717,12 @@
       <!-- TAB 3: CLINICAL & ENGINEERING CONTEXT -->
       <div class="tab-pane" id="tab-context">
         <div class="context-section">
-          <h4 class="context-h4">Clinical Pathology &amp; Why GtfB Matters</h4>
+          <h3 class="context-h3">Clinical Pathology &amp; Why GtfB Matters</h3>
           <p>
             In clinical dentistry, dental caries is driven by acidogenic biofilms. <i>Streptococcus mutans</i> secretes Glucosyltransferase-B (GtfB), an exoenzyme that cleaves dietary sucrose and synthesizes sticky, water-insoluble &alpha;-1,3-linked glucans (mutan). This matrix forms an impenetrable bacterial fortress on tooth enamel.
           </p>
 
-          <h4 class="context-h4">The Engineering Solution</h4>
+          <h3 class="context-h3">The Engineering Solution</h3>
           <p>
             Rather than broadly killing oral flora with antiseptics, Dr. Nemo attacks the enzymatic architecture. Dr. Nemo implements a closed-loop multi-agent directed evolution platform in LangGraph:
           </p>
@@ -1561,7 +1733,7 @@
             <li><strong>IGSC Biosecurity Gate:</strong> Confirms sequence safety prior to solid-phase synthesis formatting.</li>
           </ul>
 
-          <h4 class="context-h4">Architect &amp; Researcher</h4>
+          <h3 class="context-h3">Architect &amp; Researcher</h3>
           <p>
             <strong>Dr. Roi Castrellon, DDS</strong> | Healthcare Data Engineer &amp; Applied AI Engineer. Clinician-turned-engineer combining 6 years of clinical dentistry (DDS) with production AWS PostgreSQL data engineering, medical claims analytics, and clinical AI systems.
           </p>
@@ -1598,11 +1770,11 @@
           <div class="sandbox-mutations-wrapper">
             <span class="toolbar-label">1-Click Mutations:</span>
             <div class="preset-btn-row">
-              <button class="preset-btn" onclick="applyMutation('P6A')">+P6A</button>
-              <button class="preset-btn" onclick="applyMutation('P2A')">+P2A</button>
-              <button class="preset-btn" onclick="applyMutation('R5K')">+R5K</button>
-              <button class="preset-btn" onclick="applyMutation('W4A')">+W4A</button>
-              <button class="preset-btn" onclick="applyMutation('RESET')">Reset</button>
+              <button type="button" class="preset-btn" id="btn-mut-p6a" onclick="applyMutation('P6A')">+P6A</button>
+              <button type="button" class="preset-btn" id="btn-mut-p2a" onclick="applyMutation('P2A')">+P2A</button>
+              <button type="button" class="preset-btn" id="btn-mut-r5k" onclick="applyMutation('R5K')">+R5K</button>
+              <button type="button" class="preset-btn" id="btn-mut-w4a" onclick="applyMutation('W4A')">+W4A</button>
+              <button type="button" class="preset-btn" id="btn-mut-reset" onclick="applyMutation('RESET')">Reset</button>
             </div>
           </div>
         </div>
@@ -1794,9 +1966,35 @@
     let lastClickedAtom = null;
     let currentRep = 'complex';
     let currentColoring = 'confidence';
-    let isSpinning = false;
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let isSpinning = !prefersReducedMotion;
+    let isStageVisible = true;
+    let spinObserver = null;
     let viewer = null;
     let playInterval = null;
+
+    function syncViewerSpin() {
+      const btn = document.getElementById('btn-auto-spin');
+      const shouldSpin = isSpinning && isStageVisible && !prefersReducedMotion;
+      if (viewer) {
+        viewer.spin(shouldSpin ? 'y' : false, 0.35);
+      }
+      if (btn) {
+        btn.setAttribute('aria-pressed', isSpinning ? 'true' : 'false');
+        btn.innerText = isSpinning ? 'Auto-Spin: On' : 'Auto-Spin: Off';
+      }
+    }
+
+    function setupSpinObserver(el) {
+      if (!('IntersectionObserver' in window) || spinObserver || !el) return;
+      spinObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          isStageVisible = entry.isIntersecting;
+          syncViewerSpin();
+        });
+      }, { threshold: 0.05 });
+      spinObserver.observe(el);
+    }
 
     // === 3Dmol Viewer Initialization ===
     function initViewer() {
@@ -1809,6 +2007,7 @@
       const currentTheme = document.documentElement.getAttribute('data-theme') || getSystemTheme();
       const bgColor = (currentTheme === 'dark') ? '#060B14' : '#F8FAFC';
       viewer = $3Dmol.createViewer(el, { backgroundColor: bgColor });
+      setupSpinObserver(el);
       loadCurrentLeadStructure();
     }
 
@@ -1852,10 +2051,7 @@
         viewer.zoom(0.78, 0);
       }
 
-      if (!isSpinning) {
-        isSpinning = true;
-        viewer.spin("y", 0.35);
-      }
+      syncViewerSpin();
       viewer.render();
     }
 
@@ -1878,10 +2074,10 @@
       const polarityColorFunc = function(atom) {
         const resn = (atom.resn || '').trim().toUpperCase();
         if (resn === 'CYS') return '#FACC15'; // Disulfide Gold
-        if (['ARG', 'LYS', 'HIS'].includes(resn)) return '#38BDF8'; // Basic Cationic (Electric Blue)
+        if (['ARG', 'LYS', 'HIS'].includes(resn)) return '#38BDF8'; // Basic Cationic (Clinical Sky Cyan)
         if (['ASP', 'GLU'].includes(resn)) return '#F87171'; // Acidic Anionic (Coral Red)
         if (['TRP', 'PHE', 'TYR', 'ALA', 'PRO', 'VAL', 'LEU', 'ILE', 'MET'].includes(resn)) return '#34D399'; // Aromatic/Hydrophobic (Emerald)
-        if (['SER', 'THR', 'ASN', 'GLN', 'GLY'].includes(resn)) return '#A78BFA'; // Polar Uncharged (Violet)
+        if (['SER', 'THR', 'ASN', 'GLN', 'GLY'].includes(resn)) return '#0284C7'; // Polar Uncharged (Clinical Cyan)
         return '#94A3B8';
       };
 
@@ -1922,11 +2118,11 @@
             });
           } else if (isChain) {
             viewer.setStyle({ chain: 'A' }, {
-              cartoon: { color: '#6366F1', opacity: 0.95 }
+              cartoon: { color: '#64748B', opacity: 0.95 }
             });
             viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
-              stick: { colorscheme: 'magentaCarbon', radius: 0.28 },
-              cartoon: { color: '#EC4899' }
+              stick: { color: '#F59E0B', radius: 0.28 },
+              cartoon: { color: '#F87171' }
             });
           } else { // spectrum
             viewer.setStyle({ chain: 'A' }, {
@@ -1949,12 +2145,12 @@
             });
           } else if (isChain) {
             viewer.setStyle({ chain: 'A' }, {
-              stick: { color: '#6366F1', radius: 0.22 },
-              sphere: { color: '#818CF8', radius: 0.38, opacity: 0.85 }
+              stick: { color: '#64748B', radius: 0.22 },
+              sphere: { color: '#94A3B8', radius: 0.38, opacity: 0.85 }
             });
             viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
-              stick: { colorscheme: 'magentaCarbon', radius: 0.32 },
-              sphere: { color: '#EC4899', radius: 0.55 }
+              stick: { color: '#F59E0B', radius: 0.32 },
+              sphere: { color: '#F87171', radius: 0.55 }
             });
           } else { // spectrum
             viewer.setStyle({ chain: 'A' }, {
@@ -2001,7 +2197,7 @@
         // Subtle cavity surface around active site
         try {
           let cavityColor = '#F8FAFC';
-          if (isChain) cavityColor = '#818CF8';
+          if (isChain) cavityColor = '#94A3B8';
           else if (!isPolarity) cavityColor = 'spectrum';
           if (isFullBackbone) {
             viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.25, color: cavityColor }, { chain: 'A', within: { distance: 11.5, sel: { chain: 'B' } } });
@@ -2048,10 +2244,10 @@
               cartoon: { colorfunc: polarityColorFunc }
             });
           } else if (isChain) {
-            viewer.setStyle({ chain: 'A' }, { cartoon: { color: '#6366F1', opacity: 0.95 } });
+            viewer.setStyle({ chain: 'A' }, { cartoon: { color: '#64748B', opacity: 0.95 } });
             viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
-              stick: { colorscheme: 'magentaCarbon', radius: 0.3 },
-              cartoon: { color: '#EC4899' }
+              stick: { color: '#F59E0B', radius: 0.3 },
+              cartoon: { color: '#F87171' }
             });
           } else { // spectrum
             viewer.setStyle({ chain: 'A' }, { cartoon: { color: 'spectrum', opacity: 0.95 } });
@@ -2072,12 +2268,12 @@
             });
           } else if (isChain) {
             viewer.setStyle({ chain: 'A' }, {
-              stick: { color: '#6366F1', radius: 0.28 },
-              sphere: { color: '#818CF8', radius: 0.48 }
+              stick: { color: '#64748B', radius: 0.28 },
+              sphere: { color: '#94A3B8', radius: 0.48 }
             });
             viewer.setStyle({ chain: 'A', resi: [477, 515, 588] }, {
-              stick: { colorscheme: 'magentaCarbon', radius: 0.38 },
-              sphere: { color: '#EC4899', radius: 0.65 }
+              stick: { color: '#F59E0B', radius: 0.38 },
+              sphere: { color: '#F87171', radius: 0.65 }
             });
           } else { // spectrum
             viewer.setStyle({ chain: 'A' }, {
@@ -2092,7 +2288,7 @@
           // Translucent pocket surface
           try {
             let surfColor = '#94A3B8';
-            if (isChain) surfColor = '#818CF8';
+            if (isChain) surfColor = '#94A3B8';
             else if (!isPolarity) surfColor = 'spectrum';
             viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.35, color: surfColor }, { chain: 'A' });
           } catch(e) {}
@@ -2137,9 +2333,9 @@
               console.warn("Surface render error:", se);
             }
           } else if (isChain) {
-            viewer.setStyle({ chain: 'A' }, { cartoon: { color: '#6366F1', opacity: 0.7 } });
+            viewer.setStyle({ chain: 'A' }, { cartoon: { color: '#64748B', opacity: 0.7 } });
             try {
-              viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.85, color: '#818CF8' }, { chain: 'A' });
+              viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.85, color: '#94A3B8' }, { chain: 'A' });
             } catch (se) {
               console.warn("Surface render error:", se);
             }
@@ -2161,9 +2357,9 @@
               console.warn("Surface render error:", se);
             }
           } else if (isChain) {
-            viewer.setStyle({ chain: 'A' }, { stick: { color: '#6366F1', radius: 0.25 } });
+            viewer.setStyle({ chain: 'A' }, { stick: { color: '#64748B', radius: 0.25 } });
             try {
-              viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.55, color: '#818CF8' }, { chain: 'A' });
+              viewer.addSurface($3Dmol.SurfaceType.MS, { opacity: 0.55, color: '#94A3B8' }, { chain: 'A' });
             } catch (se) {
               console.warn("Surface render error:", se);
             }
@@ -2238,12 +2434,10 @@
       const mProtease = document.getElementById('metric-protease');
       if (mProtease) mProtease.innerText = lead.protease || 'N/A';
 
-      // Sync sandbox input to this lead if different
+      // Sync canonical sandbox input to this lead if different
       const sInput = document.getElementById('sandbox-seq-input');
       if (sInput && sInput.value !== lead.seq) {
         sInput.value = lead.seq;
-        const pInput = document.getElementById('peptide-input');
-        if (pInput && pInput.value !== lead.seq) pInput.value = lead.seq;
         updateSandbox(lead.seq);
         auditSequence(lead.seq);
       }
@@ -2282,9 +2476,7 @@
 
     function toggleSpin() {
       isSpinning = !isSpinning;
-      if (viewer) {
-        viewer.spin(isSpinning ? 'y' : false, 0.6);
-      }
+      syncViewerSpin();
     }
 
     function resetCamera() {
@@ -2376,7 +2568,7 @@
         <line x1="${padL}" y1="${padT + plotH}" x2="${padL + plotW}" y2="${padT + plotH}" stroke="var(--chart-grid)" stroke-width="1"/>
         <!-- Threshold 90 Line -->
         <line x1="${padL}" y1="${padT + plotH - ((90 - 60) / 40) * plotH}" x2="${padL + plotW}" y2="${padT + plotH - ((90 - 60) / 40) * plotH}" stroke="var(--teal-primary)" stroke-dasharray="3,3" stroke-width="1"/>
-        <text x="${padL + 4}" y="${padT + plotH - ((90 - 60) / 40) * plotH - 4}" font-size="9" fill="var(--teal-primary)" font-family="JetBrains Mono">Composite 0.80 Threshold</text>
+        <text x="${padL + 4}" y="${padT + plotH - ((90 - 60) / 40) * plotH - 4}" font-size="11" fill="var(--teal-primary)" font-family="JetBrains Mono">Composite 0.80 Threshold</text>
         
         <!-- Trajectory lines -->
         <path d="${pathMean}" fill="none" stroke="var(--text-muted)" stroke-width="1.8"/>
@@ -2387,10 +2579,10 @@
         <circle cx="${activeX}" cy="${activeY}" r="5" fill="var(--blue-accent)" stroke="var(--bg-card)" stroke-width="2"/>
         
         <!-- Axes Labels -->
-        <text x="${padL}" y="${h - 10}" font-size="10" fill="var(--chart-axis)" font-family="JetBrains Mono">Gen 1</text>
-        <text x="${padL + plotW - 36}" y="${h - 10}" font-size="10" fill="var(--chart-axis)" font-family="JetBrains Mono">Gen 20</text>
-        <text x="10" y="${padT + 12}" font-size="10" fill="var(--chart-axis)" font-family="JetBrains Mono">100</text>
-        <text x="10" y="${padT + plotH}" font-size="10" fill="var(--chart-axis)" font-family="JetBrains Mono">60</text>
+        <text x="${padL}" y="${h - 10}" font-size="12" fill="var(--chart-axis)" font-family="JetBrains Mono">Gen 1</text>
+        <text x="${padL + plotW - 36}" y="${h - 10}" font-size="12" fill="var(--chart-axis)" font-family="JetBrains Mono">Gen 20</text>
+        <text x="10" y="${padT + 12}" font-size="12" fill="var(--chart-axis)" font-family="JetBrains Mono">100</text>
+        <text x="10" y="${padT + plotH}" font-size="12" fill="var(--chart-axis)" font-family="JetBrains Mono">60</text>
       `;
     }
 
@@ -2428,10 +2620,10 @@
         <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="var(--chart-grid)" stroke-width="1"/>
         <line x1="${padL}" y1="${padT + plotH}" x2="${padL + plotW}" y2="${padT + plotH}" stroke="var(--chart-grid)" stroke-width="1"/>
         ${dotsHtml}
-        <text x="${padL}" y="${h - 10}" font-size="10" fill="var(--chart-axis)" font-family="JetBrains Mono">Vina Axis</text>
-        <text x="${padL + plotW - 40}" y="${h - 10}" font-size="10" fill="var(--chart-axis)" font-family="JetBrains Mono">100</text>
-        <text x="10" y="${padT + 12}" font-size="10" fill="var(--chart-axis)" font-family="JetBrains Mono">1.0</text>
-        <text x="10" y="${padT + plotH}" font-size="10" fill="var(--chart-axis)" font-family="JetBrains Mono">0.4</text>
+        <text x="${padL}" y="${h - 10}" font-size="12" fill="var(--chart-axis)" font-family="JetBrains Mono">Vina Axis</text>
+        <text x="${padL + plotW - 40}" y="${h - 10}" font-size="12" fill="var(--chart-axis)" font-family="JetBrains Mono">100</text>
+        <text x="10" y="${padT + 12}" font-size="12" fill="var(--chart-axis)" font-family="JetBrains Mono">1.0</text>
+        <text x="10" y="${padT + plotH}" font-size="12" fill="var(--chart-axis)" font-family="JetBrains Mono">0.4</text>
       `;
     }
 
@@ -2504,14 +2696,14 @@
           <span class="legend-item"><span class="legend-dot" style="background:#38BDF8;"></span>Basic (+): Arg / Lys / His (pH Switch)</span>
           <span class="legend-item"><span class="legend-dot" style="background:#F87171;"></span>Acidic (-): Asp / Glu (Catalytic Triad)</span>
           <span class="legend-item"><span class="legend-dot" style="background:#34D399;"></span>Hydrophobic: Trp / Ala / Pro</span>
-          <span class="legend-item"><span class="legend-dot" style="background:#A78BFA;"></span>Polar Uncharged: Ser / Thr / Asn / Gln</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#0284C7;"></span>Polar Uncharged: Ser / Thr / Asn / Gln / Gly</span>
           <span class="legend-item"><span class="legend-dot" style="background:#FACC15;"></span>Disulfide Lock: Cys1-CysN (S-S)</span>
         `;
       } else if (s === 'chain') {
         el.innerHTML = `
           <span class="legend-title">Chain Key:</span>
-          <span class="legend-item"><span class="legend-dot" style="background:#6366F1;"></span>Receptor (Chain A): S. mutans GtfB Cleft (3AIC)</span>
-          <span class="legend-item"><span class="legend-dot" style="background:#EC4899;"></span>Target Active Site: Asp477, Glu515, Asp588</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#64748B;"></span>Receptor (Chain A): S. mutans GtfB Cleft (3AIC)</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#F87171;"></span>Target Active Site: Asp477, Glu515, Asp588</span>
           <span class="legend-item"><span class="legend-dot" style="background:#06B6D4;"></span>Ligand (Chain B): Cyclic Peptide Inhibitor</span>
           <span class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span>Disulfide Bridge (2.06 Å) &amp; Polar Contacts (&lt;3.65 Å)</span>
         `;
@@ -2525,10 +2717,16 @@
     }
 
     // === Interactive Sandbox & 259-Vault Engine ===
+    function focusSandboxInput() {
+      const sInput = document.getElementById('sandbox-seq-input');
+      if (sInput) {
+        sInput.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' });
+        sInput.focus();
+      }
+    }
+
     function onSandboxSeqChange(rawVal) {
       const seq = (rawVal || '').toUpperCase().trim();
-      const pInput = document.getElementById('peptide-input');
-      if (pInput && pInput.value !== seq) pInput.value = seq;
       updateSandbox(seq);
       auditSequence(seq);
     }
@@ -2578,6 +2776,41 @@
       onSandboxSeqChange(seq);
     }
 
+    function updateMutationButtons(seq) {
+      const s = (seq || '').toUpperCase().trim();
+      const btnP6A = document.getElementById('btn-mut-p6a');
+      const btnP2A = document.getElementById('btn-mut-p2a');
+      const btnR5K = document.getElementById('btn-mut-r5k');
+      const btnW4A = document.getElementById('btn-mut-w4a');
+
+      const hasP = s.includes('P');
+      const hasP2OrA2 = s.length >= 2 && (s[1] === 'P' || s[1] === 'A');
+      const hasR = s.includes('R');
+      const hasW = s.includes('W');
+
+      if (btnP6A) {
+        btnP6A.disabled = !hasP;
+        btnP6A.setAttribute('aria-disabled', String(!hasP));
+        btnP6A.title = hasP ? 'Mutate Pro residue to Ala' : 'Disabled: no Pro (P) residue in active sequence';
+      }
+      if (btnP2A) {
+        btnP2A.disabled = !hasP2OrA2;
+        btnP2A.setAttribute('aria-disabled', String(!hasP2OrA2));
+        btnP2A.innerText = (s.length >= 2 && s[1] === 'A') ? '+A2P' : '+P2A';
+        btnP2A.title = hasP2OrA2 ? 'Toggle position 2 between Pro and Ala' : 'Disabled: position 2 is neither Pro (P) nor Ala (A)';
+      }
+      if (btnR5K) {
+        btnR5K.disabled = !hasR;
+        btnR5K.setAttribute('aria-disabled', String(!hasR));
+        btnR5K.title = hasR ? 'Mutate Arg (R) residue to Lys (K)' : 'Disabled: no Arg (R) residue in active sequence';
+      }
+      if (btnW4A) {
+        btnW4A.disabled = !hasW;
+        btnW4A.setAttribute('aria-disabled', String(!hasW));
+        btnW4A.title = hasW ? 'Mutate Trp (W) residue to Ala (A)' : 'Disabled: no Trp (W) residue in active sequence';
+      }
+    }
+
     function updateSandbox(seq) {
       const strip = document.getElementById('sandbox-residue-strip');
       const cardCyc = document.getElementById('sb-card-cyclization');
@@ -2592,6 +2825,8 @@
       const valChymo = document.getElementById('sb-val-chymotrypsin');
       const vaultBox = document.getElementById('vault-match-box');
       const badge = document.getElementById('vault-match-badge');
+
+      updateMutationButtons(seq);
 
       if (!seq) {
         if (strip) strip.innerHTML = '<span style="color: var(--text-muted); font-size: 12px; font-style: italic;">Enter a peptide sequence above (e.g. CAHWRPWHC)</span>';
@@ -2730,21 +2965,21 @@
                 <span class="badge-pill blue">Pareto Rank ${entry.rank}</span>
                 <span class="badge-pill">Gen ${entry.gen}</span>
               </div>
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-muted);">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted);">
                 Disulfide Distance: ${entry.ss_bond} Å (C1-C${seq.length} S-S)
               </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-family: 'JetBrains Mono', monospace;">
-              <div style="background: var(--bg-card); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-card);">
-                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">AutoDock Vina ΔG (3AIC)</div>
+            <div class="vault-stats-grid">
+              <div class="vault-stat-cell">
+                <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">AutoDock Vina ΔG (3AIC)</div>
                 <div style="font-size: 17px; font-weight: 700; color: var(--emerald-accent);">${entry.vina_3aic.toFixed(3)} kcal/mol</div>
               </div>
-              <div style="background: var(--bg-card); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-card);">
-                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Amylase Selectivity (1SMD)</div>
+              <div class="vault-stat-cell">
+                <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Amylase Selectivity (1SMD)</div>
                 <div style="font-size: 17px; font-weight: 700; color: var(--blue-accent);">${entry.vina_1smd.toFixed(3)} kcal/mol</div>
               </div>
-              <div style="background: var(--bg-card); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-card);">
-                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Selectivity Ratio (ΔΔG)</div>
+              <div class="vault-stat-cell">
+                <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Selectivity Ratio (ΔΔG)</div>
                 <div style="font-size: 17px; font-weight: 700; color: ${entry.ddg <= -0.5 ? 'var(--emerald-accent)' : 'var(--amber-accent)'};">${entry.ddg.toFixed(2)} kcal/mol</div>
               </div>
             </div>
@@ -2781,9 +3016,7 @@
     };
 
     function setPreset(seq) {
-      const input = document.getElementById('peptide-input');
-      input.value = seq;
-      auditSequence(seq);
+      loadSandboxSeq(seq);
     }
 
     function calcChargeAtPh(seq, ph) {
@@ -2821,6 +3054,8 @@
         if (feedback) feedback.innerText = 'Enter a peptide sequence to evaluate oral biophysical gates.';
         return;
       }
+      const activeSeqEl = document.getElementById('inspector-active-seq');
+      if (activeSeqEl) activeSeqEl.innerText = seq || 'NONE';
       const sInput = document.getElementById('sandbox-seq-input');
       if (sInput && sInput.value !== seq) {
         sInput.value = seq;
