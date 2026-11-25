@@ -204,10 +204,10 @@ def save_targets():
 # === SIDEBAR INTERFACE ===
 teacher_mode = st.sidebar.checkbox("Educational Walkthrough Mode", value=False)
 
-st.sidebar.header("🔬 Target Project Control")
+st.sidebar.header("Target Project Control")
 selected_project = st.sidebar.selectbox("Active Project Target:", target_list, index=0 if "S_mutans_GtfB_3AIC" in target_list else 0)
 
-with st.sidebar.expander("⚙️ Manage Target Catalog", expanded=False):
+with st.sidebar.expander("Manage Target Catalog", expanded=False):
     m_action = st.radio("Action:", ["Add New Target", "Edit Selected"], horizontal=True, label_visibility="collapsed")
     if m_action == "Add New Target":
         with st.form("add_project_form"):
@@ -253,7 +253,7 @@ if selected_project and selected_project in targets_data:
     st.sidebar.info(f"**Target:** {targets_data[selected_project].get('name', selected_project)}\n\n{targets_data[selected_project].get('description', '')}")
 
 st.sidebar.divider()
-st.sidebar.header("🧠 Reasoning Engine (Port :4000 Gateway)")
+st.sidebar.header("Reasoning Engine (Port :4000 Gateway)")
 
 # Live zero-watt gateway models
 model_options = [
@@ -266,7 +266,7 @@ model_choice = st.sidebar.selectbox("Active Reasoning Model:", model_options, in
 os.environ["OLLAMA_MODEL"] = model_choice.split(" ")[0]
 
 st.sidebar.divider()
-with st.sidebar.expander("🚀 Laboratory Actions", expanded=False):
+with st.sidebar.expander("Laboratory Actions", expanded=False):
     st.markdown("**💡 High-Throughput Sampling**")
     col_mass1, col_mass2 = st.columns(2)
     with col_mass1:
@@ -285,7 +285,7 @@ with st.sidebar.expander("🚀 Laboratory Actions", expanded=False):
                 st.error(f"Error: {e}")
 
 # === MANUAL PEPTIDE INPUT ===
-with st.sidebar.expander("🧪 Quick Sequence Dispatch", expanded=False):
+with st.sidebar.expander("Quick Sequence Dispatch", expanded=False):
     st.caption("Submit custom cyclic peptide (must start/end with C) to the AutoDock Vina + Vinardo pipeline.")
     manual_peptide = st.text_input("Sequence:", max_chars=30, placeholder="e.g. CAHWRPWHC").strip().upper()
     manual_note = st.text_input("Notes:", placeholder="Custom design")
@@ -315,7 +315,7 @@ with st.sidebar.expander("🧪 Quick Sequence Dispatch", expanded=False):
             st.error(msg)
 
 st.sidebar.divider()
-st.sidebar.header("📖 Biophysical Falsification Gates")
+st.sidebar.header("Biophysical Falsification Gates")
 st.sidebar.markdown("""
 - **Vina / Vinardo ΔG**: ≤ -7.50 kcal/mol (3AIC active cleft affinity)
 - **1SMD Selectivity ΔΔG**: ≤ -0.80 kcal/mol (Salivary amylase exclusion)
@@ -327,7 +327,7 @@ st.sidebar.markdown("""
 
 # === SIDEBAR LIVE DAEMON CONTROLS ===
 st.sidebar.divider()
-st.sidebar.markdown("### ⚡ Live Foundry Daemon")
+st.sidebar.markdown("### Live Foundry Daemon")
 sb_d = fm.get_daemon_status()
 st.sidebar.metric("Daemon Status", sb_d["badge"])
 st.sidebar.metric("Contenders Vault", f"{sb_d['vault_count']} candidates")
@@ -372,7 +372,19 @@ st.sidebar.divider()
 
 # === TOP BANNER: LIVE SQLITE VAULT TELEMETRY CARD ===
 vault_count = len(df) if df is not None else 0
-best_vina = df['vina_3aic_kcal'].min() if (df is not None and 'vina_3aic_kcal' in df.columns) else -8.191
+_top_champ = ContenderVault().get_pareto_champion()
+champ_seq = _top_champ.get("sequence", "CAHWRPWHC") if _top_champ else "CAHWRPWHC"
+best_vina = float(_top_champ.get("vina_3aic_kcal", -8.191)) if (_top_champ and _top_champ.get("vina_3aic_kcal") is not None) else (df['vina_3aic_kcal'].min() if (df is not None and 'vina_3aic_kcal' in df.columns) else -8.191)
+
+st.markdown("""<style>
+[data-testid="stMetricValue"] {
+    font-size: 1.25rem !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.25 !important;
+}
+</style>""", unsafe_allow_html=True)
 
 st.markdown(f"""
 <div style="background: linear-gradient(135deg, #131d2e, #0c121e); padding: 14px 20px; border-radius: 10px; border: 1px solid #1e293b; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
@@ -383,7 +395,7 @@ st.markdown(f"""
         </div>
         <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.9em; flex-wrap: wrap;">
             <span style="color: #cbd5e1;">Evaluated: <strong style="color: #38bdf8;">{vault_count} Contenders</strong></span>
-            <span style="color: #cbd5e1;">Pareto Champion: <strong style="color: #4ade80;">CAHWRPWHC</strong> ({best_vina:.3f} kcal/mol)</span>
+            <span style="color: #cbd5e1;">Pareto Champion: <strong style="color: #4ade80;">{champ_seq}</strong> ({best_vina:.3f} kcal/mol)</span>
             <span style="color: #cbd5e1;">Protease Resistance: <strong style="color: #4ade80;">0 Cleavage Sites</strong></span>
             <span style="color: #cbd5e1;">Stephan Switch: <strong style="color: #4ade80;">ΔQ = +1.618</strong></span>
         </div>
@@ -462,15 +474,15 @@ def apply_lab_styling(df_to_style):
 
 # === TABS ===
 tab_cmd, tab1, tab_popper, tab7, tab5, tab2, tab3, tab6, tab4 = st.tabs([
-    "⚡ Live Command & Sequence Lab",
-    "🔬 Target Monitoring",
-    "⚖️ Karl Popper Falsification",
-    "🛡️ Foundry Strategy",
-    "📈 Expansion Status",
-    "🏆 Leaderboard",
-    "🧬 3D Structure Viewer",
-    "🎯 Target Reference",
-    "📚 Manual"
+    "Live Command & Sequence Lab",
+    "Target Monitoring",
+    "Karl Popper Falsification",
+    "Foundry Strategy",
+    "Expansion Status",
+    "Leaderboard",
+    "3D Structure Viewer",
+    "Target Reference",
+    "Manual"
 ])
 
 # === TAB 1: LIVE COMMAND & SEQUENCE LAB ===
@@ -561,6 +573,24 @@ with tab_cmd:
             key="custom_seq_input_widget"
         ).strip().upper()
 
+        _valid_aas = set("ACDEFGHIKLMNPQRSTVWY")
+        _bad_chars = sorted(set(seq_text) - _valid_aas)
+        _seq_error = None
+        if not seq_text:
+            _seq_error = "Sequence cannot be empty."
+        elif len(seq_text) > 30:
+            _seq_error = f"Sequence length ({len(seq_text)}) exceeds 30 residues."
+        elif len(seq_text) < 3:
+            _seq_error = "Sequence must be at least 3 residues long."
+        elif _bad_chars:
+            _seq_error = f"Invalid amino acid characters: {', '.join(_bad_chars)}"
+        elif not (seq_text.startswith("C") and seq_text.endswith("C")):
+            _seq_error = "Sequence must start and end with 'C' (cyclic disulfide)."
+
+        if _seq_error:
+            st.error(_seq_error)
+        _seq_valid = _seq_error is None
+
         st.markdown("**1-Click Point-Mutation Builder:**")
         pm_c1, pm_c2, pm_c3 = st.columns([1, 1, 1.2])
 
@@ -573,7 +603,7 @@ with tab_cmd:
             sel_aa = st.selectbox("Target AA:", safe_aas, index=default_aa_idx)
         with pm_c3:
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🧬 Apply Mutation", use_container_width=True):
+            if st.button("Apply Mutation", use_container_width=True, disabled=not _seq_valid):
                 ok, mutated = fm.mutate_sequence(seq_text, sel_pos, sel_aa)
                 if ok:
                     st.session_state["custom_seq_val"] = mutated
@@ -582,7 +612,7 @@ with tab_cmd:
                 else:
                     st.error(mutated)
 
-        if st.button("⚡ Queue All Single-Site Variants", use_container_width=True, help="Generates and queues all single-site variants for positions 2..N-1"):
+        if st.button("Queue All Single-Site Variants", use_container_width=True, disabled=not _seq_valid, help="Generates and queues all single-site variants for positions 2..N-1"):
             variants = fm.generate_all_single_site_variants(seq_text)
             cnt = 0
             for v in variants:
