@@ -1288,6 +1288,17 @@
         display: none;
       }
 
+      .leads-bar .toolbar-label,
+      .sandbox-pills-row .toolbar-label,
+      .preset-btn-row .toolbar-label {
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+
+      input[type=range] {
+        min-height: 44px;
+      }
+
       .lead-chip,
       .toggle-btn,
       .preset-btn,
@@ -2568,7 +2579,7 @@
         <line x1="${padL}" y1="${padT + plotH}" x2="${padL + plotW}" y2="${padT + plotH}" stroke="var(--chart-grid)" stroke-width="1"/>
         <!-- Threshold 90 Line -->
         <line x1="${padL}" y1="${padT + plotH - ((90 - 60) / 40) * plotH}" x2="${padL + plotW}" y2="${padT + plotH - ((90 - 60) / 40) * plotH}" stroke="var(--teal-primary)" stroke-dasharray="3,3" stroke-width="1"/>
-        <text x="${padL + 4}" y="${padT + plotH - ((90 - 60) / 40) * plotH - 4}" font-size="11" fill="var(--teal-primary)" font-family="JetBrains Mono">Composite 0.80 Threshold</text>
+        <text x="${padL + 4}" y="${padT + plotH - ((90 - 60) / 40) * plotH - 4}" font-size="12" fill="var(--teal-primary)" font-family="JetBrains Mono">Composite 0.80 Threshold</text>
         
         <!-- Trajectory lines -->
         <path d="${pathMean}" fill="none" stroke="var(--text-muted)" stroke-width="1.8"/>
