@@ -181,7 +181,8 @@ with colB:
     st.markdown("<br>", unsafe_allow_html=True)
     search_term = st.text_input("🔍 Global Data Search:", placeholder="Filter by Sequence or ID...").strip()
 
-# === Load Targets ===target_list = []
+# === Load Targets ===
+target_list = []
 targets_data = {}
 if TARGETS_FILE.exists():
     with open(TARGETS_FILE, 'r') as f:
@@ -200,7 +201,8 @@ def save_targets():
         json.dump(targets_data, f, indent=4)
 
 
-# === SIDEBAR INTERFACE ===teacher_mode = st.sidebar.toggle("🎓 Teacher Mode", value=False)
+# === SIDEBAR INTERFACE ===
+teacher_mode = st.sidebar.checkbox("Educational Walkthrough Mode", value=False)
 
 st.sidebar.header("🔬 Target Project Control")
 selected_project = st.sidebar.selectbox("Active Project Target:", target_list, index=0 if "S_mutans_GtfB_3AIC" in target_list else 0)
@@ -282,7 +284,8 @@ with st.sidebar.expander("🚀 Laboratory Actions", expanded=False):
             except Exception as e:
                 st.error(f"Error: {e}")
 
-# === MANUAL PEPTIDE INPUT ===with st.sidebar.expander("🧪 Quick Sequence Dispatch", expanded=False):
+# === MANUAL PEPTIDE INPUT ===
+with st.sidebar.expander("🧪 Quick Sequence Dispatch", expanded=False):
     st.caption("Submit custom cyclic peptide (must start/end with C) to the AutoDock Vina + Vinardo pipeline.")
     manual_peptide = st.text_input("Sequence:", max_chars=30, placeholder="e.g. CAHWRPWHC").strip().upper()
     manual_note = st.text_input("Notes:", placeholder="Custom design")
@@ -322,7 +325,8 @@ st.sidebar.markdown("""
 - **Disulfide Geometry**: S-S bond 2.00-2.15 Å (Macrocycle lock)
 """)
 
-# === SIDEBAR LIVE DAEMON CONTROLS ===st.sidebar.divider()
+# === SIDEBAR LIVE DAEMON CONTROLS ===
+st.sidebar.divider()
 st.sidebar.markdown("### ⚡ Live Foundry Daemon")
 sb_d = fm.get_daemon_status()
 st.sidebar.metric("Daemon Status", sb_d["badge"])
@@ -366,7 +370,8 @@ if st.sidebar.button("⚡ Run 1 Immediate Cycle", key="sb_btn_cycle", use_contai
 
 st.sidebar.divider()
 
-# === TOP BANNER: LIVE SQLITE VAULT TELEMETRY CARD ===vault_count = len(df) if df is not None else 0
+# === TOP BANNER: LIVE SQLITE VAULT TELEMETRY CARD ===
+vault_count = len(df) if df is not None else 0
 best_vina = df['vina_3aic_kcal'].min() if (df is not None and 'vina_3aic_kcal' in df.columns) else -8.191
 
 st.markdown(f"""
@@ -667,7 +672,8 @@ with tab1:
 
         selected_rows = event.selection.rows
 
-        # === BIOPHYSICAL SCATTER VISUALIZATIONS ===st.divider()
+        # === BIOPHYSICAL SCATTER VISUALIZATIONS ===
+        st.divider()
         st.subheader("📈 Biophysical Correlation Landscapes")
         sc_col1, sc_col2 = st.columns(2)
         with sc_col1:
@@ -679,7 +685,8 @@ with tab1:
             if 'vina_3aic_kcal' in project_df.columns and 'vina_1smd_kcal' in project_df.columns:
                 st.scatter_chart(project_df, x="vina_3aic_kcal", y="vina_1smd_kcal", color="Status")
 
-        # === MULTI-PEPTIDE SEQUENCE ALIGNMENT ===if selected_rows and len(selected_rows) >= 2:
+        # === MULTI-PEPTIDE SEQUENCE ALIGNMENT ===
+        if selected_rows and len(selected_rows) >= 2:
             selected_df = project_df.iloc[selected_rows].copy()
             st.divider()
             st.subheader(f"🔬 Multi-Peptide Sequence Alignment ({len(selected_df)} Contenders Selected)")

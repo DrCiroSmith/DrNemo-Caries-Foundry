@@ -210,6 +210,15 @@ def test_dashboard_path_resolution():
             os.environ["DRNEMO_DATA_DIR"] = old_env
 
 
+def test_dashboard_headless_execution():
+    """Verify dashboard.py boots headlessly via AppTest without NameError or unhandled exceptions."""
+    import py_compile
+    py_compile.compile(str(REPO_ROOT / "dashboard.py"), doraise=True)
+    from streamlit.testing.v1 import AppTest
+    at = AppTest.from_file(str(REPO_ROOT / "dashboard.py"), default_timeout=30).run()
+    assert not at.exception, f"Dashboard boot raised unexpected exception: {at.exception}"
+
+
 # ==============================================================================
 # OPERATION KARL POPPER: 6-ANGLE BIOPHYSICAL FALSIFICATION TEST SUITE
 # ==============================================================================

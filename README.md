@@ -52,8 +52,6 @@ The discovery engine executes a deterministic 4-stage Python screening pipeline 
 3. **Biophysics Engine**: AutoDock Vina + Vinardo uncompressed 28.0 A dual grid docking on RCSB 3AIC (target) and 1SMD (human alpha-amylase off-target), with isolated-ligand 200-step Amber14/GBn2 steric relaxation check (informational only; not used in docking pose selection).
 4. **Popperian Falsification**: Amylase counter-screen (1SMD DDG <= -0.80), N=39 scrambled null permutations, alanine scan, and co-crystal calibration controls.
 
-Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to mutate the hinge.
-
 ---
 
 ## 3. Biophysical Results: Reference Scaffold CAHWRPWHC
@@ -75,7 +73,7 @@ Falsified candidates (amylase cross-reactivity, protease cleavage) feed back to 
 | **Stephan DQ (acid switch)** | 0.00 | +1.62 | +1.62 | **+1.62** | Acid-activated in cariogenic niche |
 | **Disulfide S-S** | unconstrained | 2.06 A | 2.06 A | **2.06 A** | Intact macrocyclic restraint |
 | **OpenMM Amber14/GBn2** | N/A | 200-step relaxed | 200-step relaxed | **200-step relaxed** | Isolated ligand steric minimization |
-| **Verdict** | FALSIFIED (multiple gates) | FALSIFIED (amylase) | FALSIFIED (trypsin site) | **IN SILICO HYPOTHESIS** | Candidate advance with 3 caveats |
+| **Verdict** | FALSIFIED (multiple gates) | FALSIFIED (amylase) | FALSIFIED (trypsin site) | **IN SILICO HYPOTHESIS** | Non-corroborated reference scaffold (inconclusive within Vina noise) |
 
 P2A (Pro2 to Ala) hinge relaxation preserves GtfB binding while sterically excluding the inhibitor from human amylase (DDG = -0.85 kcal/mol). P6A (Pro6 to Ala) gives raw affinity -8.890 kcal/mol but breaks the proline steric shield, creating a tryptic cleavage site, falsified on Angle 5.
 
@@ -114,8 +112,8 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 </p>
 
 - **Panel A, Pareto Frontier:** Vina 3AIC vs selectivity DDG across contenders; CAHWRPWHC is the non-dominated candidate.
-- **Panel B, Scrambled Null Histogram (N=39):** charge-matched sequence permutations establish empirical significance (mean = -8.343 +/- 0.470 kcal/mol, Z = +0.32 sigma, p = 0.5897).
-- **Panel C, Alanine Hotspot Scan:** His3, Trp7, His8 are catalytic anchors; Pro2/Pro6 are conformational gates. P6A flagged for Arg5 trypsin lysis.
+- **Panel B, Scrambled Null Histogram (N=39):** charge-matched sequence permutations evaluate against the empirical null distribution (Z = +0.32, p = 0.5897, failing to reject H0).
+- **Panel C, Alanine Hotspot Scan:** His3, Trp7, His8 are candidate contact residues (single-site shifts +0.08 to +0.39 kcal/mol, within Vina noise); Pro2/Pro6 are conformational gates. P6A flagged for Arg5 trypsin lysis.
 - **Panel D, Stephan Acid-Switch:** DQ = +1.62 activates the inhibitor in the cariogenic acidic niche (pH approximately 5.2). CRRRWWRRRRC shows flat charge, no acid activation.
 
 ---
