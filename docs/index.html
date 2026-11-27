@@ -3169,7 +3169,11 @@
       const entry = (typeof VAULT_LOOKUP !== 'undefined') ? VAULT_LOOKUP[seq] : null;
 
       if (entry) {
-        const isCorrob = entry.status === 'CORROBORATED';
+        // Archived rows carry the retired label CORROBORATED for what is only
+        // survival of the in silico gates. Never show that word as a verdict.
+        const SURVIVED = ['SURVIVED_ALL_GATES', 'CORROBORATED', 'NOT_CORROBORATED'];
+        const isCorrob = SURVIVED.indexOf(entry.status) !== -1;
+        const statusLabel = isCorrob ? 'SURVIVED_ALL_GATES' : entry.status;
         if (badge) {
           badge.innerHTML = `<span class="status-dot ${isCorrob ? 'pass' : 'fail'}"></span><span>Vault Match · Rank ${entry.rank}</span>`;
         }
@@ -3179,7 +3183,7 @@
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
               <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <span style="font-family: var(--font-mono); font-size: 13.5px; font-weight: 600; color: var(--text-primary);">259-Vault Match: ${seq}</span>
-                <span class="status-tag" style="color: ${statusColor};">${entry.status}</span>
+                <span class="status-tag" style="color: ${statusColor};">${statusLabel}</span>
                 <span class="pane-meta">Rank ${entry.rank} · Gen ${entry.gen}</span>
               </div>
               <div class="pane-meta">

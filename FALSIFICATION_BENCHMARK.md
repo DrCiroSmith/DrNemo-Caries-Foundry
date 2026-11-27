@@ -3,7 +3,10 @@
 **Autonomous Structural-Biology Verification Suite for *Streptococcus mutans* glucosyltransferase inhibitors**  
 *Principal Investigator:* Dr. Roi Castrellon, DDS (DrNemo Oral Biophysics Research, Miami, FL, USA)  
 *Benchmark Version:* 2.0.0 (Empirical $28.0\text{ \AA}$ Dual-Scoring Vina + Vinardo + OpenMM)  
-*Status:* 100% Empirical Physics Validated (Zero Synthetic / Mock Scores)
+*Status:* Docking and biophysics scores are computed empirically. Eight of the twelve
+disproof angles are reported from a cached run rather than recomputed per candidate, and
+four gates in the current thresholds cannot fail on this contender set. Both limits are
+listed in section 5. No candidate in this benchmark is corroborated.
 
 ---
 
@@ -45,7 +48,7 @@ Mean = -8.34 ± 0.47 kcal/mol  His3, Trp7, His8 Anchors        Zero Cleavage Sit
                       Stephan Acid-Switch ΔQ ≥ +1.0
                                     │
                                     ▼
-                     [ CORROBORATED PARETO CHAMPION ]
+                      [ SURVIVED ALL GATES, RANK 1 ]
 ```
 
 ---
@@ -67,7 +70,7 @@ Mean = -8.34 ± 0.47 kcal/mol  His3, Trp7, His8 Anchors        Zero Cleavage Sit
 * **Clinical Rationale:** Oral therapeutics targeting carbohydrate-processing bacterial enzymes must not inhibit host salivary amylase, which is vital for dietary starch hydrolysis and oral mucosal health.
 * **Empirical Discoveries:**
   * **Initial Lead (`CPHWRPWHC`):** GTF-SI $\mathbf{-8.062\text{ kcal/mol}}$ vs Amylase $\mathbf{-7.902\text{ kcal/mol}}$ ($\Delta\Delta G = \mathbf{-0.16\text{ kcal/mol}}$). **FALSIFIED on Angle 2:** In the uncompressed $28\text{ \AA}$ box, `CPHWRPWHC` cross-reacts with human amylase and fails the $\le -0.80\text{ kcal/mol}$ selectivity threshold!
-  * **Pareto Champion (`CAHWRPWHC`, P2A Hinge Mutant):** GTF-SI $\mathbf{-8.191\text{ kcal/mol}}$ vs Amylase $\mathbf{-7.343\text{ kcal/mol}}$ ($\Delta\Delta G = \mathbf{-0.85\text{ kcal/mol}}$). **CORROBORATED:** Hinge relaxation preserves high GTF-SI affinity while sterically excluding the macrocycle from the narrower human amylase cleft!
+  * **Pareto Champion (`CAHWRPWHC`, P2A Hinge Mutant):** GTF-SI $\mathbf{-8.191\text{ kcal/mol}}$ vs Amylase $\mathbf{-7.343\text{ kcal/mol}}$ ($\Delta\Delta G = \mathbf{-0.85\text{ kcal/mol}}$). **SURVIVED ALL GATES:** hinge relaxation preserves GTF-SI affinity in this scoring function while placing the macrocycle outside the selectivity threshold for the narrower human amylase cleft. Clearing every in silico gate is not evidence of inhibition, and this candidate does not separate from its charge-matched scrambled nulls (Angle 5: $Z = +0.32$, $p = 0.5897$).
 
 ---
 
@@ -109,10 +112,17 @@ Systematic single-alanine substitutions were evaluated across the scaffold:
 
 ## 3. Comprehensive Contender Comparison
 
+**Status vocabulary.** `SURVIVED_ALL_GATES` means a candidate cleared every in silico filter.
+It is not a positive result and it is not corroboration: no wet-lab evidence of inhibition
+exists for any sequence in this repository. Rows in `data/foundry_contenders.sqlite` and the
+exported ledgers still carry the retired label `CORROBORATED` for that same state, because the
+archive predates the rename; readers in `vault.py` accept both. Every other status names the
+gate that rejected the candidate.
+
 | Candidate / Control | Sequence | 3AIC Vina (kcal/mol) | 1SMD Vina (kcal/mol) | Selectivity $\Delta\Delta G$ | Protease Sites | Stephan $\Delta Q$ | Donnan $Q_{\text{pH } 6.0}$ | Popperian Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Top Affinity Lead** | `CHPWPHWAC` | **-9.048** | **-7.751** | **-1.30** | **0** | **+1.62** | **+1.05** | **CORROBORATED (Rank 1)** |
-| **12-Angle Benchmark Lead** | `CAHWRPWHC` | **-8.191** | **-7.343** | **-0.85** | **0** | **+1.62** | **+2.05** | **CORROBORATED (Rank 1)** |
+| **Top Affinity Lead** | `CHPWPHWAC` | **-9.048** | **-7.751** | **-1.30** | **0** | **+1.62** | **+1.05** | **SURVIVED ALL GATES (Rank 1)** |
+| **12-Angle Benchmark Lead** | `CAHWRPWHC` | **-8.191** | **-7.343** | **-0.85** | **0** | **+1.62** | **+2.05** | **SURVIVED ALL GATES (Rank 1)** |
 | Initial WT Lead | `CPHWRPWHC` | -8.062 | -7.902 | -0.16 | 0 | +1.62 | +2.05 | FALSIFIED (Amylase Cross-Reactivity) |
 | High-Affinity Mutant (P6A) | `CPHWRAWHC` | -8.890 | -7.302 | -1.59 | 1 | +1.62 | +2.05 | FALSIFIED (Oral Protease Lysis) |
 | Linear Control | `SPHWRPWHS` | -8.865 | -7.420 | -1.45 | 0 | +1.62 | +2.05 | FALSIFIED (35 Torsions, Entropic Loss) |

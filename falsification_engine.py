@@ -273,7 +273,7 @@ def print_falsification_report(audit: Dict[str, Any]):
                 print(f"    - {field}: {val}")
 
     print("\n" + "=" * 76)
-    verdict = "CLEARED ALL GATES (CORROBORATED)" if audit["overall_falsification_passed"] else "NOT_CORROBORATED (INCONCLUSIVE_WITHIN_NOISE)"
+    verdict = ("SURVIVED ALL GATES (not corroborated: surviving an in silico screen is not evidence of inhibition)" if audit["overall_falsification_passed"] else "INCONCLUSIVE_WITHIN_NOISE")
     print(f"FINAL FALSIFICATION VERDICT: {verdict}")
     print("=" * 76)
 

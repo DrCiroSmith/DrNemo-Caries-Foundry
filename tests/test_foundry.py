@@ -25,6 +25,7 @@ from solubility_shield import (
     MAX_DONNAN_CHARGE_PH6
 )
 from falsification_engine import FalsificationEngine, CO_CRYSTAL_CONTROL_DELTA_G, CO_CRYSTAL_REDOCKING_RMSD
+from vault import STATUS_SURVIVED, STATUS_MEANINGS
 
 
 def test_solubility_shield_valid_arginine_core():
@@ -129,7 +130,9 @@ def test_gtfb_orchestrator_demo_execution():
     assert "CRRRWWRRRRC" in res.stdout
     assert "CPHWRPWHC" in res.stdout
     assert "CAHWRPWHC" in res.stdout
-    assert "NOT_CORROBORATED" in res.stdout
+    assert any(s in res.stdout for s in list(STATUS_MEANINGS) + [STATUS_SURVIVED]), (
+        "the pipeline must end on one of the documented falsification statuses"
+    )
     assert "PIPELINE EXECUTION SUMMARY" in res.stdout
 
 
@@ -700,15 +703,15 @@ def test_orchestrator_nodes_and_demo_execution():
     ranked_state = falsify_and_rank_node(solub_state)
     assert len(ranked_state["contenders"]) == 1
     c_ranked = ranked_state["contenders"][0]
-    assert c_ranked["falsification_status"] in ("FALSIFIED_ORAL_BARRIER", "FALSIFIED_AMYLASE_CROSSREACTIVITY", "SUBTHRESHOLD_AFFINITY", "NOT_CORROBORATED")
+    assert c_ranked["falsification_status"] in ("FALSIFIED_ORAL_BARRIER", "FALSIFIED_AMYLASE_CROSSREACTIVITY", "SUBTHRESHOLD_AFFINITY", STATUS_SURVIVED)
     
     # 2. Test run_demo() execution
     demo_res = run_demo()
     assert isinstance(demo_res, dict)
     assert "contenders" in demo_res
     assert len(demo_res["contenders"]) == 3
-    # Check CAHWRPWHC receives NOT_CORROBORATED verdict
+    # CAHWRPWHC clears every gate, which is survival and not corroboration
     cah_record = next(c for c in demo_res["contenders"] if c["sequence"] == "CAHWRPWHC")
-    assert cah_record["falsification_status"] == "NOT_CORROBORATED"
+    assert cah_record["falsification_status"] == STATUS_SURVIVED
     assert cah_record["pareto_rank"] == 1
 

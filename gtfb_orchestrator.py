@@ -32,7 +32,7 @@ from biophysics_engine import (
     relax_with_openmm,
     measure_disulfide_bond
 )
-from vault import ContenderVault
+from vault import ContenderVault, STATUS_SURVIVED, SURVIVED_STATUSES
 
 # StateGraph pipeline execution with zero-dependency fallback
 try:
@@ -235,7 +235,7 @@ def falsify_and_rank_node(state: GtfBEvolutionState) -> Dict[str, Any]:
             cand_data["falsification_status"] = "SUBTHRESHOLD_AFFINITY"
             cand_data["pareto_rank"] = 2
         else:
-            cand_data["falsification_status"] = "NOT_CORROBORATED"
+            cand_data["falsification_status"] = STATUS_SURVIVED
             cand_data["pareto_rank"] = 1
             if winning is None or (vina_3aic is not None and vina_3aic < winning.get("vina_3aic_kcal", 0)):
                 winning = cand_data
@@ -284,7 +284,7 @@ def verify_vault():
         rank_counts[rk] = rank_counts.get(rk, 0) + 1
         
         ss = c.get("ss_bond_angstrom")
-        if ss is not None and (ss < 1.95 or ss > 2.25) and st in ("CORROBORATED", "NOT_CORROBORATED", "INCONCLUSIVE_UNVALIDATED"):
+        if ss is not None and (ss < 1.95 or ss > 2.25) and st in SURVIVED_STATUSES:
             broken_disulfide_count += 1
 
     print("\nFalsification Status Breakdown:")
@@ -373,9 +373,9 @@ def run_demo():
     print("-" * 72)
     if winning:
         print(f"Top Candidate: {winning['sequence']} (Rank {winning.get('pareto_rank')})")
-        print(f"Final Verdict: {winning.get('falsification_status')} (Inconclusive Within Noise)")
+        print(f"Final Verdict: {winning.get('falsification_status')} (survived the screen; not corroborated)")
     else:
-        print("Final Verdict: ALL CANDIDATES FALSIFIED (NOT_CORROBORATED)")
+        print("Final Verdict: ALL CANDIDATES FALSIFIED")
     print("=" * 72 + "\n")
     return s4
 
