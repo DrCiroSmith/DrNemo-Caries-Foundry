@@ -1277,6 +1277,39 @@ def main():
     emit("R", "one-sided 5 percent boundary, normal approximation (kcal/mol better than the mean)",
          f"{boundary:.4f}", "this script")
 
+    # Which direction does enlarging the null move the requirement? With one
+    # score per control the candidate may lose to at most j controls, where j is
+    # the largest integer with (j+1)/(n+1) < 0.05. The required rank as a
+    # fraction of n rises toward 0.05 but stays below it at every n, so the 5
+    # per cent quantile is a floor beneath the requirement and no control count
+    # makes the test easier than that quantile.
+    def _losable(n, alpha=0.05):
+        j = -1
+        while (j + 2) / (n + 1) < alpha:
+            j += 1
+        return j
+
+    for n in (39, 199, 999):
+        j = _losable(n)
+        emit("R", f"controls a candidate may lose to at n={n}, and the required quantile",
+             f"{j} / {(j + 1) / n:.4f}", "this script")
+    if _losable(n_null) != 0:
+        note(f"at n={n_null} a candidate may now lose to {_losable(n_null)} controls, so "
+             "section 3.3b's statement that it must beat every one of them is wrong")
+    if any((_losable(n) + 1) / n >= 0.05 for n in (39, 199, 999, 9999, 999999)):
+        note("the required quantile reaches or passes 0.05 at some n, so the 5 per cent "
+             "quantile is not a floor beneath the requirement and section 3.3b's "
+             "'however many controls are added' no longer holds")
+    emit("R", "requirement at n=39 in null sd units (beat the best control)",
+         f"{(null_mean - null_best) / null_sd:.4f}", "this script")
+    emit("R", "asymptotic floor on the requirement, in null sd units", f"{Z95:.4f}",
+         "Trott and Olson give no boundary; this is the normal 5 percent point")
+    remark("Enlarging the null relaxes the rank a candidate needs and lowers the floor on "
+           "the attainable p value, but it cannot lower the score: the requirement moves "
+           "down from 2.20 null standard deviations at n=39 toward 1.64 and no further. "
+           "This is the clause a referee needs, because 'more controls cannot help' reads "
+           "as a power excuse without it.")
+
     # The effect size has to come from the repository, not from a round number.
     # The lead's own margin is its gain over the parent it was derived from.
     lead_rows = [r for r in designed if r["sequence"] == LEAD]
@@ -1297,6 +1330,8 @@ def main():
                "only the +0.70 kcal/mol alanine hotspot gate, which measures something "
                "else.")
         emit("R", "that margin in null sd units", f"{MARGIN / null_sd:.4f}", "this script")
+        emit("R", "the asymptotic floor divided by that margin", f"{boundary / MARGIN:.2f}",
+             "this script")
         emit("R", "ratio of the beat-every-member margin to it",
              f"{abs(null_best - null_mean) / MARGIN:.2f}", "this script")
 

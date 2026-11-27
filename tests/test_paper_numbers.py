@@ -150,6 +150,51 @@ def test_seeds_per_control_needed_to_resolve_that_margin(z, expected_m, expected
     assert (len(ns) + 1) * m == expected_runs
 
 
+def _losable(n, alpha=0.05):
+    """Controls a candidate may lose to and still reach p < alpha, at one score each."""
+    j = -1
+    while (j + 2) / (n + 1) < alpha:
+        j += 1
+    return j
+
+
+def test_enlarging_the_null_cannot_take_the_requirement_below_the_five_percent_point():
+    """Why "however many controls are added" is not a power excuse.
+
+    Section 3.3b claims the 5 per cent quantile is a floor beneath the score a
+    candidate must reach, so no control count makes the test easier than that
+    quantile. The required rank as a fraction of n must therefore stay below
+    0.05 at every n. If it ever reached 0.05 the claim would be wrong, and the
+    paragraph would have to be rewritten.
+    """
+    assert _losable(19) == -1, "p < 0.05 should be unattainable with 19 controls"
+    assert _losable(39) == 0, "at n = 39 the candidate must beat every control"
+    assert (_losable(199), _losable(999)) == (8, 48)
+    previous = 0.0
+    for n in (39, 59, 99, 199, 499, 999, 9999, 999999):
+        quantile = (_losable(n) + 1) / n
+        assert quantile < 0.05, (
+            f"at n = {n} the required quantile is {quantile:.5f}, so the 5 per cent point "
+            "is not a floor beneath the requirement and Section 3.3b is wrong")
+        assert quantile > previous, "the requirement should relax monotonically with n"
+        previous = quantile
+
+
+def test_the_requirement_at_thirty_nine_is_stricter_than_the_asymptotic_floor():
+    """The direction matters: more controls make the test easier, not harder."""
+    ns = _null_scores()
+    sd = statistics.stdev(ns)
+    at_39 = (statistics.fmean(ns) - min(ns)) / sd
+    assert round(at_39, 2) == 2.20
+    assert at_39 > Z95, (
+        "beating the best of 39 should ask more than beating the 5 per cent point; "
+        "if it asks less, Section 3.3b's direction of travel is inverted")
+    rows = {r["sequence"]: float(r["vina_3aic_kcal"]) for r in _ledger()
+            if r["falsification_status"] != "SCRAMBLED_NULL_CONTROL"}
+    margin = abs(rows["CAHWRPWHC"] - rows["CPHWRPWHC"])
+    assert round(Z95 * sd / margin, 2) == 5.99
+
+
 def test_the_five_percent_boundary_is_set_by_the_spread():
     ns = _null_scores()
     assert round(Z95 * statistics.stdev(ns), 3) == 0.773
@@ -164,6 +209,7 @@ def test_the_manuscript_still_carries_the_recomputed_figures():
     text = PAPER.read_text()
     assert "## 3.3b" in text, "Section 3.3b is missing from the manuscript"
     for figure in ("-9.378", "1.035", "0.129", "0.152", "0.773", "0.470", "0.475",
+                   "2.20", "1.64", "0.026", "0.045", "0.049",
                    "0.2207", "0.2259", "0.269", "1.772", "0.384", "0.605",
                    "m = 36", "1,440", "m = 82", "3,280"):
         assert figure in text, f"the manuscript no longer states {figure}"
