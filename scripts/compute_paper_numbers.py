@@ -38,6 +38,7 @@ import sqlite3
 import subprocess
 import statistics
 import sys
+import textwrap
 from pathlib import Path
 
 REPO = Path(__file__).parent.parent.resolve()
@@ -82,7 +83,14 @@ def emit(tag, label, value, source):
 
 
 def note(text):
+    """A failed cross-check. Counted, and printed under DISCREPANCIES."""
     discrepancies.append(text)
+
+
+def remark(text):
+    """Prose that explains a number. Printed inline, never counted as a check."""
+    for line in textwrap.wrap(text, 92):
+        print(f"      {line}")
 
 
 def heading(text):
@@ -1170,8 +1178,119 @@ def main():
             emit("R", f"{label}: atoms / summed partial charge",
                  f"{len(rows)} / {sum(r[6] for r in rows):+.3f}", f"data/poses/{fname}")
 
+    # ------------------------------------------------- the design's resolution
+    heading("22. What size of difference this null design could resolve")
+    remark("Section 3.3b. The reviewer's next question after a null p value is "
+         "'enlarge the null'. These numbers say why that does not help, and what "
+         "would. Everything here is arithmetic on the 39 scrambled controls and "
+         "on the repeat runs of one ligand from section 3.2.")
+
+    null_scores = [r["vina_3aic_kcal"] for r in scrambles]
+    n_null = len(null_scores)
+    null_mean = statistics.mean(null_scores)
+    null_sd = statistics.stdev(null_scores)
+    null_best = min(null_scores)
+    emit("R", "null members", n_null, "ledger, SCRAMBLED_NULL_CONTROL rows")
+    emit("R", "null mean / sample sd (kcal/mol)",
+         f"{null_mean:.4f} / {null_sd:.4f}", "this script")
+    emit("R", "best null member (kcal/mol)", f"{null_best:.4f}", "this script")
+
+    # (k+1)/(n+1) is the one-sided permutation p with the observation counted in.
+    p_floor = 1.0 / (n_null + 1)
+    k_allowed = [k for k in range(n_null + 1) if (k + 1) / (n_null + 1) < 0.05]
+    k_max = max(k_allowed) if k_allowed else None
+    emit("R", "smallest attainable one-sided p at this n", f"{p_floor:.4f}", "this script")
+    if k_max == 0:
+        emit("R", "null members the candidate must beat for p < 0.05",
+             f"{n_null} of {n_null}", "this script")
+        emit("R", "score that requires (kcal/mol)", f"{null_best:.4f}", "this script")
+        emit("R", "that margin over the null mean (kcal/mol)",
+             f"{null_best - null_mean:.4f}", "this script")
+    else:
+        discrepancies.append(
+            f"p<0.05 is reachable at n={n_null} while losing to {k_max} null members, "
+            "so section 3.3b's threshold statement needs rewriting")
+
+    # The rejection boundary is set by the spread, not the count. Normal approximation.
+    Z95 = 1.6448536269514722
+    Z80 = 0.8416212335729143
+    boundary = Z95 * null_sd
+    emit("R", "one-sided 5 percent boundary, normal approximation (kcal/mol better than the mean)",
+         f"{boundary:.4f}", "this script")
+
+    # The effect size has to come from the repository, not from a round number.
+    # The lead's own margin is its gain over the parent it was derived from.
+    lead_rows = [r for r in designed if r["sequence"] == LEAD]
+    wt_rows = [r for r in designed if r["sequence"] == WT]
+    MARGIN = None
+    if lead_rows and wt_rows:
+        lead_score = lead_rows[0]["vina_3aic_kcal"]
+        wt_score = wt_rows[0]["vina_3aic_kcal"]
+        MARGIN = abs(lead_score - wt_score)
+        emit("R", "lead and parent at GTF-SI (kcal/mol)",
+             f"{lead_score:.3f} / {wt_score:.3f}", "ledger")
+        emit("R", "the lead's margin over its parent (kcal/mol)", f"{MARGIN:.4f}", "this script")
+        emit("R", "lead minus null mean (kcal/mol, positive is worse)",
+             f"{lead_score - null_mean:+.4f}", "this script")
+        remark("This margin, not a round number, is the effect size used below. No "
+               "document in the repository states a target advantage, so I use the one "
+               "the screen actually produced. Searched for a stated threshold and found "
+               "only the +0.70 kcal/mol alanine hotspot gate, which measures something "
+               "else.")
+        emit("R", "that margin in null sd units", f"{MARGIN / null_sd:.4f}", "this script")
+        emit("R", "ratio of the beat-every-member margin to it",
+             f"{abs(null_best - null_mean) / MARGIN:.2f}", "this script")
+
+    # Where the null's dispersion comes from: sequence, or the instrument?
+    seeds = None
+    for a in disproof["angles"]:
+        if a.get("vina_scores"):
+            seeds = list(a["vina_scores"])
+            break
+    if seeds:
+        dup = -8.191  # the value carried by the duplicated file, section 3.10
+        indep = [v for v in seeds if abs(v - dup) > 1e-9]
+        noise_sd = statistics.stdev(indep)
+        emit("R", "one ligand, independent repeat runs / their sample sd (kcal/mol)",
+             f"{len(indep)} / {noise_sd:.4f}", "data/exhaustive_disproof_report.json")
+        between = null_sd ** 2 - noise_sd ** 2
+        emit("R", "null variance minus repeat-run variance (kcal/mol squared)",
+             f"{between:+.4f}", "this script")
+        remark("The implied between-sequence component of the null's spread is "
+             f"{'zero or negative' if between <= 0 else f'{math.sqrt(between):.4f} kcal/mol'}, "
+             "so the point estimate of the sequence-dependent part is zero. The "
+             f"repeat-run estimate carries {len(indep) - 1} degrees of freedom and is "
+             "itself imprecise, so this bounds the sequence component loosely. What it "
+             "shows is that nothing in the data requires any of the null's spread to be "
+             "sequence-dependent.")
+        if noise_sd ** 2 < null_sd ** 2 * 0.5:
+            discrepancies.append(
+                "repeat-run variance is less than half the null variance, so section "
+                "3.3b's claim that the null's spread is consistent with pure run-to-run "
+                "noise no longer holds")
+
+        # What would move the boundary: averaging m seeds per member.
+        if MARGIN:
+            m_boundary = math.ceil((Z95 * null_sd / MARGIN) ** 2)
+            m_power80 = math.ceil(((Z95 + Z80) * null_sd / MARGIN) ** 2)
+            emit("R", "seeds per member for that margin to reach the 5 percent boundary",
+                 m_boundary, "this script")
+            emit("R", "total docking runs that implies over 39 controls and one candidate",
+                 (n_null + 1) * m_boundary, "this script")
+            emit("R", "seeds per member for 80 percent power at that margin", m_power80,
+                 "this script")
+            emit("R", "total docking runs that implies", (n_null + 1) * m_power80, "this script")
+
+    # And what resolving it would mean, against the instrument's own error.
+    VINA_SE = 2.85  # Trott and Olson's reported standard error, section 4.2b
+    if MARGIN:
+        emit("R", "the lead's margin as a fraction of Vina's reported standard error",
+             f"{MARGIN / VINA_SE:.4f}", "this script")
+    emit("R", "beat-every-member margin as a fraction of that standard error",
+         f"{abs(null_best - null_mean) / VINA_SE:.4f}", "this script")
+
     # ------------------------------------------------- tally
-    heading("22. Battery tally")
+    heading("23. Battery tally")
     for cls, n in sorted(disproof["classification_summary"].items()):
         emit("D", f"angles classified {cls}", n, "disproof classification_summary")
     emit("R", "angles in the report", len(disproof["angles"]), "this script")
