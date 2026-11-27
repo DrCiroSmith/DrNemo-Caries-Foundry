@@ -486,6 +486,12 @@ def _pdf_text(path):
         except Exception:
             pass
     blob = b" ".join(out)
+    # A PDF legitimately holds streams this crude scan cannot decompress, so a
+    # single failure above is expected. Every failure is not: an empty blob
+    # would make any absence check below look clean while measuring nothing.
+    assert out, (
+        f"no stream in {path.name} decompressed, so this probe measured nothing "
+        "and no absence check built on it means anything")
     return (_re.sub(rb"[^A-Za-z]", b"", blob),
             _re.sub(rb"[^A-Za-z0-9.]", b"", blob))
 

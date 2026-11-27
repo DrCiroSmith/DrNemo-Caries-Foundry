@@ -173,25 +173,68 @@ ENGINE = REPO / "biophysics_engine.py"
 PAPER = REPO / "paper" / "negative_result_GTF-SI.md"
 
 
-def _docking_call_sites():
-    """Every call of run_docking_vina_and_vinardo outside the tests, with whether
-    it passes a seed."""
+def _seed_parameter_index():
+    """The seed's position in the docking function's own signature.
+
+    Read rather than assumed, so that reordering the parameter list cannot make
+    a positional caller look seedless.
+    """
+    for path in sorted(REPO.rglob("*.py")):
+        if path.relative_to(REPO).parts[0] == ".git":
+            continue
+        for node in ast.walk(_parse(path)):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and \
+                    node.name == "run_docking_vina_and_vinardo":
+                names = [a.arg for a in node.args.posonlyargs + node.args.args]
+                if "seed" in names:
+                    return names.index("seed")
+    raise AssertionError(
+        "run_docking_vina_and_vinardo has no seed parameter, so the paper's "
+        "claim about call sites leaving it unset no longer describes the code")
+
+
+def _parse(path):
+    """Parse a file, reporting a parse failure instead of skipping the file.
+
+    An earlier version of this helper caught SyntaxError and continued, which
+    meant a file that would not parse was counted as clean. A sibling audit
+    found the same hole in its own walker by injecting a seeded call with
+    invalid syntax and watching the test stay green. A silent skip in an audit
+    is indistinguishable from a passing file, so it fails here instead.
+    """
+    try:
+        return ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except SyntaxError as exc:
+        raise AssertionError(
+            f"{path.relative_to(REPO)} does not parse, so this audit cannot "
+            f"say whether it passes a seed: {exc}") from exc
+
+
+def _docking_call_sites(scope="production"):
+    """Every call of run_docking_vina_and_vinardo, with whether it passes a seed.
+
+    scope "production" excludes tests/ and the separate retarget_gtfb protocol;
+    scope "all" is what an auditor's grep of the repository finds, which is the
+    number the paper has to survive.
+    """
+    assert scope in ("production", "all")
+    seed_index = _seed_parameter_index()
     sites = []
     for path in sorted(REPO.rglob("*.py")):
         parts = path.relative_to(REPO).parts
-        if parts[0] in (".git", "tests", "retarget_gtfb"):
+        if parts[0] == ".git":
             continue
-        try:
-            tree = ast.parse(path.read_text())
-        except SyntaxError:
+        if scope == "production" and parts[0] in ("tests", "retarget_gtfb"):
             continue
-        for node in ast.walk(tree):
+        for node in ast.walk(_parse(path)):
             if not isinstance(node, ast.Call):
                 continue
             name = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
             if name != "run_docking_vina_and_vinardo":
                 continue
             passes = any(k.arg == "seed" for k in node.keywords if k.arg)
+            if len(node.args) > seed_index:
+                passes = True
             sites.append((str(path.relative_to(REPO)), node.lineno, passes))
     return sites
 
@@ -203,14 +246,62 @@ def test_no_production_call_site_passes_a_seed():
         f"score can be regenerated needs rewriting: {seeded}")
 
 
+WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six",
+         7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven",
+         12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen",
+         16: "sixteen"}
+
+
 def test_the_paper_prints_the_right_number_of_call_sites():
-    """The text names the count, so the count has to be checked and not recalled."""
-    words = {10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen",
-             15: "fifteen", 16: "sixteen"}
-    n = len(_docking_call_sites())
-    assert n in words, f"{n} call sites, which this test cannot spell; extend the map"
-    assert f"all {words[n]} of its call sites leave it unset" in PAPER.read_text(), (
-        f"there are {n} call sites and the paper does not say {words[n]}")
+    """The text names the count, so the count has to be checked and not recalled.
+
+    This guard formerly compared the paper against the production count alone,
+    which is the narrower thing it measures, while the sentence said "all
+    twelve of its call sites". The repository holds fifteen, two of which pass
+    a seed, so the sentence was false to anyone who grepped for it even though
+    this test was green. The scope of the claim is now checked, not just its
+    digit.
+    """
+    paper = PAPER.read_text()
+    production = len(_docking_call_sites("production"))
+    assert production in WORDS, f"{production} sites, extend the map"
+    assert f"all {WORDS[production]} production call sites leave it unset" in paper, (
+        f"there are {production} production call sites and the paper does not "
+        f"say {WORDS[production]} production")
+
+
+def test_the_paper_does_not_claim_more_than_production_of_the_unset_seed():
+    """A sentence about every call site is false while test fixtures pass one."""
+    paper = PAPER.read_text()
+    for overclaim in ("all twelve of its call sites",
+                      "every call site leaves it unset",
+                      "no call site passes a seed"):
+        assert overclaim not in paper, (
+            f"the paper says {overclaim!r}, which the test fixtures at "
+            f"{[f'{f}:{n}' for f, n, p in _docking_call_sites('all') if p]} "
+            "make false")
+
+
+def test_the_paper_discloses_the_seeded_test_fixtures():
+    """What a grep of the repository finds has to be in the paper already."""
+    every = _docking_call_sites("all")
+    seeded = [(f, n) for f, n, passes in every if passes]
+    assert seeded, (
+        "no call site passes a seed any more, so the paper's disclosure of the "
+        "seeded fixtures now describes code that is gone and should be cut")
+    paper = PAPER.read_text()
+    assert len(every) in WORDS, f"{len(every)} sites, extend the map"
+    files = {f for f, _ in seeded}
+    assert len(files) == 1, f"seeded sites now span {files}, so the text needs rewriting"
+    only = files.pop()
+    assert only in paper, (
+        f"{len(seeded)} call sites in {only} pass a seed and the paper does not "
+        "name the file, so a reader who greps finds seed= and reads the "
+        "surrounding claim as false")
+    outside = len(every) - len(_docking_call_sites("production"))
+    assert outside in WORDS, f"{outside} sites outside production, extend the map"
+    assert f"{WORDS[outside]} further call sites" in paper.lower(), (
+        "the paper does not account for the call sites outside production")
 
 
 def test_the_engine_still_only_seeds_when_asked():
