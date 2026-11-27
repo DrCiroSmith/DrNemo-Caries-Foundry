@@ -1022,8 +1022,14 @@ def test_the_conformer_half_of_the_seed_42_finding_stays_narrowed():
         "4.1b must say plainly that the conformer identity is not evidence")
     assert "The docked pose match is the evidence" in flat, (
         "4.1b must say which half of the finding carries the weight")
-    assert "on both sides of the calculation" not in flat, (
-        "that phrasing treated the conformer match as evidence; it is withdrawn")
+    # the phrase may appear only where it is quoted as withdrawn history, which is how
+    # the amendment log records it; it may not appear as a live claim
+    live = [l for l in (HERE / "PROTOCOL.md").read_text().splitlines()
+            if "on both sides of the calculation" in l
+            and "withdraw" not in l.lower()]
+    assert not live, (
+        "that phrasing treated the conformer match as evidence. It is withdrawn, and "
+        "may appear only on a line that says so:\n" + "\n".join(live))
 
     # and the claim rests on the builder, so the builder must still hardcode seed 42
     engine = REPO_ROOT / "biophysics_engine.py"
