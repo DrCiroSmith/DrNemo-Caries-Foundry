@@ -355,18 +355,141 @@ def test_the_paper_matches_whether_the_minimisation_outcome_is_checked():
     pinned to the code's actual shape.
     """
     paper = PAPER.read_text()
-    disclosure = "discards the optimiser's return value"
+    present = "the builder discards the optimiser's return value"
+    past = "discarded the optimiser's return value"
     if _mmff_call_uses_its_return_value():
-        assert disclosure not in paper, (
-            "the builder now uses MMFFOptimizeMolecule's return value, so the "
-            "paper must stop saying it is discarded")
+        assert present not in paper, (
+            "the builder now reads MMFFOptimizeMolecule's return value, so the "
+            "paper must not say in the present tense that it is discarded")
+        assert past in paper, (
+            "the builder now reads the return value, but the conformers in the "
+            "paper were built by code that did not. The paper has to say that in "
+            "the past tense, or it implies the deposited structures carry an "
+            "outcome that nothing records")
     else:
-        assert disclosure in paper, (
+        assert present in paper, (
             "the builder still discards MMFFOptimizeMolecule's return value and "
             "the paper no longer says so, which overstates the minimisation step")
-        assert "UFF" in paper, (
-            "the paper no longer mentions the UFF fallback that the code's "
-            "except clause contains")
+    assert "UFF" in paper, (
+        "the paper no longer mentions the UFF fallback that the code's "
+        "except clause contains")
+
+
+def _numeric(node):
+    """Whether an AST node is a plain number, including a negated one."""
+    if isinstance(node, ast.Constant):
+        return isinstance(node.value, (int, float)) and not isinstance(node.value, bool)
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
+        return _numeric(node.operand)
+    return False
+
+
+def test_no_failure_handler_substitutes_a_number_for_a_failed_measurement():
+    """A failure has to be recorded as absent, never as a plausible value.
+
+    run_campaign.py wrote openmm_kj = -950.0 in its except clause, and -950.0 is
+    inside the range of real relaxed energies in the ledger, so a failed
+    minimisation would have entered the ledger as an ordinary measurement. No
+    committed row carries it, but the path existed. This fails on any except
+    clause anywhere that assigns a bare number to a name holding a measured
+    quantity.
+    """
+    measured = ("openmm", "vina", "vinardo", "kcal", "_kj", "rmsd", "drift",
+                "energy", "affinity")
+    offenders = []
+    for path in sorted(REPO.rglob("*.py")):
+        if path.relative_to(REPO).parts[0] in (".git", "retarget_gtfb"):
+            continue
+        for node in ast.walk(_parse(path)):
+            if not isinstance(node, ast.ExceptHandler):
+                continue
+            for stmt in ast.walk(node):
+                if not isinstance(stmt, ast.Assign):
+                    continue
+                for target in stmt.targets:
+                    name = getattr(target, "id", None)
+                    if name is None or not any(m in name.lower() for m in measured):
+                        continue
+                    if _numeric(stmt.value):
+                        offenders.append(
+                            f"{path.relative_to(REPO)}:{stmt.lineno} sets "
+                            f"{name} = {ast.unparse(stmt.value)} on failure")
+    assert not offenders, (
+        "a failed measurement is being written as a number, which is "
+        "indistinguishable from a real one downstream: " + "; ".join(offenders))
+
+
+def test_the_builder_fails_loudly_when_embedding_fails():
+    """A conformer-less molecule must not reach the writers.
+
+    EmbedMolecule returns -1 on failure and adds no conformer. The retry's
+    return was assigned and never read, so a double failure fell through to the
+    PDB writer and to Meeko with nothing embedded. RDKit is not installed here,
+    so what those two do with such a molecule is untested; the fix is to not
+    reach them.
+    """
+    raises_on_embed_failure = False
+    for node in ast.walk(_parse(ENGINE)):
+        if not isinstance(node, ast.If):
+            continue
+        names = {n.id for n in ast.walk(node.test) if isinstance(n, ast.Name)}
+        if "embed_res" not in names:
+            continue
+        if any(isinstance(s, ast.Raise) for s in ast.walk(node)):
+            raises_on_embed_failure = True
+    assert raises_on_embed_failure, (
+        "biophysics_engine.py no longer raises on a failed embedding, so a "
+        "molecule with no conformer can reach the PDB writer and Meeko")
+
+
+def test_no_document_states_the_minimisation_as_a_step_count():
+    """maxIterations is a cap, and six surfaces called it a step count.
+
+    OpenMM's Simulation.minimizeEnergy documents maxIterations as "The maximum
+    number of iterations to perform", documents no return value, and exposes no
+    convergence status afterwards. The minimiser also halts early on its force
+    tolerance. So "200-step relaxed" states a step count that nothing can
+    report, for every ligand in the table.
+    """
+    banned = ("200-step", "200 steps", "200 step ")
+    for path in (PAPER, README, PAGE, DASHBOARD, REPO / "biophysics_engine.py",
+                 REPO / "gtfb_orchestrator.py", BENCHMARK,
+                 REPO / "DOCUMENTATION.md"):
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for phrase in banned:
+            if phrase in text and "not describe the output as 200-step" in text:
+                continue
+            assert phrase not in text, (
+                f"{path.relative_to(REPO)} calls the minimisation {phrase!r}, "
+                "but maxIterations=200 is an upper bound and OpenMM reports "
+                "neither the iterations taken nor whether it converged")
+
+
+def test_no_document_quotes_a_drift_figure_the_report_says_does_not_exist():
+    """Angle 11's 0.92 A drift was in the README and in no artefact.
+
+    The committed report's own words for that angle are that no relaxation was
+    run and no drift figure exists. A number quoted beside that is unsourced.
+    """
+    import json
+    report = json.loads((REPO / "data" / "exhaustive_disproof_report.json")
+                        .read_text(encoding="utf-8"))
+    angle11 = [a for a in report["angles"] if a.get("angle") == 11]
+    assert angle11, "angle 11 is no longer in the committed report"
+    recorded = angle11[0].get("heavy_atom_drift_rmsd_angstrom")
+    if recorded is not None:
+        return
+    for path in (README, PAGE, PAPER, DASHBOARD):
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            if "Relaxation Drift" not in line and "relaxation drift" not in line:
+                continue
+            assert not re.search(r"\d\.\d+\s*(A|&Aring;|\u00c5)", line), (
+                f"{path.relative_to(REPO)} quotes a drift figure for angle 11, "
+                "which the committed report states does not exist: " + line.strip())
 
 
 def test_no_document_states_mmff_minimisation_as_completed():

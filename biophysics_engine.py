@@ -8,7 +8,7 @@ Zero synthetic formulas, zero mock shortcuts:
 - Dual scoring: AutoDock Vina (--scoring vina) + Vinardo (--scoring vinardo)
 - Ligand Efficiency: LE = -E_vina / heavy_atoms
 - Disulfide S-S geometry verification in output pose (2.00 - 2.15 A)
-- OpenMM all-atom Amber14 (amber14-all.xml + implicit/gbn2.xml) isolated ligand-only steric minimization (200 steps)
+- OpenMM all-atom Amber14 (amber14-all.xml + implicit/gbn2.xml) isolated ligand-only steric minimization, capped at 200 iterations
 - Solubility Shield: Donnan equilibrium (Q_pH6 <= +4.0) & Stephan acid-switch (Delta Q >= +1.0)
 """
 import os
@@ -90,9 +90,10 @@ def build_macrocycle_3d(
     MMFF94 minimisation is ATTEMPTED, not guaranteed. MMFFOptimizeMolecule reports
     "forcefield could not be set up" by returning -1 and a hit iteration cap by
     returning 1, per RDKit's documentation, so the try/except below reaches its UFF
-    fallback only on an exception and the return value is discarded either way.
-    Nothing here or downstream records which force field ran. Do not describe output
-    of this function as MMFF94-minimised without checking that first.
+    fallback only on an exception. The return value is now read and a non-zero value
+    is reported on standard error, but nothing persists it, so a past run's outcome
+    cannot be recovered. Do not describe output of this function as MMFF94-minimised
+    without checking the warnings from the run that produced it.
     If target_center is provided, translates the conformer centroid to target_center.
     Returns the count of heavy atoms.
     """
@@ -143,20 +144,40 @@ def build_macrocycle_3d(
     Chem.SanitizeMol(mol)
 
     # 3D Distance Geometry embedding, then an ATTEMPT at MMFF94 minimisation.
-    # The return value is discarded, so -1 (no force field) and 1 (cap reached) both
-    # pass silently and the except clause below sees no exception in those cases.
     params = AllChem.ETKDGv3()
     params.randomSeed = 42
     embed_res = AllChem.EmbedMolecule(mol, params)
     if embed_res != 0:
         embed_res = AllChem.EmbedMolecule(mol, useRandomCoords=True, maxAttempts=5000, randomSeed=42)
+    if embed_res != 0:
+        # Both embeddings failed, so the molecule carries no conformer. Previously this
+        # fell through to the writers with nothing to write. Fail here instead of
+        # handing a conformer-less molecule onward.
+        raise RuntimeError(
+            f"ETKDGv3 embedding failed for {seq} on both the seeded and the random-coordinate "
+            f"attempt, so no conformer exists and no pose can be written.")
+
+    # The force field selection below is deliberately left as it was: changing which
+    # field runs would change the geometry, and these are the geometries the published
+    # campaign docked. What is added is disclosure, not a different calculation.
+    # MMFFOptimizeMolecule returns 0 on convergence, -1 if the force field could not be
+    # set up for this molecule, and 1 if more iterations were needed. Failure is a return
+    # code, not an exception, so the UFF fallback below is unreachable for the -1 case.
     try:
-        AllChem.MMFFOptimizeMolecule(mol, maxIters=500)
-    except Exception:
+        mmff_res = AllChem.MMFFOptimizeMolecule(mol, maxIters=500)
+        if mmff_res != 0:
+            reason = ("MMFF94 could not be set up for this molecule"
+                      if mmff_res == -1 else "the 500-iteration cap was reached")
+            print(f"WARNING: MMFF94 minimisation of {seq} returned {mmff_res}: {reason}. "
+                  f"The conformer is not a converged MMFF94 minimum.", file=sys.stderr)
+    except Exception as exc:
+        print(f"WARNING: MMFF94 minimisation of {seq} raised {exc!r}, falling back to UFF.",
+              file=sys.stderr)
         try:
             AllChem.UFFOptimizeMolecule(mol, maxIters=500)
-        except Exception:
-            pass
+        except Exception as exc2:
+            print(f"WARNING: UFF minimisation of {seq} also raised {exc2!r}. The conformer "
+                  f"is raw ETKDG output with no force field applied.", file=sys.stderr)
 
     if target_center is not None:
         conf = mol.GetConformer()
@@ -418,8 +439,16 @@ def run_docking_vina_and_vinardo(
 
 def relax_with_openmm(pdb_path: str, temp_k: float = 310.15) -> float:
     """
-    Runs isolated ligand-only Amber14/GBn2 energy minimization (200 steps)
-    for steric relaxation and implicit-solvation potential energy (kJ/mol) on the 3D pose.
+    Runs isolated ligand-only Amber14/GBn2 energy minimization for steric relaxation
+    and returns the implicit-solvation potential energy (kJ/mol) of the relaxed pose.
+
+    maxIterations=200 is an upper bound, not a step count. Per the OpenMM API, the
+    minimiser halts when the RMS force reaches its default tolerance or when the cap
+    is reached, whichever comes first, minimizeEnergy returns nothing, and no
+    convergence status is available afterwards. So the caller cannot tell how many
+    iterations ran or whether the result converged, and nothing here records it. Do
+    not describe the output as 200-step relaxed.
+
     Does NOT run bound receptor-ligand molecular dynamics at 310.15 K.
     """
     from pdbfixer import PDBFixer

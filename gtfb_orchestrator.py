@@ -3,7 +3,7 @@
 
 Deterministic 4-stage biophysical screening and falsification pipeline wiring
 cyclic peptide generation, solubility shielding, empirical AutoDock Vina + Vinardo grid docking,
-OpenMM Amber14/GBn2 isolated ligand steric relaxation (200 steps),
+OpenMM Amber14/GBn2 isolated ligand steric relaxation, minimisation capped at 200 iterations,
 and 6-angle biophysical falsification into ContenderVault.
 Zero synthetic mock scores, zero fake fallbacks, zero unverified heuristics.
 """

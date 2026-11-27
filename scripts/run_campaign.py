@@ -125,10 +125,15 @@ def evaluate_single_contender(item: Dict[str, Any]) -> Dict[str, Any]:
 
     # 4. OpenMM Amber14 / GBn2 energy minimisation. temp_k parameterises the integrator
     #    object only; no step is taken, so this samples no temperature and is not dynamics.
+    #    A failure must not be written as a number: a plausible-looking energy is
+    #    indistinguishable from a computed one in every downstream consumer, so this
+    #    records None and says so on stderr, as the other three call sites do.
     try:
         openmm_kj = relax_with_openmm(pdb_ligand, temp_k=310.15)
-    except Exception:
-        openmm_kj = -950.0
+    except Exception as exc:
+        print(f"WARNING: OpenMM relaxation failed for {seq}: {exc}. "
+              f"Recording openmm_relaxed_kj as null, not as a number.", file=sys.stderr)
+        openmm_kj = None
 
     # 5. Solubility & Oral Biochemistry
     q72 = calc_net_charge_at_ph(seq, 7.2)
