@@ -513,3 +513,153 @@ def test_the_qmmm_reference_is_the_one_that_was_verified():
     entry = match[0]
     for part in ("Jaña GA", "Org Biomol Chem", "2018", "16(14):2438-47"):
         assert part in entry, f"the verified citation no longer states {part!r}: {entry}"
+
+
+# --------------------------------------------------------------------------
+# Provenance of the published numbers, as opposed to their correctness.
+#
+# Every defect found in this repository until now was a real computation
+# wearing a label it had not earned. The angle-11 drift figure was something
+# else: a number with no computation behind it at all, which no label check and
+# no wording check would ever have caught. These two tests are for that class.
+# --------------------------------------------------------------------------
+
+BENCHMARK_SHEET = REPO_ROOT / "FALSIFICATION_BENCHMARK.md"
+
+
+def _script_summary():
+    """Run the provenance script and read its own closing counts.
+
+    Thirteen of its checks read the project's commit history, so the totals are
+    lower in a copy without .git: 378 against 391 when this was written. A
+    checkout without history cannot check the paper's figures, so this skips
+    there rather than reporting a defect that is really a missing clone.
+    """
+    import subprocess
+    if not (REPO_ROOT / ".git").exists():
+        pytest.skip("no git history in this checkout, so the script's totals "
+                    "are lower than the paper's by the history-derived checks")
+    proc = subprocess.run(
+        ["python3", str(REPO_ROOT / "scripts" / "compute_paper_numbers.py")],
+        capture_output=True, text=True, timeout=600, cwd=str(REPO_ROOT))
+    assert proc.returncode == 0, (
+        "scripts/compute_paper_numbers.py does not run, so the paper's claim "
+        f"about it cannot be checked: {proc.stderr[-800:]}")
+    out = proc.stdout
+    tail = re.search(r"(\d+) numbers emitted: (\d+) recomputed here, "
+                     r"(\d+) read from a recorded run", out)
+    disc = re.search(r"DISCREPANCIES \((\d+)\)", out)
+    assert tail and disc, (
+        "the script's closing summary no longer has the shape this test reads, "
+        "so the paper's figures cannot be checked against it")
+    return tuple(int(g) for g in tail.groups()) + (int(disc.group(1)),)
+
+
+def test_the_paper_states_the_counts_the_script_actually_emits():
+    """The paper quotes four figures about its own provenance script.
+
+    They were 389, 348, 41 and 25 while the script emitted 391, 346, 45 and 26.
+    A stale self-description is the easiest claim in a paper to check and the
+    easiest to leave rotting, so it is checked here against a live run.
+    """
+    emitted, recomputed, recorded, discrepancies = _script_summary()
+    paper = PAPER.read_text(encoding="utf-8")
+    for value, what in ((emitted, "values emitted"),
+                        (recomputed, "recomputed from primary data"),
+                        (recorded, "read from recorded runs"),
+                        (discrepancies, "failed cross-checks")):
+        assert re.search(rf"(?<![\d.]){value}(?![\d.])", paper), (
+            f"the script reports {value} {what} and the paper does not state "
+            f"that number anywhere, so its account of its own provenance is "
+            f"stale")
+
+
+def _benchmark_rows():
+    """The candidate table in the benchmark sheet, as cells."""
+    rows = []
+    for line in BENCHMARK_SHEET.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("|") or "`" not in line:
+            continue
+        cells = [c.strip().strip("*").strip() for c in line.strip("|").split("|")]
+        seq = [c.strip("`") for c in cells if c.startswith("`")]
+        if seq:
+            rows.append((seq[0], cells))
+    return rows
+
+
+def _benchmark_json_value(seq, field):
+    """The benchmark json's value for one sequence and field, or None.
+
+    The file is a handful of named blocks rather than a table, so this walks it
+    and returns the field from whichever block names this sequence.
+    """
+    path = REPO_ROOT / "demo_data" / "results" / "falsification_benchmark.json"
+    if not path.exists():
+        return None
+    doc = json.loads(path.read_text(encoding="utf-8"))
+
+    def walk(node):
+        if isinstance(node, dict):
+            if node.get("sequence") == seq and field in node:
+                yield node[field]
+            for value in node.values():
+                yield from walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                yield from walk(value)
+
+    for found in walk(doc):
+        if isinstance(found, (int, float)):
+            return float(found)
+    return None
+
+
+def test_the_benchmark_table_does_not_disagree_with_the_ledger():
+    """Two published cells in that table came from nowhere.
+
+    The linear control is not in the ledger at all, and its amylase score and
+    selectivity difference were in no artefact. The naive polyarginine row
+    carried an amylase score of -6.500 and a difference of -1.09 while the
+    ledger recorded -7.580 and -0.006 for the same sequence. A table that
+    disagrees with the run record is the 0.92 class: a number a reader cannot
+    trace.
+    """
+    with LEDGER.open(newline="", encoding="utf-8") as fh:
+        ledger = {r["sequence"]: r for r in csv.DictReader(fh)}
+    columns = {2: "vina_3aic_kcal", 3: "vina_1smd_kcal", 4: "selectivity_ddg"}
+    checked = 0
+    for seq, cells in _benchmark_rows():
+        row = ledger.get(seq)
+        for idx, col in columns.items():
+            if idx >= len(cells):
+                continue
+            cell = cells[idx].replace("$", "").replace("\\mathbf{", "").strip("}")
+            value = re.search(r"-?\d+\.?\d*", cell)
+            if row is None:
+                # Not in the ledger. The benchmark json may still record the
+                # field for this sequence, so check there before calling the
+                # cell unsourced.
+                recorded_elsewhere = _benchmark_json_value(seq, col)
+                if recorded_elsewhere is not None:
+                    assert value is not None and \
+                        abs(float(value.group(0)) - recorded_elsewhere) <= 0.011, (
+                            f"the benchmark table states {cells[idx]!r} for "
+                            f"{seq} {col} and the benchmark json records "
+                            f"{recorded_elsewhere}")
+                    continue
+                assert value is None or "not recorded" in cells[idx], (
+                    f"the benchmark table publishes {cells[idx]!r} for {seq} "
+                    f"in {col}, and no artefact in the repository records it: "
+                    f"{seq} is not in the ledger and the benchmark json has no "
+                    f"{col} for it")
+                continue
+            if value is None:
+                continue
+            stated, recorded = float(value.group(0)), float(row[col])
+            assert abs(stated - recorded) <= 0.011, (
+                f"the benchmark table states {stated} for {seq} {col} and the "
+                f"ledger records {recorded}")
+            checked += 1
+    assert checked >= 12, (
+        f"only {checked} cells were compared against the ledger, so this test "
+        "is not covering the table it is meant to guard")

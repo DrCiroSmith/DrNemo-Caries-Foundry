@@ -155,8 +155,25 @@ gate that rejected the candidate.
 | **12-Angle Benchmark Lead** | `CAHWRPWHC` | **-8.191** | **-7.343** | **-0.85** | **0** | **+1.62** | **+2.05** | **SURVIVED ALL GATES (Rank 1)** |
 | Initial WT Lead | `CPHWRPWHC` | -8.062 | -7.902 | -0.16 | 0 | +1.62 | +2.05 | FALSIFIED (Amylase Cross-Reactivity) |
 | High-Affinity Mutant (P6A) | `CPHWRAWHC` | -8.890 | -7.302 | -1.59 | 1 | +1.62 | +2.05 | FALSIFIED (Oral Protease Lysis) |
-| Linear Control | `SPHWRPWHS` | -8.865 | -7.420 | -1.45 | 0 | +1.62 | +2.05 | FALSIFIED (35 Torsions, Entropic Loss) |
-| Naive Poly-Arginine | `CRRRWWRRRRC` | -7.586 | -6.500 | -1.09 | 7 | 0.00 | +7.00 | FALSIFIED (Donnan Collapse & Lysis) |
+| Linear Control | `SPHWRPWHS` | -8.865 | not recorded | not recorded | 0 | +1.62 | +2.05 | FALSIFIED (35 Torsions, Entropic Loss) |
+| Naive Poly-Arginine | `CRRRWWRRRRC` | -7.586 | -7.580 | -0.006 | 7 | 0.00 | +7.00 | FALSIFIED (Donnan Collapse & Lysis) |
+
+
+**Two cells in this table had no source, and one row disagreed with the results ledger.** A provenance audit of
+every number published in this repository traced each one to the file it comes out of. Four of the six rows above
+reproduce `data/contenders_ledger.csv` exactly. The other two did not.
+
+* `SPHWRPWHS`, the linear control, is not in the ledger at all. `demo_data/results/falsification_benchmark.json`
+  records its Vina score against GTF-SI and its Vinardo score, and no 1SMD score. The amylase figure of -7.420
+  kcal/mol and the selectivity difference of -1.45 that this table carried are in no artefact in the repository, so
+  they are withdrawn rather than footnoted. Its GTF-SI score of -8.865 is recorded and stands.
+* `CRRRWWRRRRC`, the naive polyarginine control, is in the ledger with an amylase score of -7.580 kcal/mol and a
+  selectivity difference of -0.006. This table carried -6.500 and -1.09, which appear in no artefact. The ledger's
+  values are now shown. The row's verdict does not rest on that column, so it is unchanged, but the two documents
+  disagreed and the ledger is the record of the run.
+
+Surviving these gates is not a pass in the twelve-angle disproof battery, where the lead candidate now has none.
+The gates are screening filters; the battery is the attempt to falsify what passed them.
 
 ---
 
