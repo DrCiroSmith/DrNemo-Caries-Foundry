@@ -72,7 +72,7 @@ The naming checks are part of that sequence, before anything is docked.
 |---|---|---|
 | 1 | The four named contenders plus acarbose redocking, 5 seeds each | 25 |
 | 2 | Both 39-member null distributions, 3 seeds each | 234 |
-| 3 | The same thing in a smaller box, to test whether box size drove the result | 87 |
+| 3 | A smaller box. **See PROTOCOL.md 4.1c before running this:** the box as defined is shorter than the ligands, so this arm is currently expected to be refused rather than to produce data | 87 |
 | 6 | The same thing against a receptor that keeps the structural Ca2+ | 87 |
 | 4 | Four more starting conformers, to test whether conformer luck drove it | 88 |
 | 5 | Amylase and lysozyme counter-screens | 24 |

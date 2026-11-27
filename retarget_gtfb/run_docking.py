@@ -338,6 +338,77 @@ def has_glue_atoms(pdbqt: Path) -> bool:
     return False
 
 
+PSEUDO_ATOM_TYPES = {"G0", "G1", "G2", "G3"}
+
+
+def heavy_atom_coords(pdbqt: Path) -> list[tuple[float, float, float]]:
+    """Coordinates of the real heavy atoms in a prepared ligand.
+
+    Hydrogens and Meeko's G pseudo-atoms are excluded; the CG closure carbons are
+    kept, because they are real carbons. That selection gives 84 for the lead and
+    86 for the parent, which is what RDKit counts before Meeko writes the file. The
+    type is the last whitespace token, never a column slice.
+    """
+    pts = []
+    models = 0
+    unreadable = 0
+    for l in pdbqt.read_text(errors="replace").splitlines():
+        if l.startswith("MODEL"):
+            models += 1
+            continue
+        if not l.startswith(("ATOM", "HETATM")):
+            continue
+        tokens = l.split()
+        t = tokens[-1].upper() if tokens else ""
+        if t in ("H", "HD", "HS") or t in PSEUDO_ATOM_TYPES:
+            continue
+        try:
+            pts.append((float(l[30:38]), float(l[38:46]), float(l[46:54])))
+        except ValueError:
+            unreadable += 1
+    if unreadable:
+        # A diameter measured over part of a molecule understates its size, and an
+        # understated diameter is exactly what would let a too-small box through the
+        # check below. So a file that cannot be read in full is not measured at all.
+        raise ValueError(
+            f"{pdbqt.name} has {unreadable} atom records whose coordinate columns "
+            f"could not be read. A diameter from the remaining atoms would understate "
+            f"the ligand and could pass a box that does not fit it.")
+    if models > 1:
+        # A multi-model pose file holds every docked mode superimposed. Measuring
+        # across all of them gives the spread of the ensemble, not the size of one
+        # molecule, and it reads as a much larger ligand: 396 atoms and 21.22 A for
+        # a nine-mode acarbose file whose single models are 44 atoms and 14.76 A. I
+        # made exactly that mistake measuring these files by hand, so it is refused
+        # here rather than left to the caller to remember.
+        raise ValueError(
+            f"{pdbqt.name} holds {models} models. A diameter across superimposed "
+            f"modes is not the size of one ligand. Split it first.")
+    return pts
+
+
+def ligand_diameter_A(pdbqt: Path) -> float:
+    """Largest distance between any two heavy atoms, in angstrom.
+
+    This is the rotation-invariant size of the ligand. An axis-aligned bounding box
+    is not: the same acarbose conformer measures 5.93 A on one axis and 14.41 A on
+    another, so a box built from a bounding box inherits the arbitrary orientation
+    of whatever frame the coordinates happen to be in. A rigid body of diameter D
+    can only be contained in a cube of edge e when D is at most e, whatever its
+    orientation, so D is the quantity a box has to be checked against.
+    """
+    pts = heavy_atom_coords(pdbqt)
+    worst = 0.0
+    for i in range(len(pts)):
+        xi, yi, zi = pts[i]
+        for j in range(i + 1, len(pts)):
+            xj, yj, zj = pts[j]
+            d2 = (xi - xj) ** 2 + (yi - yj) ** 2 + (zi - zj) ** 2
+            if d2 > worst:
+                worst = d2
+    return worst ** 0.5
+
+
 def terminal_state(pdbqt: Path) -> dict:
     """
     Record whether the built ligand has free termini, read off the file Vina is given.
@@ -458,6 +529,33 @@ def dock_one(ligand_pdbqt: Path, receptor: str, centre, size,
     cx, cy, cz = centre
     sx, sy, sz = size
 
+    # A box smaller than the ligand is not a smaller search, it is a different
+    # experiment. Vina requires every ligand atom inside the box, so when the
+    # ligand's diameter exceeds the shortest edge, no orientation that lies along
+    # that edge can be sampled at all. The score that comes back is then not
+    # comparable with one from a box where every orientation was available, and
+    # nothing in the output would say so. This run is recorded as impossible
+    # rather than scored, and the campaign carries on with the rest.
+    try:
+        diameter = ligand_diameter_A(ligand_pdbqt)
+    except ValueError as exc:
+        # One unreadable ligand file fails its own run. Raising here would abort a
+        # campaign of hundreds of runs over one bad file, and the rest are unaffected.
+        return {"ok": False, "seconds": 0.0, "ligand_unmeasurable": True,
+                "error": f"the ligand file could not be measured, so the box fit could "
+                         f"not be checked: {exc}"}
+    min_edge = float(min(sx, sy, sz))
+    if diameter > min_edge:
+        return {"ok": False, "seconds": 0.0, "box_too_small": True,
+                "ligand_diameter_A": round(diameter, 3),
+                "box_min_edge_A": min_edge,
+                "box_clearance_per_side_A": round((min_edge - diameter) / 2.0, 3),
+                "error": f"the ligand's heavy-atom diameter is {diameter:.2f} A and the "
+                         f"shortest box edge is {min_edge:.2f} A. Vina keeps the whole "
+                         f"ligand inside the box, so every orientation along that edge "
+                         f"is unreachable and this score would not be comparable with "
+                         f"the other boxes. Not docked."}
+
     cmd = ["vina", "--receptor", receptor, "--ligand", str(ligand_pdbqt),
            "--center_x", str(cx), "--center_y", str(cy), "--center_z", str(cz),
            "--size_x", str(sx), "--size_y", str(sy), "--size_z", str(sz),
@@ -468,6 +566,9 @@ def dock_one(ligand_pdbqt: Path, receptor: str, centre, size,
     # a pair of input hashes is not evidence of anything.
     prov = {
         "run_id": run_id,
+        "ligand_diameter_A": round(diameter, 3),
+        "box_min_edge_A": min_edge,
+        "box_clearance_per_side_A": round((min_edge - diameter) / 2.0, 3),
         "vina_command": cmd,
         "vina_command_string": " ".join(cmd),
         "vina_version_text": vina_version_text,
@@ -862,6 +963,28 @@ def main() -> int:
     if len(raw_jobs) != len(jobs):
         print(f"\n  {len(raw_jobs) - len(jobs)} requested runs are the same run under "
               f"two tiers; each is docked once and reported in both.")
+
+    # A box shorter than the ligands cannot produce comparable scores, and the place to
+    # learn that is before a nine-hour run, not in the results. The reference is the
+    # largest diameter observed over the committed conformers of every sequence this
+    # package docks, so it is a lower bound on what a freshly built conformer may be;
+    # the per-run check in dock_one is what actually refuses a run. See PROTOCOL.md 4.1c.
+    reference = CONFIG["docking"].get("observed_ligand_diameter_max_A")
+    if reference:
+        at_risk = [j for j in jobs if min(j["size"]) < reference]
+        if at_risk:
+            arms = sorted({j["box_id"] for j in at_risk})
+            tiers_hit = sorted({j["tier"] for j in at_risk if j.get("tier")})
+            print(f"\n  WARNING: {len(at_risk)} of the {len(jobs)} planned runs use a box "
+                  f"whose shortest edge is under {reference} A, which is the largest "
+                  f"heavy-atom diameter observed over the committed conformers of these "
+                  f"ligands.")
+            print(f"  Affected box arms: {', '.join(arms)}. Affected tiers: "
+                  f"{', '.join(str(t) for t in tiers_hit)}.")
+            print("  Vina keeps the whole ligand inside the box, so those runs will be "
+                  "refused rather than scored, and any comparison involving that arm "
+                  "will have no data on one side. PROTOCOL.md section 4.1c has the "
+                  "arithmetic and the decision that is open on it.")
 
     done = set()
     if RESULTS.exists():

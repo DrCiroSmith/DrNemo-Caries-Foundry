@@ -80,14 +80,17 @@
           28.0,
           28.0
         ],
-        "rationale": "Identical to the box edge used in the existing campaign on 3AIC, so the new numbers are directly comparable with the old ones."
+        "rationale": "Identical to the box edge used in the existing campaign on 3AIC, so the new numbers are directly comparable with the old ones. It is also, measured rather than assumed, close to the smallest cube these ligands fit in: over all 972 committed single-model conformers the largest heavy-atom diameter is 27.31 A, so a 28 A cube leaves about 0.34 A per side at the most extended conformer on record. None of the 972 would fail a 28 A edge and 17 of them would fail a 26 A one. The box may still be large relative to the binding cleft, which is a separate and untested concern."
       },
       "tight_auto": {
         "size": "computed as the acarbose bounding box plus a 8.0 A margin per axis, rounded up to 0.5 A",
-        "rationale": "A 28 A cube is a very large search volume for an 86-heavy-atom macrocycle. Box size is therefore treated as a tested factor rather than a fixed assumption, because an oversized box is a plausible single common cause of three red flags the existing campaign already reports: 4.51 A redocking drift, a 0.10 kcal/mol gap between pose modes 1 and 2, and scrambled controls scoring as well as the lead."
+        "rationale": "WITHDRAWN AS A TEST OF AN OVERSIZED BOX. The earlier rationale here said a 28 A cube is a very large search volume for an 86-heavy-atom macrocycle. Measured on the repository's own poses that is wrong: 28 A is close to the smallest cube that holds these ligands at all. A box built from acarbose's axis-aligned bounding box plus 8 A gives edges near 14 A on the short axis measured here, and all 972 committed conformers exceed 14 A, so the tight arm would refuse every run rather than search a smaller volume. Tier 3 is the arm that uses it. See PROTOCOL.md defect 4 for the arithmetic and the open decision.",
+        "not_rotation_invariant": "An axis-aligned bounding box depends on the arbitrary orientation of the crystal frame. The rotation-invariant size of a ligand is its diameter, the largest distance between two heavy atoms, and that is what the per-run fit check uses."
       }
     },
-    "box_centre_rule": "Primary centre is the centroid of the heavy atoms of the bound acarbose in chain A. The centroid of the catalytic triad carboxylate oxygens (Asp451, Glu489, Asp562) is computed as a cross-check and the distance between the two centres is recorded. If they differ by more than 4.0 A the run stops, because that would mean the site has been identified wrongly."
+    "box_centre_rule": "Primary centre is the centroid of the heavy atoms of the bound acarbose in chain A. The centroid of the catalytic triad carboxylate oxygens (Asp451, Glu489, Asp562) is computed as a cross-check and the distance between the two centres is recorded. If they differ by more than 4.0 A the run stops, because that would mean the site has been identified wrongly.",
+    "observed_ligand_diameter_max_A": 27.31,
+    "observed_ligand_diameter_source": "largest heavy-atom diameter over all 972 committed single-model poses in data/poses, hydrogens and Meeko G pseudo-atoms excluded and the CG closure carbons kept. The maximum is 27.31 A, in scrambled_39_CHPHPWRWC_1smd_split_3, an 86-heavy-atom null member; the median is 22.37 A. Recomputed from those files by a test, so it cannot go stale. It is a lower bound on what a newly built conformer may be."
   },
   "ligand_preparation": {
     "builder": "biophysics_engine.build_macrocycle_3d, imported unchanged from the repository root",

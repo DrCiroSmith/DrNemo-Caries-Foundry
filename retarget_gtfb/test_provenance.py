@@ -103,6 +103,8 @@ def _record(identity: str, stem: str, run_id: str, pose_sha: str, **over) -> dic
         "box_size": [28.0, 28.0, 28.0], "vina_version_text": "AutoDock Vina v1.2.7",
         "receptor_md5": "a" * 32, "ligand_md5": "b" * 32,
         "started_utc": "2026-11-27T00:00:00Z", "finished_utc": "2026-11-27T00:01:00Z",
+        "ligand_diameter_A": 21.57, "box_min_edge_A": 28.0,
+        "box_clearance_per_side_A": 3.215,
         "vina_kcal": -8.1,
     }
     rec.update(over)
@@ -325,7 +327,13 @@ def test_overwrite_flag_lets_it_through(tmp_path, monkeypatch):
     """
     monkeypatch.setattr(rd, "POSE_DIR", tmp_path)
     (tmp_path / "already_here.pdbqt").write_text("ATOM      1  C   UNL     1\n")
-    (tmp_path / "lig.pdbqt").write_text("ATOM      1  C   UNL     1\n")
+    # A prepared ligand has coordinate columns, and the stub needs them: dock_one now
+    # measures the ligand before docking, and a record with no coordinates is refused
+    # as unmeasurable. Without the columns this test went green without ever reaching
+    # Vina, which is not what it claims to prove.
+    (tmp_path / "lig.pdbqt").write_text(
+        "ATOM      1  C   UNL     1       0.000   0.000   0.000  0.00  0.00    "
+        "+0.000 C \n")
     (tmp_path / "r.pdbqt").write_text("ATOM      1  N   ALA A   1\n")
     try:
         out = rd.dock_one(ligand_pdbqt=tmp_path / "lig.pdbqt",
@@ -336,6 +344,13 @@ def test_overwrite_flag_lets_it_through(tmp_path, monkeypatch):
     except FileNotFoundError:
         return  # vina is not installed here; the guard was still passed
     assert out.get("overwrite_refused") is not True
+    # Every check that sits between the overwrite guard and Vina must also have been
+    # passed, or this test proves nothing about the overwrite guard.
+    assert out.get("ligand_unmeasurable") is not True, (
+        "the run stopped at the ligand measurement, so it never reached the overwrite "
+        f"guard's downstream path: {out.get('error')}")
+    assert out.get("box_too_small") is not True, (
+        f"the run stopped at the box-fit check: {out.get('error')}")
 
 
 # --------------------------------------------------------------------------- #
@@ -1402,6 +1417,8 @@ def test_the_analysis_runs_end_to_end_on_a_synthetic_result_set(tmp_path):
             "box_centre": list(j["centre"]), "box_size": list(j["size"]),
             "receptor_md5": hashlib.md5(stand_in.read_bytes()).hexdigest(),
             "ligand_md5": hashlib.md5(pose.read_bytes()).hexdigest(),
+            "ligand_diameter_A": 21.57, "box_min_edge_A": float(min(j["size"])),
+            "box_clearance_per_side_A": round((float(min(j["size"])) - 21.57) / 2.0, 3),
             "seconds": 1.0, "vina_kcal": modes[0]["affinity_kcal"],
             "vina_modes": modes, "n_modes": len(modes),
             "mode_gap_kcal": round(modes[1]["affinity_kcal"] - modes[0]["affinity_kcal"], 3),
@@ -1530,4 +1547,219 @@ def test_the_dry_run_prints_the_plan_and_names_what_it_skipped(tmp_path):
     else:
         assert "NOT CHECKED" not in proc.stdout, (
             "Vina is on PATH here, so nothing should have been skipped")
+
+
+# --------------------------------------------------------------------------- #
+# Whether the ligand fits the box it was docked in
+# --------------------------------------------------------------------------- #
+def _single_model_pose(pattern: str) -> Path:
+    """A committed single-conformer pose file, for measuring real geometry."""
+    hits = sorted((REPO_ROOT / "data" / "poses").glob(pattern))
+    assert hits, f"no committed pose matches {pattern}"
+    return hits[0]
+
+
+def test_the_heavy_atom_selection_reproduces_the_counts_rdkit_reports():
+    """84 for the lead, 86 for the parent, 44 for acarbose, on the committed files.
+
+    These are the counts RDKit gives before Meeko writes the pdbqt, so reproducing
+    them from the written file is what shows the selection is right: hydrogens and
+    the G pseudo-atoms out, the CG closure carbons in. A two-character column slice
+    truncates CG0 to CG and gets this wrong in both directions, which is the defect
+    that produced two withdrawn r.m.s.d. figures.
+    """
+    for pattern, expected in (("*CAHWRPWHC*split_*.pdbqt", 84),
+                              ("*CPHWRPWHC*split_*.pdbqt", 86),
+                              ("*acarbose*split_*.pdbqt", 44)):
+        hits = sorted((REPO_ROOT / "data" / "poses").glob(pattern))
+        assert hits, f"no committed single-model pose matches {pattern}"
+        counts = {len(rd.heavy_atom_coords(h)) for h in hits}
+        assert counts == {expected}, (
+            f"{pattern}: heavy-atom counts {sorted(counts)}, expected {expected}")
+
+
+def test_a_diameter_is_never_measured_across_superimposed_modes():
+    """A multi-model pose file is refused rather than measured.
+
+    A nine-mode acarbose file reads as 396 atoms spanning 21.22 A; its own single
+    models are 44 atoms spanning 14.76 A. Measuring across modes gives the spread of
+    the ensemble, not the size of a molecule, and it would overstate the ligand and
+    refuse boxes that do in fact fit. I made this mistake by hand on these very
+    files, which is why it is refused in code rather than remembered.
+    """
+    multi = sorted((REPO_ROOT / "data" / "poses").glob("*acarbose*docked.pdbqt"))
+    multi = [m for m in multi if "split" not in m.name]
+    assert multi, "no multi-model acarbose pose is committed"
+    with pytest.raises(ValueError, match="models"):
+        rd.ligand_diameter_A(multi[0])
+
+
+def test_a_box_shorter_than_the_ligand_is_recorded_as_impossible_not_scored(tmp_path,
+                                                                            monkeypatch):
+    """The run is refused, and the record says by how much it fell short.
+
+    Vina keeps the whole ligand inside the box, so when the ligand's diameter exceeds
+    the shortest edge, the orientations along that edge cannot be sampled. The score
+    that comes back is then not comparable with a box where they could be, and
+    nothing else in the output would say so. The protocol tests box size as a factor,
+    so this is the difference between measuring a box and measuring a truncation.
+    """
+    monkeypatch.setattr(rd, "POSE_DIR", tmp_path)
+    (tmp_path / "r.pdbqt").write_text("ATOM      1  N   ALA A   1\n")
+    pose = _single_model_pose("*CAHWRPWHC*split_*.pdbqt")
+    diameter = rd.ligand_diameter_A(pose)
+    assert diameter > 14.0, f"this test needs a ligand larger than its box; got {diameter}"
+
+    out = rd.dock_one(ligand_pdbqt=pose, receptor=str(tmp_path / "r.pdbqt"),
+                      centre=(1, 2, 3), size=(14.0, 28.0, 28.0), dock_seed=1,
+                      tag="too_small", cpu=1, exhaustiveness=16)
+    assert out["ok"] is False
+    assert out["box_too_small"] is True
+    assert out["box_min_edge_A"] == 14.0
+    assert abs(out["ligand_diameter_A"] - diameter) < 0.01
+    assert out["box_clearance_per_side_A"] < 0
+    assert not (tmp_path / "too_small.pdbqt").exists(), (
+        "a pose file was written for a run that was never docked")
+
+    # And the same ligand in the campaign's own box is not refused. Reaching Vina,
+    # which is absent here, is the proof that the fit check passed it.
+    try:
+        ok_box = rd.dock_one(ligand_pdbqt=pose, receptor=str(tmp_path / "r.pdbqt"),
+                             centre=(1, 2, 3), size=(28.0, 28.0, 28.0), dock_seed=1,
+                             tag="fits", cpu=1, exhaustiveness=16)
+    except FileNotFoundError:
+        return  # vina is not installed here; the fit check was passed
+    assert ok_box.get("box_too_small") is not True, (
+        "the check refuses a ligand that does fit the 28 A box the campaign used")
+
+
+def test_an_unmeasurable_ligand_fails_its_own_run_and_not_the_campaign(tmp_path,
+                                                                       monkeypatch):
+    """One corrupt ligand file must not abort a run of hundreds.
+
+    It must also not be measured from the atoms that did parse: a diameter over part
+    of a molecule understates it, and an understated diameter is exactly what would
+    pass a box that does not fit.
+    """
+    monkeypatch.setattr(rd, "POSE_DIR", tmp_path)
+    truncated = tmp_path / "truncated_ligand.pdbqt"
+    truncated.write_text("ATOM      1  C   UNL     1\nATOM      2  C   UNL     1\n")
+    out = rd.dock_one(ligand_pdbqt=truncated, receptor=str(tmp_path / "r.pdbqt"),
+                      centre=(1, 2, 3), size=(28.0, 28.0, 28.0), dock_seed=1,
+                      tag="bad", cpu=1, exhaustiveness=16)
+    assert out["ok"] is False
+    assert out["ligand_unmeasurable"] is True
+    assert "could not be" in out["error"]
+
+
+def test_the_analyser_requires_the_fit_each_run_was_made_at():
+    """ligand_diameter_A and box_min_edge_A are required provenance.
+
+    The protocol compares two box sizes. A row that cannot say whether its ligand fit
+    the box it was docked in cannot take part in that comparison, so the requirement
+    belongs with the other fields that make a result attributable.
+    """
+    required = _load_analyze().REQUIRED_PROVENANCE
+    for field in ("ligand_diameter_A", "box_min_edge_A"):
+        assert field in required, f"{field} is not required provenance"
+
+
+def test_a_box_arm_with_no_usable_runs_is_named_rather_than_counted():
+    """An empty experimental arm is the finding, not a number in rows_failed.
+
+    If every tight-box run were refused, a bare count beside a full report would not
+    say that one side of the box comparison has no data.
+    """
+    an_mod = _load_analyze()
+    rows = [
+        {"ok": True, "box_id": "wide_28", "identity": "a"},
+        {"ok": False, "box_id": "tight_auto", "identity": "b", "box_too_small": True,
+         "ligand_diameter_A": 21.57, "box_min_edge_A": 14.0, "error": "too small"},
+        {"ok": False, "box_id": "tight_auto", "identity": "c", "box_too_small": True,
+         "ligand_diameter_A": 22.58, "box_min_edge_A": 14.0, "error": "too small"},
+    ]
+    res = an_mod.failure_breakdown(rows)
+    assert res["rows_failed"] == 2
+    assert res["per_box_arm"]["tight_auto"] == {"planned": 2, "usable": 0}
+    assert res["per_box_arm"]["wide_28"] == {"planned": 1, "usable": 1}
+    assert any("tight_auto" in n and "none usable" in n for n in res["notes"]), res["notes"]
+    assert len(res["not_docked_because_the_box_was_shorter_than_the_ligand"]) == 2
+
+    # And an arm that has data produces no such note.
+    clean = an_mod.failure_breakdown([{"ok": True, "box_id": "wide_28", "identity": "a"}])
+    assert clean["notes"] == []
+
+
+def test_the_reference_diameter_in_config_is_what_the_committed_poses_measure():
+    """config.json's observed_ligand_diameter_max_A is recomputed, not trusted.
+
+    Defect 4 rests on this number, and a figure published in a config file is exactly
+    the kind that goes stale silently: the 0.92 A drift figure in the manuscript's
+    README had no source in any file, which is why every number here has to be
+    recomputable from one. Tolerance is 0.01 A, the rounding in the config.
+    """
+    import json
+
+    cfg = json.loads((HERE / "config.json").read_text())
+    stated = cfg["docking"]["observed_ligand_diameter_max_A"]
+
+    worst, worst_file = 0.0, None
+    for f in sorted((REPO_ROOT / "data" / "poses").glob("*split_*.pdbqt")):
+        try:
+            d = rd.ligand_diameter_A(f)
+        except ValueError:
+            continue
+        if d > worst:
+            worst, worst_file = d, f.name
+    assert worst > 0, "no committed single-model pose could be measured"
+    assert abs(worst - stated) < 0.01, (
+        f"config says the largest observed ligand diameter is {stated} A; the committed "
+        f"poses measure {worst:.3f} A, in {worst_file}. One of them is stale, and "
+        f"defect 4 and the plan-time warning both read this figure.")
+
+
+def test_a_plan_that_uses_a_box_shorter_than_the_ligands_says_so_before_docking(tmp_path):
+    """Requesting tier 3 warns at plan time, naming the arm and the tier.
+
+    The per-run check refuses the runs, but it does so one at a time inside a run that
+    may have been started for nine hours. The warning costs nothing and arrives before
+    any docking.
+    """
+    import json, shutil, subprocess, sys, hashlib
+
+    pkg = tmp_path / "retarget_gtfb"
+    shutil.copytree(HERE, pkg)
+    shutil.rmtree(pkg / "out", ignore_errors=True)
+    out = pkg / "out"
+    out.mkdir()
+    stand_in = out / "receptor.pdbqt"
+    stand_in.write_text("REMARK synthetic stand-in, not a receptor\n")
+    native = out / "native_ligand.pdbqt"
+    native.write_text("REMARK synthetic stand-in, not a ligand\n")
+    sha = hashlib.sha256(stand_in.read_bytes()).hexdigest()
+    (out / "receptor_validation.json").write_text(json.dumps(
+        {"sha256": sha, "title": "SYNTHETIC, NOT A RECEPTOR"}))
+    # A tight box as short as the one acarbose's bounding box would give here.
+    (out / "boxes.json").write_text(json.dumps({
+        "source_sha256": sha, "centre": [1.0, 2.0, 3.0],
+        "receptor_pdbqt": str(stand_in), "native_ligand_pdbqt": str(native),
+        "boxes": {"wide_28": {"size": [28, 28, 28]},
+                  "tight_auto": {"size": [14.0, 20.5, 22.5]}}}))
+
+    def plan(tiers):
+        return subprocess.run([sys.executable, "run_docking.py", "--dry-run",
+                               "--tiers", tiers], cwd=pkg, capture_output=True,
+                              text=True, timeout=300)
+
+    tight = plan("3")
+    assert tight.returncode == 0, tight.stderr[-2000:]
+    assert "WARNING" in tight.stdout, (
+        f"tier 3 uses a 14.0 A edge and the plan said nothing:\n{tight.stdout[-2000:]}")
+    assert "tight_auto" in tight.stdout
+    assert "4.1c" in tight.stdout, "the warning does not say where the arithmetic is"
+
+    wide = plan("1")
+    assert wide.returncode == 0, wide.stderr[-2000:]
+    assert "WARNING" not in wide.stdout, (
+        f"tier 1 docks in the 28 A box and should draw no warning:\n{wide.stdout[-2000:]}")
 

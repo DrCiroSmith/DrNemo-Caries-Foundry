@@ -551,7 +551,11 @@ PARENT_ID = "contender_g01_CPHWRPWHC"
 REQUIRED_PROVENANCE = ("run_id", "identity", "path_stem", "vina_command_string",
                        "dock_seed", "exhaustiveness", "box_centre", "box_size",
                        "vina_version_text", "receptor_md5", "ligand_md5",
-                       "started_utc", "finished_utc", "pose_sha256")
+                       "started_utc", "finished_utc", "pose_sha256",
+                       # The fit the run was made at. A box shorter than the ligand is a
+                       # different experiment, not a smaller search, so a score whose
+                       # record cannot say which it was is not comparable across boxes.
+                       "ligand_diameter_A", "box_min_edge_A")
 
 
 def provenance_audit(rows: list[dict]) -> dict:
@@ -674,6 +678,50 @@ def load() -> list[dict]:
     return rows
 
 
+def failure_breakdown(rows: list[dict]) -> dict:
+    """Say why runs failed, and shout when a whole box arm has nothing in it.
+
+    A bare rows_failed count can hide the loss of an entire experimental arm. If
+    every tight-box run was refused because the ligand does not fit, the box-size
+    comparison has no data on one side, and a count of 130 beside a report full of
+    numbers does not say so.
+    """
+    failed = [r for r in rows if not r.get("ok")]
+    out: dict = {"rows_failed": len(failed), "by_reason": {}, "notes": []}
+    for r in failed:
+        if r.get("box_too_small"):
+            reason = "box shorter than the ligand, not docked"
+        elif r.get("overwrite_refused"):
+            reason = "refused to overwrite an unclaimed pose file"
+        else:
+            reason = (str(r.get("error") or "unstated").split(".")[0] or "unstated")[:80]
+        out["by_reason"][reason] = out["by_reason"].get(reason, 0) + 1
+
+    unfit = [r for r in failed if r.get("box_too_small")]
+    if unfit:
+        out["not_docked_because_the_box_was_shorter_than_the_ligand"] = [
+            {"identity": r.get("identity"), "box_id": r.get("box_id"),
+             "ligand_diameter_A": r.get("ligand_diameter_A"),
+             "box_min_edge_A": r.get("box_min_edge_A")}
+            for r in unfit[:20]]
+
+    # An arm with no usable rows is the finding, not a footnote.
+    arms: dict = {}
+    for r in rows:
+        arm = r.get("box_id") or "<no box recorded>"
+        a = arms.setdefault(arm, {"planned": 0, "usable": 0})
+        a["planned"] += 1
+        if r.get("ok"):
+            a["usable"] += 1
+    out["per_box_arm"] = arms
+    for arm, a in arms.items():
+        if a["planned"] and not a["usable"]:
+            out["notes"].append(
+                f"box arm {arm}: {a['planned']} runs planned and none usable. Any "
+                f"comparison involving this arm has no data on one side.")
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--self-test", action="store_true")
@@ -694,6 +742,10 @@ def main() -> int:
         if (OUT / "receptor_validation.json").exists() else None,
         "caveats": [],
     }
+
+    report["failures"] = failure_breakdown(rows)
+    for note in report["failures"]["notes"]:
+        report["caveats"].append(note)
 
     report["provenance_audit"] = provenance_audit(rows)
     if not report["provenance_audit"]["passed"]:

@@ -37,8 +37,8 @@ can be read directly.
 | 21:33 | `d8ccf7f` | 4.1b called seed 42 non-independent "on both sides of the calculation", counting the identical input conformer as evidence alongside the identical pose | **that half is withdrawn.** Every `ETKDGv3` path here embeds at seed 42, `build_macrocycle_3d` hardcoding it and the sweep parameterising it, so an identical conformer is expected by construction. The manuscript work reached this independently and is right. Added as a caveat the files cannot settle: a third path, the campaign script, embeds by the default method under a 300-iteration MMFF cap rather than 500, which should not match, so the identity shows both files came from the `ETKDGv3` path and nothing records which script wrote either. The docked pose remains the evidence, the campaign having docked unseeded. Also destaled: the manuscript now publishes the four-run 9.11 and 11.80 over 84 real heavy atoms, matching this package to the digit |
 | 21:52 | `396983f` | defect 2 was stated as a property of the function, that `biophysics_engine.py` contains no `--seed`, and pinned by a test asserting the string's absence. The manuscript branch has since given the function an optional `seed` parameter, so that sentence and that test were both about to fail for a reason that does not touch the finding | restated as a property of the call sites: no production call passes a seed, so every docking run the repository has produced was stochastic. The test now walks the call graph instead of matching a string, reads the seed's positional index from the function's own signature, excludes `tests/`, and reports a file that will not parse rather than treating it as clean. Verified against a simulated post-merge tree and against three controls, one of which exposed the parse-swallowing hole. No result moves; this is a claim and a test being narrowed to what the evidence is about |
 | 22:3x | `adf5643` | nothing recorded whether a docked conformer had been minimised, and five guards had not been shown to fail when their property was violated | defect 2b added: the production builder's MMFF and UFF failures are both silent and its embedding return is discarded, so no published number can say which happened, and the repository cannot settle it. Recorded from now on per ligand, with the seed-42 path marked `unrecorded` rather than assumed. Four guards added and the analyser loader narrowed so a broken `analyze.py` fails instead of skipping; a fixture-presence guard added so that the eighteen conditional skips in the suite cannot silently subtract evidence from a green run. All five mutation-verified: the embed raise removed, the silent `pass` restored, seed 42 claiming `mmff94`, the analyser catch broadened, and `data/poses` moved away each make the matching guard fail. No threshold moves |
-| 22:5x | `8e67910` | `minimisation` was recorded as `mmff94` on any non-exception, although `maxIters` is a ceiling and the call returns 1 when it was reached first, so a conformer that stopped at the cap would have been recorded as minimised | the return code is read: `mmff94_converged` or `mmff94_hit_iteration_cap`, the UFF equivalents, the boolean and the cap itself, all per ligand. No number here may be called iterations performed. Defect 2c added: `scripts/run_campaign.py:130` assigns `openmm_kj = -950.0` in an `except` clause, inside the ledger's real -5985.78 to -173.64 range, so a failed minimisation would have been indistinguishable from a reading. Checked in the ledger itself: 260 rows, 260 distinct values, no blanks, no -950.0, and `-950` matches no artefact in the tree, so it never fired and no published energy is fabricated. A guard now fails on any bare number assigned to a measurement-like name in an `except` handler. Both new guards mutation-verified. No threshold moves |
-| 23:1x | `PENDING` | no test ran `analyze.py`'s `main()`, so the one path that will read the user's `out/results.jsonl` after up to 5.8 hours of docking had never been executed; and `--dry-run`, advertised in `README_RUN_THIS.md` as listing the jobs without running anything, called `preflight()` first and died on a missing Vina, so it could not run on the one machine where a person would want to read the plan before installing anything | the analyser is run end to end on a result set built by the package's own `build_jobs`, `dedupe_jobs`, `identity` and `path_stem`, with real pose geometry from `data/poses` and scores drawn from the real ledger: exit 0, a report with all twenty sections, and its own statistics guard firing correctly on nonsense input. No defect in the package was found this way and one was found in my harness, which omitted `finished_utc` because `run_docking.py` sets it by mutating `prov` after the literal; the required fields are now read from the analyser rather than listed by hand. `preflight` takes `require_tools`, relaxed **only** by the dry run and defaulting to True, and the dry run now names every check it skipped and states that it is not evidence the run can start. The receptor and box checks are **not** relaxed, because the plan is built from `out/boxes.json`. Seven new guards, all mutation-verified. One control first came back green because the injected failure never landed in the file, caught by counting the injection rather than reading the exit status; the same class of error as the parse-swallowing hole at 21:52. No threshold moves, and no result exists to move |
+| 22:5x | `8e67910` | `minimisation` was recorded as `mmff94` on any non-exception, although `maxIters` is a ceiling and the call returns 1 when it was reached first, so a conformer that stopped at the cap would have been recorded as minimised | the return code is read: `mmff94_converged` or `mmff94_hit_iteration_cap`, the UFF equivalents, the boolean and the cap itself, all per ligand. No number here may be called iterations performed. Defect 2c added: `scripts/run_campaign.py:130` assigns `openmm_kj = -950.0` in an `except` clause, inside the ledger's real -5985.78 to -173.64 range, so a failed minimisation would have been indistinguishable from a reading. Checked in the ledger itself: 260 rows, 260 distinct values, no blanks, no -950.0, and `-950` matches no artefact in the tree, so it never fired and no published energy is fabricated. A guard now fails on any bare number assigned to a measurement-like name in an `except` handler. | 23:4x | `PENDING2` | the two scripts that define the receptor and the search box had never been exercised by anything, and `config.json` justified testing box size on the claim that a 28 A cube is a very large search volume for an 86-heavy-atom macrocycle | **that claim is withdrawn.** Measured over all 972 committed single-model poses, the largest heavy-atom diameter is 27.31 A, in a null member, so 28 A is close to the smallest cube that holds them: 0.34 A per side, and none of the 972 would fail a 28 A edge. The tight box, built from acarbose's bounding box plus 8 A, lands near 14 A on the short axis measured here, and all 972 conformers exceed 14 A, so tier 3 as registered would refuse every run rather than search a smaller volume. My first version of this gave 25.91 A because I measured the contenders and acarbose and not the nulls; the test that recomputes the figure from the files caught it before the commit; an axis-aligned bounding box is also not rotation invariant, the same acarbose conformer measuring 5.93 A on one axis and 14.41 A on another. Defect 4 added as 4.1c with the table, rule 8 qualified, and tier 3 left exactly as registered because redefining a pre-registered arm is the author's decision, not a correction. Added: a per-run fit check that refuses to dock a ligand longer than the shortest box edge and records the fit on every result, the fit as required provenance, and a report section that names a box arm ending with no usable rows. Tiers 1, 2, 4, 5 and 6 are unaffected; 87 runs of the full plan sit in the tight box and all are tier 3. Six guards, all mutation-verified. Two of my own test fixtures were found to pass for the wrong reason while doing this and were corrected. No threshold moves |
+| 23:1x | `6eba8ed` | no test ran `analyze.py`'s `main()`, so the one path that will read the user's `out/results.jsonl` after up to 5.8 hours of docking had never been executed; and `--dry-run`, advertised in `README_RUN_THIS.md` as listing the jobs without running anything, called `preflight()` first and died on a missing Vina, so it could not run on the one machine where a person would want to read the plan before installing anything | the analyser is run end to end on a result set built by the package's own `build_jobs`, `dedupe_jobs`, `identity` and `path_stem`, with real pose geometry from `data/poses` and scores drawn from the real ledger: exit 0, a report with all twenty sections, and its own statistics guard firing correctly on nonsense input. No defect in the package was found this way and one was found in my harness, which omitted `finished_utc` because `run_docking.py` sets it by mutating `prov` after the literal; the required fields are now read from the analyser rather than listed by hand. `preflight` takes `require_tools`, relaxed **only** by the dry run and defaulting to True, and the dry run now names every check it skipped and states that it is not evidence the run can start. The receptor and box checks are **not** relaxed, because the plan is built from `out/boxes.json`. Seven new guards, all mutation-verified. One control first came back green because the injected failure never landed in the file, caught by counting the injection rather than reading the exit status; the same class of error as the parse-swallowing hole at 21:52. No threshold moves, and no result exists to move |
 
 Six of these entries withdraw a claim of mine rather than refine one. That record is
 kept deliberately: a protocol whose amendment log contains only improvements is a
@@ -572,6 +572,103 @@ ambiguity is designed out below rather than audited for afterwards.
   two contents are both caught. Thirty-eight checks, all passing, run in under a
   second. They are a precondition of the docking rather than a tier of it.
 
+### 4.1c Defect 4: the tight box is smaller than the ligands it would dock
+
+Registered before any run of this package. Every figure here is recomputed from the
+committed pose files by a test, so none of it rests on my arithmetic alone.
+
+A ligand's rotation-invariant size is its diameter, the largest distance between two
+of its heavy atoms. Vina keeps the whole ligand inside the box, so a rigid body of
+diameter D can only take an orientation along a box edge of length e when D is at
+most e. Measured over every committed single-conformer pose of every sequence this
+package docks, hydrogens and Meeko's G pseudo-atoms excluded and the CG closure
+carbons kept:
+
+Over all 972 committed single-model conformers in `data/poses`, which cover the
+contenders, the mutants, both null sets and acarbose, the median diameter is 22.37 A
+and the largest is **27.31 A**, in `scrambled_39_CHPHPWRWC_1smd_split_3`, an
+86-heavy-atom member of the null. The largest is a null member and not a contender,
+which matters because the nulls are docked in tiers 2, 5 and 6.
+
+| ligand | heavy atoms | median diameter | largest diameter |
+|---|---|---|---|
+| scrambled_39 CHPHPWRWC, a null member | 86 | 23.05 A | **27.31 A** |
+| CPHWRPWHC, the parent | 86 | 22.58 A | 25.91 A |
+| CRRRWWRRRRC, the naive baseline | 118 | 23.19 A | 24.59 A |
+| CAHWRPWHC, the lead | 84 | 21.54 A | 24.47 A |
+| CPHWRAWHC, the P6A mutant | 84 | 22.15 A | 24.27 A |
+| acarbose, the native | 44 | 17.53 A | 18.96 A |
+
+How many of the 972 would not fit a given cube edge, which is the quantity that
+decides whether a box arm can produce data at all:
+
+| edge | conformers that would not fit |
+|---|---|
+| 28.0 A, the campaign's box | 0 of 972 |
+| 27.0 A | 2 of 972 |
+| 26.0 A | 17 of 972 |
+| 24.0 A | 132 of 972 |
+| 20.0 A | 911 of 972 |
+| 14.0 A, near the short tight edge | **972 of 972** |
+
+My first version of this table gave 25.91 A as the maximum, because I measured the
+four contenders and acarbose and not the nulls. The test that recomputes the figure
+from the files is what caught it. The correction makes the 28 A box tighter than I
+said, 0.34 A per side rather than 1.04 A, and leaves every conclusion below standing.
+
+Three consequences, in order of how much they matter.
+
+**The claim that 28 A is a very large search volume for these ligands is withdrawn.**
+It was the stated rationale for testing box size at all. The most extended conformer
+on record reaches 27.31 A, so a 28 A cube leaves 0.34 A per side for it. The smallest
+cube that holds every one of the 972 is 28 A, with 2 A of clearance per side it is
+32 A, and with 4 A it is 36 A. The campaign's box is therefore at the bottom of the
+range these ligands can be docked in, not the top of it. The box may still be large relative to the
+binding cleft, which is a different and untested concern, and nothing here supports or
+refutes it.
+
+**The tight arm, tier 3, would measure truncation rather than a smaller search.**
+`tight_auto` is built as the acarbose bounding box plus 8 A per axis. Acarbose's own
+sorted bounding-box axes measure 5.93, 11.73 and 14.41 A at their medians here, so the
+shortest tight edge lands near 14 A. Every one of the 972 committed conformers exceeds
+14 A, acarbose's own included, so the arm does not search a smaller volume: it refuses
+every run. Even at 20 A, 911 of the 972 would not fit. Decision rule 1, the acarbose
+redocking gate, is evaluated per box, and acarbose is both the smallest ligand here and
+the one the box was sized from, so any edge at which that gate can still be read is one
+where the contenders are the more constrained of the two. A reordering measured there
+would read as box size when it was reach.
+
+**An axis-aligned bounding box is not a rotation-invariant measure of a molecule.**
+The same acarbose conformer measures 5.93 A on one axis and 14.41 A on another. A box
+built from one inherits the arbitrary orientation of whatever frame the coordinates
+happen to be in, so the same complex solved in a different crystal setting would give a
+different pre-registered box. The diameter does not have that property, which is why
+the per-run check uses it.
+
+**What changes now, and what does not.** Nothing is dropped or resized on my own
+judgement: tier 3 stays exactly as registered until its author decides, because
+redefining a pre-registered arm is not a correction of a mistake, it is a change of
+experiment. What is added is that no run can now pretend the ligand fitted when it did
+not. `dock_one` measures the ligand before docking, refuses the run when the diameter
+exceeds the shortest edge, and records `ligand_diameter_A`, `box_min_edge_A` and
+`box_clearance_per_side_A` on every result; the analyser requires the first two as
+provenance and names any box arm that ends with no usable rows instead of folding it
+into a count. The practical effect, if tier 3 is run unchanged, is an arm that is
+refused rather than an arm that quietly reports constrained scores.
+
+**Not affected:** tiers 1, 2, 4, 5 and 6 all dock in the 28 A box, which fits all 972
+conformers on record, so the runs this package has been asked for are unaffected. Of
+the full six-tier plan, 87 runs sit in the tight box and all of them are tier 3. The
+one caveat on the 28 A box is that 0.34 A per side is thin: a freshly built conformer
+more extended than any of the 972 would be refused rather than docked, and the
+refusal would be recorded with both numbers rather than scored. That is the intended
+behaviour, and it is the reason the reference figure is called a lower bound.
+
+**The open decision, for the author.** Either drop tier 3 and record that the box-size
+hypothesis was rejected on arithmetic before any compute, or restate it in the only
+direction available, a box larger than 28 A, which tests whether the campaign's box was
+too small rather than too large. Both are defensible. Neither is mine to take.
+
 ### 4.2 Measurements made from the results, costing no docking runs
 
 Four things are computed from data the run already produces. Each is here because a
@@ -691,7 +788,7 @@ after it arrives.
 | 5 | **Starting-conformer sensitivity.** Spread across five ETKDGv3 embedding seeds. Meeko opens the macrocycle at one bond, so Vina samples the resulting torsions, but bond lengths, bond angles and the ring-closure geometry stay as the embedding set them. | Same | If conformer spread exceeds the lead-minus-null difference, the campaign measured conformer-generation luck. |
 | 6 | **Pose convergence.** Heavy-atom RMSD between the top poses from different docking seeds. | Reported separately from score convergence, never conflated with it | Converged scores with divergent poses means the scoring function is reaching the same number by different arrangements, which is a known failure mode of large boxes and is not evidence of a binding mode. |
 | 7 | **Mode gap.** Energy difference between pose modes 1 and 2. | Reported, no threshold | A gap under about 0.3 kcal/mol means the top pose is not meaningfully preferred over the runner-up. |
-| 8 | **Box-size effect.** Score and rank change between the 28 A and tight boxes. | Reported, no threshold | A reordering of lead against controls between boxes means the original ranking was an artefact of box size. |
+| 8 | **Box-size effect.** Score and rank change between the 28 A and tight boxes. | Reported, no threshold | A reordering of lead against controls between boxes means the original ranking was an artefact of box size. **Qualified by defect 4 (4.1c):** the tight box as defined is shorter than every contender's diameter, so a reordering there may be truncation of the ligand's reachable orientations rather than box size. This rule cannot be read at all until tier 3's definition is settled. |
 | 9 | **Off-target selectivity.** Delta delta G against 1SMD and 1LZ1. | Must exceed about 1 kcal/mol to be discussed at all | Vina's own standard error on its reference set is around 2.85 kcal/mol. Differences well inside that are not selectivity. |
 | 10 | **Geometry integrity.** Cys1 SG to CysN SG distance in every built ligand. | 2.00 to 2.15 A | Outside that range the disulfide is not a disulfide and the molecule docked was not the molecule intended. |
 | 11 | **Provenance integrity.** No pose content under more than one run, no path holding more than one content, no reused run identifier. | Zero of each | Any one of them means two results cannot be told apart, so no number in the set can be attributed. This gate runs before any other is read and the analysis exits non-zero when it fails. It is the gate the existing campaign has already failed: two docked results under five filenames, one of them the lead's headline -8.191. |
