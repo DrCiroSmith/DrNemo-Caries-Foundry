@@ -323,7 +323,7 @@ st.sidebar.markdown("""
 - **Stephan Switch ΔQ**: ≥ +1.00 (pH 5.2 acid-activation)
 - **Donnan Barrier**: Q(pH 6.0) ≤ +4.0 (Chitosan compatibility)
 - **Protease Resistance**: 0 Cleavage Sites (RP motif steric shield)
-- **Disulfide Geometry**: S-S bond 2.00-2.15 Å (Macrocycle lock)
+- **Disulfide Geometry**: S-S bond 1.95-2.25 Å (Macrocycle lock). This window is the one `scripts/continuous_hunter.py` and `gtfb_orchestrator.py` enforce. It has never rejected a candidate: all 260 rows fall between 2.050 and 2.070 Å, so it would catch a broken build and does not discriminate between candidates.
 """)
 
 # === SIDEBAR LIVE DAEMON CONTROLS ===
