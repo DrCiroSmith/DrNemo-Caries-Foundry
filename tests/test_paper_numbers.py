@@ -379,3 +379,32 @@ def test_the_crystallization_reference_is_cited_in_the_body():
         "reference 6 is listed but never cited in the body; it is the source "
         "of the 2.1 A figure that the superseded preprint attached to 3AIC")
     assert "Crystallization and preliminary X-ray analysis" in refs
+
+
+def test_nothing_still_calls_the_scoring_error_uncited():
+    """That claim was withdrawn, so it must not survive anywhere else.
+
+    The paper traced the 2.85 kcal/mol constant to Trott and Olson's reported
+    standard error over their 190-complex test set and withdrew the earlier
+    "untraceable" note. The README, the project page and the battery's own
+    summary line went on calling it assumed and uncited, which left the
+    repository asserting two different things about the same number. A line may
+    mention both only if it is the withdrawal itself.
+    """
+    paths = ["README.md", "docs/index.html", "paper/negative_result_GTF-SI.md",
+             "scripts/run_exhaustive_disproof.py", "dashboard.py"]
+    withdrawal = ("and it is not", "I withdraw", "was recorded here as uncited")
+    offenders = []
+    for rel in paths:
+        f = REPO_ROOT / rel
+        if not f.exists():
+            continue
+        for n, line in enumerate(f.read_text().splitlines(), 1):
+            if "2.85" not in line:
+                continue
+            if ("uncited" in line or "untraceable" in line) and not any(
+                    w in line for w in withdrawal):
+                offenders.append(f"{rel}:{n}")
+    assert not offenders, (
+        f"these lines still call the 2.85 kcal/mol constant uncited or "
+        f"untraceable after that claim was withdrawn: {offenders}")

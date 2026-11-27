@@ -825,7 +825,7 @@ with tab_popper:
     with col_p1:
         st.metric(label="Lead 3AIC Vina ΔG (CAHWRPWHC)", value="-8.191 kcal/mol", delta="Passed in Silico")
     with col_p2:
-        st.metric(label="Amylase 1SMD ΔΔG (CAHWRPWHC)", value="-0.848 kcal/mol", delta="Inconclusive (assumed ±2.85, uncited)")
+        st.metric(label="Amylase 1SMD ΔΔG (CAHWRPWHC)", value="-0.848 kcal/mol", delta="Inconclusive (inside Vina's ±2.85 benchmark error)")
     with col_p3:
         st.metric(label="Scrambled Permutation Z", value="+0.32σ", delta="p = 0.600 (H0 Not Rejected)")
     with col_p4:

@@ -511,6 +511,10 @@ def evaluate_angle4_forcefield_error_margin() -> Dict[str, Any]:
     # reports it as an assumption, not as a published value. Replace it with a figure
     # taken from a paper you have read, or compute an error margin on a benchmark set
     # of your own, before quoting this angle anywhere.
+    # Trott and Olson report this as the standard error of Vina's predicted
+    # against experimental free energies over their 190-complex test set. It is a
+    # benchmark-wide affinity error and not a discrimination threshold for a
+    # selectivity margin; see Angle 4 and the paper's Section 3.6.
     vina_standard_error_kcal = 2.85
 
     return {
@@ -919,7 +923,7 @@ def evaluate_angle9_lysozyme_counter_screen() -> Dict[str, Any]:
     # error. Angle 9 used to judge it by an absolute affinity cutoff instead, so a
     # LARGER margin here (-1.52) was called a pass while a smaller one there (-0.85)
     # was called inconclusive. One test, applied to both.
-    ASSUMED_VINA_ERROR_KCAL = 2.85  # uncited in this repository, see Angle 4
+    ASSUMED_VINA_ERROR_KCAL = 2.85  # Trott and Olson's benchmark SE, see Angle 4
     resolved = abs(selectivity_vs_lysozyme) > ASSUMED_VINA_ERROR_KCAL
 
     return {
@@ -1222,7 +1226,11 @@ def print_disproof_table(report: Dict[str, Any]):
         elif num == 3:
             metric = f"Delta E (1-2) = +{a['delta_e_mode1_mode2_kcal']} kcal"
         elif num == 4:
-            metric = f"DDG = {a['measured_selectivity_ddg_kcal']} kcal, inside an assumed {a['assumed_forcefield_error_kcal']} kcal error (uncited)"
+            # The field name keeps "assumed" because recorded runs carry it, but
+            # the constant itself is sourced: it is Trott and Olson's benchmark
+            # standard error. What is assumed is using it as a discrimination
+            # threshold for a selectivity margin.
+            metric = f"DDG = {a['measured_selectivity_ddg_kcal']} kcal, inside a {a['assumed_forcefield_error_kcal']} kcal benchmark error used here as a threshold"
         elif num == 5:
             metric = f"Z = {a['z_score']:+.2f}, p = {a['p_value']:.4f} (H0 not rejected)"
         elif num == 6:
