@@ -332,6 +332,45 @@ independent conformer and docking seeds is therefore **not supported**: at most 
 are independent, and any dispersion computed over all five is computed over a set
 containing one non-independent member.
 
+What that costs the repository's two angle 2 claims is not the same for each, and the
+difference is worth stating because one of them survives intact.
+
+The **score** summary moves. The published figure is mean -8.10 plus or minus 0.37
+kcal/mol over five. On the four independent runs (-8.565, -7.837, -8.374, -7.535) it
+is mean -8.078 with population spread 0.4116, the same convention. The sample
+standard deviation of those four is 0.4753, which is the figure the manuscript's
+variance work already uses, so that work is unaffected.
+
+The **pose** claim does not move. All five docked files are mutually distinct, five
+distinct coordinate digests, so the pairwise comparison is over five real poses even
+though one of them was not produced by seed 42.
+
+The atom selection has to be stated, because this ligand's files make it easy to get
+wrong. Mode 1 holds 104 `ATOM` records, but two of them are Meeko glue markers typed
+`G0`, which are not atoms and are excluded here. Two further records are the
+macrocycle closure carbons typed `CG0`, which are real carbons and are kept. Columns
+78 and 79 alone truncate `CG0` to `CG`, and a selection written on that two-character
+field will either count the glue markers as carbon or discard two real ones. The same
+truncation is what produced the withdrawn rigid-ring claim recorded in the amendment
+log, so it is called out rather than left implicit.
+
+On that selection, mode 1, in place, with no superposition and no fitting: over all
+102 real atoms the mean pairwise r.m.s.d. rises from 9.25 to 9.33 A when seed 42 is
+dropped, across six pairs instead of ten, with the worst pair at 11.84 A between
+seeds 101 and 404, both independent. Over the 84 heavy atoms it rises from 9.04 to
+9.11 A, worst pair 11.80 A, the same two seeds. So the conclusion that the score
+reproduces and the pose does not strengthens very slightly when the non-independent
+member is removed, rather than depending on it.
+
+These are not the manuscript's figures and are not offered as a reproduction of them.
+The manuscript reports 9.24 A mean and 12.19 A worst over five; the mean agrees to
+0.01 A but the worst pair does not, so the two selections differ somewhere, most
+likely in mode choice or superposition. Neither set of numbers is asserted here to be
+the other's, and the direction of the effect, which is the only load-bearing part, is
+the same on both of the selections computed above.
+
+So the correction needed is to the label and to the score summary, not to the finding.
+
 This is why the `56e034b2` group is not merely untidy. It is the evidence that the
 seed sweep's first member is not what the sweep says it is. An earlier revision of this section counted all eight filenames as
 covering five distinct results, which was wrong arithmetic on my part, and it also

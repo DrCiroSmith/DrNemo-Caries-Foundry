@@ -635,3 +635,145 @@ def test_what_a_larger_null_buys_is_quantified_not_asserted():
     assert "A larger null buys 25 percent and then nothing" in protocol
     for token in ("2.203 standard deviations", "j = 0 at", "0.0250, 0.0450, 0.0490"):
         assert token in protocol, f"the n-dependence is not quantified: {token}"
+
+
+# Meeko's macrocycle glue markers. Not atoms, so never in an r.m.s.d. The closure
+# carbons typed CG0 are real carbons and are kept; note that columns 78 and 79 alone
+# truncate CG0 to CG, which is the truncation behind the withdrawn rigid-ring claim.
+GLUE_PSEUDO_ATOM_TYPES = {"G0", "G1", "G2", "G3"}
+
+
+def _mode1_coords(path: Path, heavy_only: bool) -> list[tuple[float, float, float]]:
+    """Coordinates of the first MODEL record only, in file order, no fitting."""
+    out: list[tuple[float, float, float]] = []
+    started = False
+    for line in path.read_text().splitlines():
+        if line.startswith("MODEL"):
+            if started:
+                break
+            started = True
+            continue
+        if line.startswith("ENDMDL") and started:
+            break
+        if line.startswith(("ATOM", "HETATM")):
+            atom_type = line[77:79].strip()
+            if atom_type in GLUE_PSEUDO_ATOM_TYPES:
+                continue
+            if heavy_only and atom_type.startswith("H"):
+                continue
+            out.append((float(line[30:38]), float(line[38:46]), float(line[46:54])))
+    return out
+
+
+def _pairwise_rmsd(poses: dict[int, list[tuple[float, float, float]]]) -> tuple[float, float, tuple[int, int]]:
+    """Mean and worst in-place r.m.s.d. over every pair, and which pair is worst."""
+    import itertools
+    import math
+
+    vals = []
+    for a, b in itertools.combinations(sorted(poses), 2):
+        pa, pb = poses[a], poses[b]
+        assert len(pa) == len(pb), (a, b, len(pa), len(pb))
+        total = sum(
+            (x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2
+            for (x1, y1, z1), (x2, y2, z2) in zip(pa, pb)
+        )
+        vals.append((math.sqrt(total / len(pa)), a, b))
+    worst = max(vals)
+    return sum(v for v, _, _ in vals) / len(vals), worst[0], (worst[1], worst[2])
+
+
+def test_dropping_the_non_independent_seed_does_not_weaken_the_pose_finding():
+    """Section 4.1b says the pose conclusion survives seed 42's removal. Recompute it.
+
+    The point this pins is directional, not a figure: if the mean pairwise spread ever
+    falls when the non-independent member is dropped, then the published
+    score-reproduces-pose-does-not finding would partly rest on that member, and 4.1b
+    would be wrong to say the correction is only to the label and the score summary.
+    """
+    poses_dir = REPO_ROOT / "data" / "poses"
+    if not poses_dir.exists():
+        pytest.skip("data/poses is not present in this checkout")
+    files = {
+        s: poses_dir / f"disproof_seed_{s}_CAHWRPWHC_3AIC_docked.pdbqt"
+        for s in (42, 101, 202, 303, 404)
+    }
+    for f in files.values():
+        if not f.exists():
+            pytest.skip(f"{f.name} is not present in this checkout")
+
+    # all five docked files are genuinely different poses, so the pairwise set is real
+    assert len({_mode_coord_digest(f) for f in files.values()}) == 5, (
+        "4.1b asserts the pairwise comparison runs over five distinct poses")
+
+    all_atom = {s: _mode1_coords(f, heavy_only=False) for s, f in files.items()}
+    assert len(all_atom[42]) == 102, (
+        "real-atom count changed; the 102 in 4.1b is stale. 104 records minus two "
+        "G0 glue markers")
+
+    mean5, worst5, _ = _pairwise_rmsd(all_atom)
+    four = {s: v for s, v in all_atom.items() if s != 42}
+    mean4, worst4, worst_pair = _pairwise_rmsd(four)
+
+    assert mean4 >= mean5, (
+        f"dropping seed 42 lowered the mean pairwise r.m.s.d. ({mean5:.2f} to "
+        f"{mean4:.2f} A); 4.1b's claim that the pose finding does not depend on it "
+        f"would need rewriting")
+    assert 42 not in worst_pair, (
+        "the four-seed worst pair must be between two independent seeds")
+    assert abs(worst4 - worst5) < 0.02, (
+        "4.1b says the worst pair is effectively unaffected by the removal")
+
+    text = (HERE / "PROTOCOL.md").read_text()
+    for figure in (f"{mean5:.2f}", f"{mean4:.2f}", f"{worst4:.2f}"):
+        assert figure in text, (
+            f"4.1b quotes a pairwise r.m.s.d. figure that no longer recomputes: "
+            f"{figure} is absent from PROTOCOL.md")
+
+    assert "G0" in text and "CG0" in text, (
+        "4.1b must state which records are excluded; a bare atom count is not a "
+        "selection a reader can reproduce")
+    assert "9.24" in text and "12.19" in text, (
+        "4.1b must keep the manuscript's figures beside its own and say they are not "
+        "a reproduction of each other")
+
+    heavy = {s: _mode1_coords(f, heavy_only=True) for s, f in files.items()}
+    assert len(heavy[42]) == 84, "heavy-atom count changed; the 84 in 4.1b is stale"
+    h_mean5, _, _ = _pairwise_rmsd(heavy)
+    h_mean4, h_worst4, _ = _pairwise_rmsd({s: v for s, v in heavy.items() if s != 42})
+    assert h_mean4 >= h_mean5
+    for figure in (f"{h_mean5:.2f}", f"{h_mean4:.2f}", f"{h_worst4:.2f}"):
+        assert figure in text, f"heavy-atom figure {figure} is absent from PROTOCOL.md"
+
+
+def test_the_four_run_score_summary_is_recomputed_not_asserted():
+    """4.1b gives a four-run mean and spread. Derive both from the report, in order."""
+    import json
+
+    report = REPO_ROOT / "data" / "exhaustive_disproof_report.json"
+    if not report.exists():
+        pytest.skip("exhaustive_disproof_report.json is not present in this checkout")
+    angles = json.loads(report.read_text())["angles"]
+    sweep = [a for a in angles if a.get("n_seeds") == 5]
+    assert len(sweep) == 1, "expected exactly one five-seed angle in the report"
+    scores = sweep[0]["vina_scores"]
+    assert len(scores) == 5
+
+    # the sweep declares its seeds in this order, so the first entry is seed 42's
+    src = (REPO_ROOT / "scripts" / "run_exhaustive_disproof.py").read_text()
+    assert "seeds = [42, 101, 202, 303, 404]" in src, (
+        "the seed order is what makes scores[0] seed 42's; it has changed")
+    four = scores[1:]
+
+    mean = sum(four) / len(four)
+    pop_sd = (sum((v - mean) ** 2 for v in four) / len(four)) ** 0.5
+    sample_sd = (sum((v - mean) ** 2 for v in four) / (len(four) - 1)) ** 0.5
+
+    text = (HERE / "PROTOCOL.md").read_text()
+    assert f"{mean:.3f}" in text, f"4.1b's four-run mean {mean:.3f} no longer recomputes"
+    assert f"{pop_sd:.4f}" in text, f"4.1b's four-run spread {pop_sd:.4f} no longer recomputes"
+    assert f"{sample_sd:.4f}" in text, (
+        f"the sample standard deviation {sample_sd:.4f} is the figure the manuscript's "
+        f"variance work uses; 4.1b must still state it so the two stay reconciled")
+    # and the published five-run figures must still be what we are contrasting against
+    assert "-8.10" in text and "0.37" in text
