@@ -242,6 +242,45 @@ def has_glue_atoms(pdbqt: Path) -> bool:
     return False
 
 
+def terminal_state(pdbqt: Path) -> dict:
+    """
+    Record whether the built ligand has free termini, read off the file Vina is given.
+
+    This exists because the repository's two models of the same molecule disagree.
+    Chem.MolFromSequence, which the ligand builder calls, produces a peptide with a free
+    N-terminal amine and a free C-terminal carboxylate: the macrocycle is closed by the
+    Cys1-Cys9 disulfide, not head to tail. solubility_shield.calc_net_charge_at_ph takes
+    the opposite view, skipping both terminal ionisations on the stated assumption that
+    they are consumed by cyclization. One of those is wrong about this molecule.
+
+    Nothing here changes the molecule. Changing it would make the new numbers
+    incomparable with the old ones, which is the one thing this package is for. What it
+    does is write the capping state into the per-ligand record, so that the ambiguity
+    cannot be inherited silently by whatever reads these results next.
+    """
+    try:
+        names, charges = [], []
+        for line in pdbqt.read_text(errors="replace").splitlines():
+            if line[:6] in ("ATOM  ", "HETATM"):
+                names.append(line[12:16].strip().upper())
+                try:
+                    charges.append(float(line[70:76]))
+                except ValueError:
+                    pass
+        return {
+            "free_c_terminal_carboxylate_OXT_present": "OXT" in names,
+            "atom_name_count": len(names),
+            "summed_partial_charge": round(sum(charges), 3) if charges else None,
+            "capping": "uncapped, free termini" if "OXT" in names else "no OXT atom found",
+            "note": "Built by Chem.MolFromSequence, which does not cap termini. "
+                    "solubility_shield.calc_net_charge_at_ph models this molecule as if the "
+                    "termini were consumed by cyclization; on a disulfide macrocycle they are "
+                    "not. The two disagree, and this field records which molecule was docked.",
+        }
+    except Exception as exc:  # a diagnostic must never stop a run
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+
 def ligand_for(seq: str, centre, conf_seed: int) -> tuple[Path, dict]:
     LIGAND_DIR.mkdir(parents=True, exist_ok=True)
     pdbqt = LIGAND_DIR / f"{seq}_conf{conf_seed}.pdbqt"
@@ -263,7 +302,8 @@ def ligand_for(seq: str, centre, conf_seed: int) -> tuple[Path, dict]:
             "builder": builder,
             "pdbqt_sha256": hashlib.sha256(pdbqt.read_bytes()).hexdigest(),
             "rotatable_branches": torsion_count(pdbqt),
-            "macrocycle_opened_by_meeko": has_glue_atoms(pdbqt)}
+            "macrocycle_opened_by_meeko": has_glue_atoms(pdbqt),
+            "terminal_state": terminal_state(pdbqt)}
     meta_path.write_text(json.dumps(meta, indent=2) + "\n")
     return pdbqt, meta
 
@@ -427,6 +467,26 @@ def build_jobs(boxes: dict, tiers: list[int]) -> list[dict]:
             for n in null_b[:10]:
                 add("null_b", n["id"], n["sequence"], "8FJC", gtfb, centre,
                     "wide_28", wide, 1, cseed)
+    if 6 in tiers:
+        # The calcium control. Same ligands, same box, same seeds as tier 3, but against
+        # the receptor that keeps the conserved structural Ca2+ instead of stripping it.
+        # Skipped without comment here if prepare_receptor.py could not build or validate
+        # that receptor; it writes the reason into out/boxes.json.
+        ca = boxes.get("calcium_condition") or {}
+        if ca.get("usable") and ca.get("receptor_pdbqt"):
+            gtfb_ca = ca["receptor_pdbqt"]
+            for s in d["seeds_for_null_sets"]:
+                add("calibration", "acarbose_native", None, "8FJC_CA", gtfb_ca, centre,
+                    "wide_28", wide, s, None, prebuilt=native)
+                for c in contenders:
+                    add("contender", c["id"], c["sequence"], "8FJC_CA", gtfb_ca, centre,
+                        "wide_28", wide, s, 42)
+                for n in null_a[:12]:
+                    add("null_a", n["id"], n["sequence"], "8FJC_CA", gtfb_ca, centre,
+                        "wide_28", wide, s, 42)
+                for n in null_b[:12]:
+                    add("null_b", n["id"], n["sequence"], "8FJC_CA", gtfb_ca, centre,
+                        "wide_28", wide, s, 42)
     if 5 in tiers:
         for s in d["seeds_for_null_sets"]:
             for rid, rpath in off.items():
@@ -446,8 +506,11 @@ def job_key(j: dict) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--tiers", default="1,2,3,4,5",
-                    help="comma-separated tiers to run, in order. Default all.")
+    ap.add_argument("--tiers", default="1,2,3,4,5,6",
+                    help="comma-separated tiers to run, in order. Default all. Tier 6 is "
+                         "the calcium control and is skipped automatically if the "
+                         "Ca-retained receptor could not be built or this Vina build "
+                         "refused it; out/boxes.json records why.")
     ap.add_argument("--cpu", type=int, default=CONFIG["docking"]["cpu"])
     ap.add_argument("--dry-run", action="store_true",
                     help="list the work and stop without docking")

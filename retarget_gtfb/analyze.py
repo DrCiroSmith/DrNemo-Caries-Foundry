@@ -336,7 +336,8 @@ def main() -> int:
         crystal = Path(boxes["native_ligand_pdbqt"])
         cal = {}
         for box in ("wide_28", "tight_auto"):
-            rs = [r for r in good if r["kind"] == "calibration" and r["box_id"] == box]
+            rs = [r for r in good if r["kind"] == "calibration" and r["box_id"] == box
+                  and r["receptor_id"] == "8FJC"]
             per_seed = []
             for r in rs:
                 pose = Path(str(r["pose_pdbqt"]).replace(".pdbqt", "_split_1.pdbqt"))
@@ -371,9 +372,9 @@ def main() -> int:
     NULL_SEEDS = set(CONFIG["docking"]["seeds_for_null_sets"])
 
     def scores_for(kind: str, box="wide_28", cseed=42, seeds=None,
-                   stat="best") -> dict[str, float]:
+                   stat="best", receptor="8FJC") -> dict[str, float]:
         d: dict[str, list[float]] = defaultdict(list)
-        for r in subset(kind, box, cseed):
+        for r in subset(kind, box, cseed, receptor):
             if seeds is None or r["dock_seed"] in seeds:
                 d[r["id"]].append(r["vina_kcal"])
         if stat == "best":
@@ -460,6 +461,99 @@ def main() -> int:
         }
     else:
         report["box_size_effect"] = {"status": "not run", "reason": "tier 3 rows absent"}
+
+    # ---- calcium condition ----
+    # prepare_receptor.py strips every heteroatom from the main receptor, which removes
+    # the conserved structural Ca2+ that sits next to the catalytic triad. Tier 6 repeats
+    # the same ligands in the same box against a receptor that keeps it. Neither receptor
+    # is treated as correct here: the point is to measure how much the choice moves the
+    # answer, because a result that survives only one of the two is not a result.
+    #
+    # Vina has no electrostatic term and does not read PDBQT partial charges, so a
+    # retained metal cannot act on a charged ligand by Coulomb attraction. What it does
+    # change is real but narrower: Vina types a metal as a hydrogen-bond donor, and an
+    # absent ion leaves open volume that the steric terms can fill. Both effects are
+    # local to the site, which is why this is run rather than argued about.
+    ca_cfg = (boxes.get("calcium_condition") or {}) if boxes else {}
+    ca_cont = scores_for("contender", seeds=NULL_SEEDS, receptor="8FJC_CA")
+    if ca_cont:
+        base_cont = scores_for("contender", seeds=NULL_SEEDS)
+        ca_b = scores_for("null_b", seeds=NULL_SEEDS, receptor="8FJC_CA")
+        base_b = {k: v for k, v in b_m["best"].items() if k in ca_b}
+        shared_c = sorted(set(ca_cont) & set(base_cont))
+        deltas = [ca_cont[k] - base_cont[k] for k in shared_c]
+
+        # Does the lead keep the same standing against its own null when the ion is kept?
+        def standing(cand: dict, null: dict):
+            if lead_id not in cand or not null:
+                return None
+            obs = cand[lead_id]
+            pt = permutation_p_one_sided(obs, list(null.values()))
+            return {"lead_kcal": round(obs, 3),
+                    "null_members": pt["n_null"],
+                    "null_members_beating_lead": pt["null_members_at_least_as_good"],
+                    "null_mean_kcal": pt["null_mean"],
+                    "exact_p_one_sided": pt["empirical_p_one_sided"]}
+
+        with_ca, without_ca = standing(ca_cont, ca_b), standing(base_cont, base_b)
+        flipped = None
+        if with_ca and without_ca:
+            flipped = ((with_ca["exact_p_one_sided"] < 0.05)
+                       != (without_ca["exact_p_one_sided"] < 0.05))
+
+        # Redocking, which is the check that decides whether any pose claim holds at all.
+        ca_cal = []
+        crystal = Path(boxes["native_ligand_pdbqt"]) if boxes else None
+        for r in good:
+            if r["kind"] != "calibration" or r["receptor_id"] != "8FJC_CA":
+                continue
+            pose = Path(str(r["pose_pdbqt"]).replace(".pdbqt", "_split_1.pdbqt"))
+            if not pose.exists():
+                pose = Path(r["pose_pdbqt"])
+            if pose.exists() and crystal and crystal.exists():
+                m = symmetry_corrected_rmsd(pose, crystal)
+                if m.get("ok"):
+                    ca_cal.append({"dock_seed": r["dock_seed"], "rmsd_A": m["rmsd_A"],
+                                   "vina_kcal": r["vina_kcal"]})
+
+        report["calcium_condition"] = {
+            "receptor_built_by_prepare_step": {k: ca_cfg.get(k) for k in
+                                               ("ca_ions_in_file", "ca_ions_kept",
+                                                "ca_atoms_in_pdbqt", "keep_radius_A", "ions")},
+            "per_contender": {k: {"no_ca": round(base_cont[k], 3),
+                                  "with_ca": round(ca_cont[k], 3),
+                                  "delta_with_minus_without": round(ca_cont[k] - base_cont[k], 3)}
+                              for k in shared_c},
+            "delta_kcal": agg(deltas),
+            "lead_against_null_b_with_ca": with_ca,
+            "lead_against_null_b_without_ca": without_ca,
+            "verdict_flipped_by_the_ion": flipped,
+            "redocking_with_ca": {"per_seed": ca_cal,
+                                  "rmsd_A": agg([d["rmsd_A"] for d in ca_cal]) if ca_cal else None,
+                                  "passes_2A_standard": bool(ca_cal) and
+                                  max(d["rmsd_A"] for d in ca_cal) < 2.0} if ca_cal else None,
+            "null_b_subset_note":
+                f"Tier 6 runs {len(ca_b)} of the {len(b_m['best'])} null B members, so the "
+                f"smallest exact p attainable in this condition is "
+                f"{round(1.0 / (len(ca_b) + 1), 4) if ca_b else 'n/a'}. This condition is a "
+                f"sensitivity check on the receptor, not an independent significance test.",
+            "interpretation":
+                "If the mean delta is small and the lead keeps its standing against null B "
+                "either way, the metal is not driving the answer and the stripped receptor is "
+                "an acceptable simplification to state. If the verdict flips, then no "
+                "conclusion from the stripped receptor stands on its own, and the campaign has "
+                "to be reported against the metal-containing receptor or not at all.",
+        }
+    else:
+        report["calcium_condition"] = {
+            "status": "not run",
+            "reason": ca_cfg.get("problem", "tier 6 rows absent"),
+            "consequence":
+                "Every score in this report comes from a receptor with the conserved "
+                "structural Ca2+ removed. That is a stated limitation, not a neutral choice: "
+                "the metal sits beside the inhibitor subsites and one of its coordinating "
+                "residues also hydrogen bonds acarbose.",
+        }
 
     # ---- conformer-seed effect ----
     conf: dict[str, dict[int, float]] = defaultdict(dict)

@@ -42,6 +42,19 @@ EXPECTED_CONTACTS = {449: "ARG", 455: "ASN", 511: "ASN", 514: "ARG",
                      561: "HIS", 883: "ASP", 934: "GLN"}
 LIGAND_RESNAMES = {"GLC", "AC1", "ACR"}
 
+# The conserved structural Ca2+ site, which sits adjacent to the catalytic triad.
+# Schormann et al. 2023 give the GtfC coordinating residues as Glu431, Asp437, Asn481
+# and Asp959 (from Ito et al. 2011), and state directly that GtfC Asp437 corresponds to
+# GtfB Asp411. Every GtfC-to-GtfB pair in that paper's Table 4 differs by exactly 26
+# (475/449, 477/451, 481/455, 515/489, 540/514, 587/561, 588/562, 909/883, 960/934), and
+# 437 - 26 = 411 reproduces the one correspondence the paper states outright. The other
+# three GtfB numbers below are therefore derived at that offset, not quoted, so they are
+# reported rather than enforced: if one of them comes back as the wrong amino acid, the
+# offset derivation is wrong and that is worth knowing before anything is docked.
+CALCIUM_SITE_STATED = {411: "ASP"}
+CALCIUM_SITE_DERIVED = {405: "GLU", 455: "ASN", 933: "ASP"}
+METAL_RESNAMES = {"CA", "MG", "MN", "ZN", "NA", "K"}
+
 
 class Failed(Exception):
     pass
@@ -59,6 +72,7 @@ def parse(path: Path):
     """Minimal fixed-column PDB reader. No external dependencies on purpose."""
     protein: dict[tuple[str, int], str] = {}
     hetatms: dict[tuple[str, str, int], int] = {}
+    metals: list[dict] = []
     header, title, remarks = "", [], []
     n_atom = 0
     for raw in path.read_text(errors="replace").splitlines():
@@ -86,8 +100,16 @@ def parse(path: Path):
                 continue
             key = (chain, resname, resnum)
             hetatms[key] = hetatms.get(key, 0) + 1
+            if resname in METAL_RESNAMES:
+                try:
+                    pos = (float(raw[30:38]), float(raw[38:46]), float(raw[46:54]))
+                except ValueError:
+                    pos = None
+                metals.append({"resname": resname, "chain": chain, "resnum": resnum,
+                               "atom": raw[12:16].strip(), "xyz": pos})
     return {"header": header, "title": " ".join(title), "remarks": remarks,
-            "protein": protein, "hetatms": hetatms, "n_atom": n_atom}
+            "protein": protein, "hetatms": hetatms, "n_atom": n_atom,
+            "metals": metals}
 
 
 def check(path: Path) -> dict:
@@ -192,6 +214,53 @@ def check(path: Path) -> dict:
         f"the crystal is a result that needs stating, not hiding."
     )
 
+    # 8. The conserved structural Ca2+ site. Reported, never a reason to stop.
+    #    This exists because prepare_receptor.py strips every heteroatom, and a
+    #    structural metal adjacent to the catalytic triad is not the same kind of
+    #    heteroatom as a crystallisation sulfate. Stripping it leaves open volume where
+    #    an ion sat, and AutoDock Vina types a retained metal as a hydrogen-bond donor,
+    #    so the two receptors are not interchangeable in either direction. The package
+    #    therefore docks against both and reports the difference instead of assuming one.
+    ca_site_seen = {}
+    for resnum, expected_name in CALCIUM_SITE_STATED.items():
+        actual = chain_a.get(resnum)
+        ca_site_seen[f"{expected_name}{resnum}"] = actual
+        if actual != expected_name:
+            problems.append(
+                f"residue {resnum} is {actual}, expected {expected_name}. Schormann et al. "
+                f"2023 state that GtfB Asp411 is one of the two Ca2+-coordinating "
+                f"aspartates, so this is a direct check on the numbering, not a derived one."
+            )
+    ca_site_derived_seen, ca_site_derived_mismatches = {}, []
+    for resnum, expected_name in CALCIUM_SITE_DERIVED.items():
+        actual = chain_a.get(resnum)
+        ca_site_derived_seen[f"{expected_name}{resnum}"] = actual
+        if actual != expected_name:
+            ca_site_derived_mismatches.append(f"{resnum}: expected {expected_name}, got {actual}")
+    results["calcium_site_residues_stated_in_paper"] = ca_site_seen
+    results["calcium_site_residues_derived_at_offset_26"] = ca_site_derived_seen
+    results["calcium_site_derived_mismatches"] = ca_site_derived_mismatches
+
+    results["metal_ions_in_file"] = s["metals"]
+    ca_ions = [m for m in s["metals"] if m["resname"] == "CA"]
+    results["calcium_ions_found"] = len(ca_ions)
+    if ca_ions:
+        results["calcium_note"] = (
+            f"{len(ca_ions)} Ca2+ ion(s) present. Schormann et al. 2023 report a calcium ion "
+            f"in the intact GtfB catalytic domain, at a site whose coordinating residues are "
+            f"conserved across GtfB, GtfC and GtfD, and one of those residues (Asn455 in GtfB "
+            f"numbering) also hydrogen bonds acarbose, so the metal sits immediately beside the "
+            f"inhibitor subsites. prepare_receptor.py builds one receptor without it and one "
+            f"with it, and tier 6 docks against both."
+        )
+    else:
+        results["calcium_note"] = (
+            "No Ca2+ ion found in this file. Either the deposited model does not include it or "
+            "the record is named differently. Tier 6 will be skipped and every result will come "
+            "from the heteroatom-stripped receptor, which is a limitation to state rather than "
+            "a failure: an apo-metal receptor is not the physiological enzyme."
+        )
+
     results["n_protein_atoms"] = s["n_atom"]
     results["sha256"] = sha256(path)
     results["path"] = str(path)
@@ -235,6 +304,12 @@ def main() -> int:
     print(f"  catalytic residues confirmed at GtfB numbering: "
           f"{', '.join(k for k, v in results['catalytic_and_contact_residues'].items() if v)}")
     print(f"  inhibitor residues: {results['inhibitor_residues_found']}")
+    print(f"  Ca2+ ions found: {results['calcium_ions_found']}")
+    if results["calcium_site_derived_mismatches"]:
+        print("  NOTE: a derived Ca2+-site residue number did not match: "
+              + "; ".join(results["calcium_site_derived_mismatches"])
+              + ". The stated Asp411 check passed, so the structure is GtfB; the offset "
+                "derivation for the other three is what is in doubt. Reported, not fatal.")
     print(f"  sha256: {results['sha256']}")
     print(f"  recorded in {stamp_path}")
     return 0

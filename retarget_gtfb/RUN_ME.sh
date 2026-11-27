@@ -4,7 +4,7 @@
 #
 # Writes only inside retarget_gtfb/. See README_RUN_THIS.md.
 #
-#   bash RUN_ME.sh              # everything, roughly eight hours
+#   bash RUN_ME.sh              # everything, roughly nine and a half hours
 #   bash RUN_ME.sh 1,2          # tiers 1 and 2 only, the result without the stress tests
 #   TIERS=1 CPU=16 bash RUN_ME.sh
 
@@ -12,7 +12,7 @@ set -euo pipefail
 
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-TIERS="${1:-${TIERS:-1,2,3,4,5}}"
+TIERS="${1:-${TIERS:-1,2,3,4,5,6}}"
 CPU="${CPU:-8}"
 
 step() { printf '\n=== %s ===\n' "$1"; }

@@ -64,17 +64,27 @@ Or just `bash RUN_ME.sh`, which runs those in order and stops at the first failu
 
 ## How long the docking takes
 
-458 docking runs in total, in five tiers that run in this order:
+545 docking runs in total, in six tiers that run in this order:
 
 | Tier | What it is | Runs |
 |---|---|---|
 | 1 | The four named contenders plus acarbose redocking, 5 seeds each | 25 |
 | 2 | Both 39-member null distributions, 3 seeds each | 234 |
 | 3 | The same thing in a smaller box, to test whether box size drove the result | 87 |
+| 6 | The same thing against a receptor that keeps the structural Ca2+ | 87 |
 | 4 | Four more starting conformers, to test whether conformer luck drove it | 88 |
 | 5 | Amylase and lysozyme counter-screens | 24 |
 
-At roughly a minute per run on eight cores that is about eight hours, so it is an
+Tier 6 is the calcium control. Preparation strips every heteroatom from the main
+receptor, which is what the original campaign did, but GtfB carries a conserved
+structural calcium next to the catalytic triad and one of the residues holding it also
+hydrogen bonds acarbose. So the package builds the receptor both ways and docks against
+both. If your Vina build will not accept a receptor with a metal in it, or Open Babel
+drops the ion during conversion, the preparation step finds that out in seconds, writes
+the reason into `out/boxes.json`, and tier 6 skips itself. The run does not fail and the
+remaining tiers are unaffected.
+
+At roughly a minute per run on eight cores that is about nine hours, so it is an
 overnight job. The script prints its own estimate after the third run, based on your
 actual timings rather than my guess, so you will know within a few minutes whether
 to leave it running.
@@ -88,8 +98,12 @@ python3 analyze.py
 ```
 
 Tiers 1 and 2 together give the redocking calibration and both null tests, which is
-the result. Tiers 3 to 5 are the attempts to break it. Send me whatever you have and
+the result. Tiers 3 to 6 are the attempts to break it. Send me whatever you have and
 I will analyse it; partial output is genuinely useful.
+
+If you want the calcium check in the same sitting, `--tiers 1,2,6` adds about another
+hour and a half. It is the one stress test that could change the answer rather than
+merely qualify it, because it changes the receptor rather than the search.
 
 Other switches: `--cpu 16` if you have more cores, `--dry-run` to list the jobs
 without running anything.
@@ -125,6 +139,10 @@ It stops if:
   `run_docking.py` do not produce byte-identical output for the same sequence and
   seed, which would mean the conformer test was measuring a difference between two
   builders instead of between two seeds.
+
+One thing deliberately does **not** stop the run: a missing or unusable calcium
+receptor. That is recorded as a limitation and tier 6 is skipped, because an absent
+control is worth knowing about and is not worth losing a night's docking over.
 
 ## One thing I could not do from here, so you are doing it
 

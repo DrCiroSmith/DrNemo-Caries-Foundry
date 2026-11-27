@@ -31,6 +31,7 @@ TRIAD_OXYGENS = {
 }
 LIGAND_RESNAMES = {"GLC", "AC1", "ACR"}
 TIGHT_MARGIN_A = 8.0
+CA_KEEP_RADIUS_A = 15.0
 
 STANDARD_AA = {
     "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE",
@@ -149,6 +150,32 @@ def main() -> int:
                               "resnum": raw[22:26].strip(), "atom": raw[12:16].strip(),
                               "distance_to_box_centre_A": round(d, 2)})
 
+    # --- the conserved structural Ca2+, kept as an explicit condition -------
+    # Every heteroatom is stripped from the main receptor, which is what the original
+    # campaign did and what keeps the two comparable. But the GtfB catalytic domain
+    # carries a conserved structural calcium next to the triad, and one of its
+    # coordinating residues (Asn455) also hydrogen bonds acarbose, so it is not the same
+    # kind of heteroatom as a crystallisation sulfate. Removing it leaves open volume
+    # that Vina's steric terms can fill; keeping it gives Vina a metal that it types as a
+    # hydrogen-bond donor. Neither is obviously right, so both receptors are built and
+    # tier 6 docks against both. Nothing here assumes which answer is correct.
+    ca_lines, ca_report = [], []
+    for raw in het_lines:
+        if raw[17:20].strip().upper() != "CA":
+            continue
+        d = float(np.linalg.norm(xyz(raw) - ligand_centre))
+        dt = float(np.linalg.norm(xyz(raw) - triad_centre))
+        ca_report.append({"chain": raw[21:22], "resnum": raw[22:26].strip(),
+                          "distance_to_box_centre_A": round(d, 2),
+                          "distance_to_triad_centroid_A": round(dt, 2),
+                          "kept": d <= CA_KEEP_RADIUS_A})
+        if d <= CA_KEEP_RADIUS_A:
+            ca_lines.append(raw)
+
+    receptor_ca_pdb = RECEPTOR_DIR / "8FJC_receptor_with_ca.pdb"
+    if ca_lines:
+        receptor_ca_pdb.write_text("\n".join(receptor_lines + ca_lines) + "\nTER\nEND\n")
+
     # --- obabel conversion --------------------------------------------------
     receptor_pdbqt = RECEPTOR_DIR / "8FJC_receptor.pdbqt"
     ligand_pdbqt = RECEPTOR_DIR / "8FJC_native_ligand.pdbqt"
@@ -161,8 +188,48 @@ def main() -> int:
             die(f"obabel failed on {src_pdb.name}:\n{res.stderr.strip()}")
         print(f"  wrote {dst.name} ({dst.stat().st_size} bytes)")
 
+    # --- convert and smoke-test the Ca-retained receptor --------------------
+    # Done here, in seconds, rather than discovered as 87 failed docking runs overnight.
+    # Two things can go wrong and both are checked: Open Babel can silently drop the
+    # HETATM, and a given Vina build can refuse the resulting atom type.
+    receptor_ca_pdbqt = RECEPTOR_DIR / "8FJC_receptor_with_ca.pdbqt"
+    ca_status: dict = {"ca_ions_in_file": len(ca_report), "ca_ions_kept": len(ca_lines),
+                       "ions": ca_report, "keep_radius_A": CA_KEEP_RADIUS_A,
+                       "usable": False, "receptor_pdbqt": None}
+    if ca_lines:
+        cmd = ["obabel", "-ipdb", str(receptor_ca_pdb), "-opdbqt", "-O", str(receptor_ca_pdbqt),
+               "-xr", "-p", "7.4", "--partialcharge", "gasteiger"]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode != 0 or not receptor_ca_pdbqt.exists():
+            ca_status["problem"] = f"obabel failed: {res.stderr.strip()[:400]}"
+        else:
+            kept = [l for l in receptor_ca_pdbqt.read_text(errors="replace").splitlines()
+                    if l[:6] in ("ATOM  ", "HETATM") and l.rstrip().split()[-1].upper() == "CA"]
+            if not kept:
+                ca_status["problem"] = (
+                    "obabel produced a PDBQT with no Ca atom type in it, so the ion did not "
+                    "survive conversion. The with-calcium condition cannot be run.")
+            else:
+                probe = subprocess.run(
+                    ["vina", "--score_only", "--receptor", str(receptor_ca_pdbqt),
+                     "--ligand", str(ligand_pdbqt)], capture_output=True, text=True)
+                if probe.returncode != 0:
+                    ca_status["problem"] = (
+                        f"this Vina build refused the Ca-containing receptor: "
+                        f"{probe.stderr.strip()[:400]}")
+                else:
+                    ca_status["usable"] = True
+                    ca_status["receptor_pdbqt"] = str(receptor_ca_pdbqt)
+                    ca_status["ca_atoms_in_pdbqt"] = len(kept)
+                    ca_status["score_only_probe_ok"] = True
+    else:
+        ca_status["problem"] = (
+            f"no Ca2+ ion within {CA_KEEP_RADIUS_A} A of the box centre. Every result will "
+            f"come from the metal-free receptor, which is a stated limitation.")
+
     boxes = {
         "receptor_pdbqt": str(receptor_pdbqt),
+        "calcium_condition": ca_status,
         "receptor_pdb": str(receptor_pdb),
         "native_ligand_pdbqt": str(ligand_pdbqt),
         "native_ligand_pdb": str(native_ligand_pdb),
@@ -197,6 +264,13 @@ def main() -> int:
     if near_site:
         print(f"  NOTE: {len(near_site)} crystallisation heteroatom(s) within 6 A of the box "
               f"centre, listed in out/boxes.json. 8FJC was grown from 2 M ammonium sulfate.")
+    if ca_status["usable"]:
+        d = min(i["distance_to_triad_centroid_A"] for i in ca_report if i["kept"])
+        print(f"  Ca2+ condition: usable. {ca_status['ca_ions_kept']} ion(s) retained, "
+              f"nearest {d} A from the catalytic triad centroid. Tier 6 will dock against "
+              f"both receptors.")
+    else:
+        print(f"  Ca2+ condition: not available. {ca_status['problem']}")
     print(f"  wrote {OUT / 'boxes.json'}")
     return 0
 
