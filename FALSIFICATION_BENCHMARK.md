@@ -11,7 +11,11 @@ in section 5: the disulfide geometry check cannot discriminate, since all 260 ro
 between 2.050 and 2.070 Angstroms against a 1.95 to 2.25 window and no candidate has ever
 been failed by it, and the Stephan acid-switch criterion is arithmetically a histidine
 count. The instability index is no longer reported at all for cyclic peptides, where it is
-out of domain and was previously replaced by a literal 25.0. The protease criterion does
+out of domain and was previously replaced by a literal 25.0. A second substitution has
+also gone: any sequence with two or more arginines and 20 or fewer residues had its index
+replaced by the same 25.0, so a short arginine-rich peptide passed a stability gate that
+was never measured on it. The gate is now applied only where the index is computed, and
+reported only there. The protease criterion does
 discriminate: 111 of the 260 rows carry at least one trypsin site. No candidate in this
 benchmark is corroborated.
 
@@ -25,7 +29,7 @@ Early computational pipelines in the Foundry utilized surrogate heuristic functi
 
 **Operation Karl Popper** systematically eradicated all synthetic mock scoring in `DrNemo-Caries-Foundry`. Every candidate is now subjected to an orthogonal 6-angle biophysical falsification battery powered by:
 1. **AutoDock Vina v1.2.7 & Vinardo:** Empirical scoring functions on uncompressed $28.0\text{ \AA}$ search grids centered on catalytic triad oxygens (`Asp477`, `Glu515`, `Asp588` of RCSB PDB: `3AIC`).
-2. **All-Atom OpenMM Molecular Mechanics:** Amber14/GBn2 implicit solvent relaxation at oral body temperature ($310.15\text{ K}$).
+2. **All-Atom OpenMM Molecular Mechanics:** Amber14/GBn2 implicit solvent energy minimisation. No dynamics are run and no temperature is sampled: the integrator is constructed at $310.15\text{ K}$ and never stepped, so nothing here is a thermal measurement.
 3. **RDKit MMFF94:** Force-field energy minimization and distance-geometry 3D conformer generation with intact disulfide bonds ($2.06\text{ \AA}$).
 4. **Physicochemical Oral Filters:** Henderson-Hasselbalch protonation states, Donnan potential compatibility ($Q_{\text{pH } 6.0} \le +4.0$), Stephan-curve electrostatic switches ($\Delta Q_{\text{Stephan}} \ge +1.0$), and mucosal enzymatic cleavage mapping.
 

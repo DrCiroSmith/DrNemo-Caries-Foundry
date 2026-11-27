@@ -24,18 +24,54 @@ from solubility_shield import (
     calc_net_charge_at_ph,
     calc_stephan_switch,
     count_protease_cleavage_sites,
-    MAX_DONNAN_CHARGE_PH6
+    MAX_DONNAN_CHARGE_PH6,
+    MAX_INSTABILITY
 )
 from falsification_engine import FalsificationEngine, CO_CRYSTAL_CONTROL_DELTA_G, CO_CRYSTAL_REDOCKING_RMSD
 from vault import STATUS_SURVIVED, STATUS_MEANINGS
 
 
 def test_solubility_shield_valid_arginine_core():
+    """A linear arginine hexamer is screened, not waved through.
+
+    This test used to assert that is_viable("RRRRRR") is True. It was True only
+    because the shield replaced the Guruprasad instability index with the literal
+    25.0, a comfortable pass, for any sequence with two or more arginines and 20 or
+    fewer residues, on top of the same substitution for cyclic peptides. With that
+    second escape hatch removed, "RRRRRR" is a linear sequence inside the domain the
+    shield now declares, the gate is applied, and the measured index (about 491, from
+    five R-R pairs at a DIWV of 58.95 each) is far above the +40 ceiling. So the
+    honest answer is that the shield rejects it, and the chitosan and hydropathy
+    checks it does pass are asserted separately below.
+    """
     viable, metrics = is_viable("RRRRRR")
-    assert viable is True
     assert metrics["chitosan_native"] is True
     assert metrics["arg_count"] == 6
     assert metrics["gravy"] < 2.0
+
+    if metrics["instability_index_applicable"]:
+        # biopython present: the index is measured and the gate is applied.
+        assert viable is False
+        assert metrics["instability_index"] > MAX_INSTABILITY
+        assert "instability_index" in metrics["gates_applied"]
+    else:
+        # biopython absent: no index is computed, so no instability gate is applied
+        # and none is reported. Nothing is substituted in its place.
+        assert viable is True
+        assert metrics["instability_index"] is None
+        assert "instability_index" not in metrics["gates_applied"]
+
+
+def test_solubility_shield_cyclic_arginine_core_makes_no_stability_claim():
+    """The cyclic form, which is what this library actually screens, passes without
+    an instability number being invented for it."""
+    viable, metrics = is_viable("CRRRRC")
+    assert viable is True
+    assert metrics["chitosan_native"] is True
+    assert metrics["instability_index_applicable"] is False
+    assert metrics["instability_index"] is None
+    assert "instability_index" not in metrics["gates_applied"]
+    assert "out of domain" in metrics["instability_index_note"]
 
 
 def test_solubility_shield_rejects_invalid_amino_acids():
