@@ -427,7 +427,9 @@ def self_test() -> int:
 # result at -7.343 under two. The -8.191 is the lead's published headline number.
 # Nothing inside those files records a seed, a command line, a run id or a time, so
 # from the files alone there is no way to tell whether that was one run saved
-# several times or several runs that collapsed onto one. A third duplicated content
+# several times or several runs that collapsed onto one. The repository's version
+# history settled it from outside the files, as one result under three names, with
+# the cause unexplained. A third duplicated content
 # in that directory is the input ligand conformer under three names, which is
 # expected from one builder at one seed and is not a defect; the distinction matters
 # and the files cannot make it, which is the point. This audit exists so that the

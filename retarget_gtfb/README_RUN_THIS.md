@@ -117,7 +117,11 @@ results sit under five filenames: your 3AIC result at -8.191 kcal/mol under thre
 names, and your 1SMD result at -7.343 under two. The -8.191 is your headline number.
 None of those files records a seed, a command line or a time, so there is no way to
 tell from them whether each was one run saved several times or several runs that
-collapsed onto one.
+collapsed onto one. In your repository it took the version history to answer that, and
+the answer is that no independent docking output was ever written to the duplicate
+paths: one result stands under three names. How that came about is not recorded
+anywhere, so it is unexplained rather than attributable, and nothing here says anyone
+copied anything.
 
 A third content in that folder also appears under three names, but it is the input
 ligand conformer rather than a docked pose, and one builder at one seed giving one

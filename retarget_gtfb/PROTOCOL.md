@@ -249,8 +249,27 @@ The defect that remains is the two docked groups. Nothing inside those files rec
 a seed, a command line, a run identifier or a time, so from the files alone there is
 no way to tell whether each was one run saved several times or several runs that
 collapsed onto one, and no way to tell the benign case from the real ones without
-inspecting the contents by hand. That ambiguity is not recoverable after the fact,
-which is why it is designed out here rather than audited for afterwards.
+inspecting the contents by hand.
+
+For these two groups the question was settled from outside the files, by the
+repository's version history rather than by anything in the pose data. That history
+shows the campaign path created and its content replaced on the same day, and both
+audit paths created later in a single commit already holding the replaced content,
+never having held anything else. So no independent docking output was ever written to
+those two paths: it is one result standing under three names at 3AIC, and the same
+pattern gives one result under two names at 1SMD.
+
+The **cause** is not established and is not asserted here. The files carry no seed, no
+command line, no run identifier and no timestamp, and the repository's only log file
+is empty, so there is no record of how the duplication arose. The supportable
+statement is that the duplication is unexplained and that its origin cannot be
+attested to. Nothing here claims that anyone copied anything. An earlier guess of mine
+that the resume guard accounted for it is withdrawn, because the guard cannot write
+one file's bytes under a different file's name.
+
+That the files themselves could not answer this is the whole point. Version history
+happened to be available in this instance and will not be in general, which is why the
+ambiguity is designed out below rather than audited for afterwards.
 
 - **Every output path is derived, never chosen.** The stem of every file a run writes
   is `t<tier>` followed by the run's kind, ligand identifier, receptor identifier,

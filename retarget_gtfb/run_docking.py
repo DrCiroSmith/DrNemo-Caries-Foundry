@@ -592,7 +592,9 @@ def build_jobs(boxes: dict, tiers: list[int]) -> list[dict]:
 # result at -7.343 under two. Nothing inside any of those files records a seed, a
 # command line, a run id or a time, so from the files alone there is no way to say
 # whether that was one run saved several times or several runs that collapsed onto
-# one. The -8.191 is the lead's published headline number. (A third duplicated
+# one. It took the repository's version history to settle that, and it turned out to
+# be one result under three names; the cause is unexplained and is not asserted. The
+# -8.191 is the lead's published headline number. (A third duplicated
 # content in that directory is the input ligand conformer under three names, which
 # is expected from one builder at one seed and is not a defect.) The two functions
 # below are why none of this can happen here.
