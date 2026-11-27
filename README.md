@@ -183,6 +183,47 @@ DrNemo-Caries-Foundry/
 
 ---
 
+## 6b. Result Naming and Provenance
+
+Three result files in `data/poses/` hold one identical set of coordinates under
+three different nominal protocols, and nothing recorded says how that happened.
+That failure is documented in `paper/negative_result_GTF-SI.md`. The files are
+kept as the evidence for it and are not regenerated or renamed. What follows is
+the convention that applies to every result written from here on.
+
+**The name comes from the run, not from a person.** `provenance.RunSpec`
+derives the output path from the target, the ligand, the protonation state, the
+seed, the exhaustiveness, the search box, and the md5 of the receptor and
+ligand input files as they are on disk. Same parameters means the same path;
+any difference means a different path. `run_docking_vina_and_vinardo` uses that
+path when the caller gives none.
+
+**The record goes inside the file.** Every result carries the full command
+line, the seed, the exhaustiveness, the box centre and size, the engine
+version, both input digests, a run identifier unique to the execution, a UTC
+timestamp, and the canonical name it should have, written as `REMARK
+PROVENANCE` records that PDBQT readers ignore. Stamping does not change the
+coordinate digest, so two runs that genuinely produced the same geometry still
+compare equal.
+
+**It is enforced.** `reserve_result_path` refuses to overwrite a result unless
+the caller asks for it. Resuming is opt-in, and an existing file is accepted
+only when its own record shows it came from the same parameters. And
+`scripts/check_result_provenance.py`, which runs in CI, fails when two distinct
+result paths share a coordinate digest without sharing a run identifier:
+
+```bash
+python3 scripts/check_result_provenance.py            # pass or fail, with reasons
+python3 scripts/check_result_provenance.py --json     # machine readable
+python3 scripts/check_result_provenance.py --no-baseline   # show the known groups too
+```
+
+`data/provenance_baseline.json` records the three groups that predate the
+convention, each with the reason it is kept. The checker reports those and
+fails on anything new. Add an entry only with a written explanation, and never
+to silence a duplicate in new output. `tests/test_result_provenance.py`
+rebuilds the original failure from scratch and shows the checker refusing it.
+
 ## 7. Getting Started
 
 ### Prerequisites

@@ -21,6 +21,8 @@ import numpy as np
 from pathlib import Path
 from typing import Dict, Any, Tuple, Optional
 
+import provenance as prov
+
 try:
     from rdkit import Chem
     from rdkit.Chem import AllChem
@@ -230,22 +232,67 @@ def run_docking_vina_and_vinardo(
     target: str = "3AIC",
     exhaustiveness: int = 16,
     cpu: int = 8,
-    out_pdbqt: Optional[str] = None
+    out_pdbqt: Optional[str] = None,
+    seed: Optional[int] = None,
+    ligand_id: Optional[str] = None,
+    protonation: str = "neutral",
+    resume: bool = False
 ) -> Dict[str, Any]:
     """
     Executes AutoDock Vina with uncompressed 28A grid, extracts Vina affinity,
     then re-scores with --score_only --scoring vinardo to get Vinardo affinity.
+
+    Naming and provenance. When out_pdbqt is not given, the output path is
+    derived from the run's own parameters by provenance.RunSpec: target,
+    ligand, protonation, seed, exhaustiveness, box, and the content of the
+    receptor and ligand files. The result carries the full command line, the
+    seed, the box, the engine version, both input digests, a run identifier
+    and a UTC timestamp, written as REMARK PROVENANCE records that PDBQT
+    readers ignore. A caller-supplied out_pdbqt is honoured, and the record
+    then names both the path written and the canonical path, so a hand-chosen
+    name is detectable by scripts/check_result_provenance.py.
+
+    Resuming. An existing file at the output path is no longer adopted
+    silently. Pass resume=True to reuse one, and it is accepted only if its
+    own provenance record shows it came from these exact parameters. That
+    check is the reason this argument exists: adopting a file written under a
+    different protocol is how a result ends up reported as something it is not.
     """
     cfg = TARGET_COORDS[target]
+    spec = prov.RunSpec.for_run(
+        target=target,
+        ligand_id=ligand_id or Path(ligand_pdbqt).stem,
+        receptor=cfg["receptor"],
+        ligand=ligand_pdbqt,
+        box_center=cfg["center"],
+        box_size=cfg["size"],
+        exhaustiveness=exhaustiveness,
+        seed=seed,
+        protonation=protonation,
+    )
+    caller_chose_path = out_pdbqt is not None
     if out_pdbqt is None:
-        out_pdbqt = ligand_pdbqt.replace(".pdbqt", f"_{target}_docked.pdbqt")
+        out_pdbqt = str(spec.result_path(Path(ligand_pdbqt).parent))
 
     cx, cy, cz = cfg["center"]
     sx, sy, sz = cfg["size"]
 
-    # Check if pose already exists and is valid (Resume-capable / Idempotent)
+    # Reuse an existing pose only on request, and only if it says it is this run
     vina_score = None
-    if os.path.exists(out_pdbqt) and os.path.getsize(out_pdbqt) > 100:
+    if resume and os.path.exists(out_pdbqt) and os.path.getsize(out_pdbqt) > 100:
+        record = prov.read_record(out_pdbqt)
+        if record is None:
+            raise RuntimeError(
+                f"{out_pdbqt} exists but carries no provenance record, so it "
+                f"cannot be shown to be the output of this run. Delete it, or "
+                f"dock to a path derived from the parameters you mean."
+            )
+        if record.get("spec_id") != spec.spec_id():
+            raise RuntimeError(
+                f"{out_pdbqt} was produced by a different run: its record says "
+                f"spec {record.get('spec_id')}, these parameters are "
+                f"{spec.spec_id()}. Refusing to report it as this one."
+            )
         with open(out_pdbqt, "r", encoding="utf-8") as f:
             for line in f:
                 if line.startswith("REMARK VINA RESULT:"):
@@ -254,6 +301,7 @@ def run_docking_vina_and_vinardo(
 
     # 1. Dock with Vina scoring if not already present
     if vina_score is None:
+        prov.reserve_result_path(out_pdbqt, overwrite=True)
         cmd_vina = [
             get_vina_path(),
             "--receptor", cfg["receptor"],
@@ -264,9 +312,16 @@ def run_docking_vina_and_vinardo(
             "--exhaustiveness", str(exhaustiveness),
             "--out", out_pdbqt
         ]
+        if seed is not None:
+            cmd_vina += ["--seed", str(seed)]
         res_vina = subprocess.run(cmd_vina, capture_output=True, text=True)
         if res_vina.returncode != 0:
             raise RuntimeError(f"Vina docking failed: {res_vina.stderr}")
+
+        # Record what produced this file, inside the file, before anything reads it
+        prov.stamp(out_pdbqt, prov.build_record(
+            spec, cmd_vina, engine=prov.engine_version(get_vina_path()),
+            written_path=out_pdbqt))
 
         # Parse best Vina affinity from output pose
         with open(out_pdbqt, "r", encoding="utf-8") as f:
@@ -344,6 +399,10 @@ def run_docking_vina_and_vinardo(
         "vinardo_kcal": vinardo_score,
         "out_pdbqt": out_pdbqt,
         "pose_sha256": pose_sha,
+        "spec_id": spec.spec_id(),
+        "canonical_name": spec.canonical_name(),
+        "path_chosen_by_caller": caller_chose_path,
+        "seed": seed,
         "ss_bond_angstrom": ss_dist
     }
 
