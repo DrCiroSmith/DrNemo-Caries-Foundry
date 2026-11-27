@@ -1,0 +1,5 @@
+# Nothing produced by a run belongs in the repository.
+receptor/
+out/
+poses/
+__pycache__/
