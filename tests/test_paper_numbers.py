@@ -559,19 +559,32 @@ def test_the_paper_states_the_counts_the_script_actually_emits():
     """The paper quotes four figures about its own provenance script.
 
     They were 389, 348, 41 and 25 while the script emitted 391, 346, 45 and 26.
-    A stale self-description is the easiest claim in a paper to check and the
-    easiest to leave rotting, so it is checked here against a live run.
+    Those four were not invented: the script emits them at ce8242c, the commit
+    the draft that quoted them accompanied, and they went stale at f82bc3a,
+    which added checks. The script is deterministic, verified by three
+    byte-identical consecutive runs at one commit, so a stale self-description
+    is the easiest claim in a paper to check and the easiest to leave rotting.
+    An earlier version of this test only asked whether each live figure
+    appeared somewhere in the paper, which a paper stating both the current and
+    the stale counts would have passed. It now reads the four numbers out of
+    the sentence that describes the current version.
     """
     emitted, recomputed, recorded, discrepancies = _script_summary()
     paper = PAPER.read_text(encoding="utf-8")
-    for value, what in ((emitted, "values emitted"),
-                        (recomputed, "recomputed from primary data"),
-                        (recorded, "read from recorded runs"),
-                        (discrepancies, "failed cross-checks")):
-        assert re.search(rf"(?<![\d.]){value}(?![\d.])", paper), (
-            f"the script reports {value} {what} and the paper does not state "
-            f"that number anywhere, so its account of its own provenance is "
-            f"stale")
+    sentence = re.search(
+        r"it emits (\d+) values, of which (\d+) are recomputed from primary data "
+        r"and (\d+) are read from recorded runs and labelled as such, alongside "
+        r"(\d+) failed cross-checks",
+        paper)
+    assert sentence, (
+        "the paper no longer carries the sentence that states the provenance "
+        "script's four counts in the expected form, so this guard cannot read "
+        "them; restore the wording or rewrite this test deliberately")
+    stated = tuple(int(g) for g in sentence.groups())
+    assert stated == (emitted, recomputed, recorded, discrepancies), (
+        f"the paper states {stated} as the script's current output and a live "
+        f"run gives {(emitted, recomputed, recorded, discrepancies)}, so its "
+        f"account of its own provenance is stale")
 
 
 def _benchmark_rows():
@@ -663,3 +676,32 @@ def test_the_benchmark_table_does_not_disagree_with_the_ledger():
     assert checked >= 12, (
         f"only {checked} cells were compared against the ledger, so this test "
         "is not covering the table it is meant to guard")
+
+
+def test_the_documents_partition_the_ledger_the_way_the_ledger_does():
+    """260 rows are 220 designs, one naive control and 39 scrambled controls.
+
+    The paper called all 221 non-scrambled rows designed, which counts the
+    naive control `naive_baseline_CRRRWWRRRRC` among the designs, while the
+    README states the partition correctly. Both documents describe the same
+    file, so they cannot disagree about what is in it.
+    """
+    import csv
+    with (REPO_ROOT / "data" / "contenders_ledger.csv").open(encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+    scrambled = [r for r in rows if r["falsification_status"] == "SCRAMBLED_NULL_CONTROL"]
+    naive = [r for r in rows if r["contender_id"].startswith("naive_baseline")]
+    designed = len(rows) - len(scrambled) - len(naive)
+    assert (len(rows), len(scrambled), len(naive), designed) == (260, 39, 1, 220), (
+        f"the ledger now holds {len(rows)} rows, {len(scrambled)} scrambled "
+        f"controls, {len(naive)} naive controls and {designed} designs, so the "
+        f"partition quoted in the paper and the README needs restating")
+    paper = PAPER.read_text(encoding="utf-8")
+    assert "221 designed" not in paper, (
+        "the paper calls 221 rows designed, which counts the naive control "
+        "among the designs; the non-scrambled set is 220 designs plus that "
+        "control")
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    assert "220 design" in readme, (
+        "the README no longer states the 220 design partition that the ledger "
+        "holds")
