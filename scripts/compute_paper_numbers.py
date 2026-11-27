@@ -21,10 +21,13 @@ Provenance tags used in the output and in the manuscript:
          artefact and key are named. This script checks it for internal
          consistency but does not re-derive it.
 
-The script also cross-checks the artefacts against each other and prints any
-disagreement under DISCREPANCIES. A disagreement is not a rounding note: it
-means two committed files state different values for the same quantity, and the
-manuscript has to say so rather than pick one.
+The script also cross-checks the artefacts against each other and prints every
+failed check under DISCREPANCIES. A failed check is not a rounding note. It is
+one of three things: two committed files state different values for the same
+quantity; a file's own stated interpretation is contradicted by the coordinates
+in that same file; or a structural property of the inputs makes a reported
+comparison unsound. In all three cases the manuscript has to say so rather than
+pick a value and move on. Checks that pass are printed inline, not here.
 """
 import collections
 import hashlib
@@ -961,8 +964,114 @@ def main():
             note("the pH 7.2 arm is the campaign pose, not a run of its own, so the pH "
                  "shift is the difference between a reused file and a fresh run")
 
+    # --------------------------------- the site, the numbering, and cyclisation
+    heading("21. The docking site, the receptor numbering, and the one controlled "
+            "test of cyclisation")
+    print("    Vina's scoring function has no electrostatic term (steric, hydrophobic\n"
+          "    and hydrogen bonding only, hydrogens not scored explicitly, 8 A cutoff).\n"
+          "    These numbers establish what was stripped from the receptor, that the two\n"
+          "    receptor files are one structure under two numberings, and what the linear\n"
+          "    control did against the macrocycle it was meant to lose to.")
+
+    def pdbqt_rows(path):
+        rows = []
+        for l in Path(path).read_text().splitlines():
+            if l.startswith(("ATOM", "HETATM")):
+                try:
+                    q = float(l[70:76])
+                except (ValueError, IndexError):
+                    q = 0.0
+                rows.append((l[12:16].strip(), l[17:20].strip(), int(l[22:26]),
+                             round(float(l[30:38]), 3), round(float(l[38:46]), 3),
+                             round(float(l[46:54]), 3), q))
+        return rows
+
+    rec_pdb_path = RECEPTORS / "3AIC_receptor.pdb"
+    rec_pq_path = RECEPTORS / "3AIC_receptor.pdbqt"
+    if rec_pdb_path.exists() and rec_pq_path.exists():
+        for name in ("3AIC_receptor.pdb", "3AIC_receptor.pdbqt"):
+            het = sum(1 for l in (RECEPTORS / name).read_text().splitlines()
+                      if l.startswith("HETATM"))
+            emit("R", f"{name}: HETATM records", het, f"demo_data/receptors/{name}")
+        if all(sum(1 for l in (RECEPTORS / n).read_text().splitlines()
+                   if l.startswith("HETATM")) == 0
+               for n in ("3AIC_receptor.pdb", "3AIC_receptor.pdbqt")):
+            note("both receptor files carry no heteroatom records, so every non-protein "
+                 "atom was removed before docking: any metal, all ordered water and the "
+                 "crystallographic ligand")
+
+        rp, rq = pdbqt_rows(rec_pdb_path), pdbqt_rows(rec_pq_path)
+        q_by_xyz = {(r[3], r[4], r[5]): r for r in rq}
+        offs = collections.Counter(r[2] - q_by_xyz[(r[3], r[4], r[5])][2]
+                                   for r in rp if (r[3], r[4], r[5]) in q_by_xyz)
+        matched = sum(offs.values())
+        emit("R", "pdb atoms whose coordinates also appear in the docked pdbqt",
+             f"{matched} of {len(rp)}", "this script")
+        emit("R", "residue-number offset, analysis pdb minus docked pdbqt",
+             ", ".join(f"{k} ({v} atoms)" for k, v in offs.most_common(3)), "this script")
+        if len(offs) == 1 and matched == len(rp):
+            # a check that PASSES, so it is printed here and not under DISCREPANCIES
+            print("    CHECK PASSES: the analysis receptor and the docked receptor are one\n"
+                  "    structure in one frame under two numberings, offset by a single\n"
+                  "    constant, so geometry measured on the analysis file applies to what\n"
+                  "    was docked.")
+
+        native = REPO / "data" / "poses" / "3AIC_native_acarbose_docked.pdbqt"
+        if native.exists():
+            lig = pdbqt_best_mode(native)
+            cen = [sum(a[i] for a in lig) / len(lig) for i in (1, 2, 3)]
+            emit("R", "redocked acarbose best-mode centroid",
+                 " ".join(f"{c:.2f}" for c in cen), "this script")
+            off = offs.most_common(1)[0][0] if offs else 0
+            # heavy atoms only: Vina does not score hydrogens explicitly, and a
+            # polar hydrogen can reach into a shell its residue's heavy atoms do not
+            heavy = [r for r in rq if not r[0].startswith("H")]
+            for radius in (8.0, 12.0):
+                near = [r for r in heavy if math.dist(cen, r[3:6]) <= radius]
+                res = {(r[1], r[2]) for r in near}
+                acid = sorted(n for t, n in res if t in ("ASP", "GLU"))
+                base = sorted(n for t, n in res if t in ("ARG", "LYS"))
+                emit("R", f"within {radius:.0f} A of that centroid: acidic / basic residues, "
+                     f"net formal charge", f"{len(acid)} / {len(base)} / {len(base)-len(acid):+d}",
+                     "this script")
+                if radius == 8.0:
+                    emit("R", "those acidic residues, in the analysis numbering",
+                         ", ".join(f"{t}{n + off}" for t, n in sorted(res, key=lambda r: r[1])
+                                   if t in ("ASP", "GLU")), "this script")
+
+    print()
+    for label, fname in (("linearised control SPHWRPWHS", "control_linear_SPHWRPWHS_3aic.pdbqt"),
+                         ("cyclic parent CPHWRPWHC", "contender_g01_CPHWRPWHC_3aic.pdbqt"),
+                         ("cyclic lead CAHWRPWHC", "contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt")):
+        f = REPO / "data" / "poses" / fname
+        if not f.exists():
+            continue
+        tors = next((int(l.split()[1]) for l in f.read_text().splitlines()
+                     if l.startswith("TORSDOF")), None)
+        emit("R", f"{label}: score / heavy atoms / active torsions",
+             f"{pdbqt_score(f)} / {len(pdbqt_best_mode(f))} / {tors}", f"data/poses/{fname}")
+    lin = REPO / "data" / "poses" / "control_linear_SPHWRPWHS_3aic.pdbqt"
+    cyc = REPO / "data" / "poses" / "contender_g01_CPHWRPWHC_3aic.pdbqt"
+    if lin.exists() and cyc.exists():
+        adv = pdbqt_score(cyc) - pdbqt_score(lin)
+        emit("R", "linear advantage over the macrocycle, kcal/mol", round(adv, 3), "this script")
+        if adv > 0:
+            note("the linearised control outscores the macrocycle it was meant to lose to, "
+                 "at the same heavy-atom count and the same exhaustiveness, while carrying "
+                 "35 active torsions against the macrocycle's 15; Vina's only entropy-like "
+                 "term penalises rotatable bonds, so the penalty should have run the other "
+                 "way, and cyclisation is this project's central design premise")
+
+    for label, fname in (("pH 7.2 neutral ligand", "disproof_explicit_pH72_neutral_CAHWRPWHC.pdbqt"),
+                         ("pH 5.2 diprotonated ligand", "disproof_explicit_pH52_diprotonated_CAHWRPWHC.pdbqt")):
+        f = REPO / "data" / "poses" / fname
+        if f.exists():
+            rows = pdbqt_rows(f)
+            emit("R", f"{label}: atoms / summed partial charge",
+                 f"{len(rows)} / {sum(r[6] for r in rows):+.3f}", f"data/poses/{fname}")
+
     # ------------------------------------------------- tally
-    heading("21. Battery tally")
+    heading("22. Battery tally")
     for cls, n in sorted(disproof["classification_summary"].items()):
         emit("D", f"angles classified {cls}", n, "disproof classification_summary")
     emit("R", "angles in the report", len(disproof["angles"]), "this script")
