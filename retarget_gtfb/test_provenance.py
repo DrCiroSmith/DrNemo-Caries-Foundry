@@ -4,11 +4,17 @@ Tests for result naming and provenance.
 
 Why this file exists
 --------------------
-The repository this package corrects holds eight pose filenames over five distinct
-results: one GTF-SI result saved under three names, one 3AIC result under three, and
-one alpha-amylase result under two. The files carry no seed, no command line, no run
-id and no timestamp, so nothing inside them can say whether that was one run written
-three times or three runs that silently collapsed onto one.
+In the repository this package corrects, two docked results appear under five
+filenames: the 3AIC result at -8.191 kcal/mol under three names, and the 1SMD result
+at -7.343 under two. The -8.191 is the lead's published headline number. Those files
+carry no seed, no command line, no run id and no timestamp, so nothing inside them
+can say whether that was one run written several times or several runs that silently
+collapsed onto one.
+
+A third duplicated content in that directory is the input ligand conformer under
+three names. That one is expected, because one builder at one seed gives one file,
+and it is not a defect. The distinction between the benign case and the two real
+ones cannot be made from the files, which is exactly the problem.
 
 These tests are the guarantee that the same thing cannot happen in this package. The
 central one, test_real_repository_duplicates_are_caught, takes the actual duplicated
@@ -390,3 +396,62 @@ def test_the_real_ledger_size_slope_is_small_but_not_zero():
     # the 2-heavy-atom mismatch between the lead and null A is worth this much
     assert abs(2 * res["slope_kcal_per_heavy_atom"]) < 0.15, (
         "if this ever exceeds the claimed lead-null gap, size alone explains the gap")
+
+
+def test_the_duplication_count_is_pinned():
+    """Pin the reconciled figures, because I got this arithmetic wrong once.
+
+    I first reported eight filenames over five distinct results. The eight filenames
+    cover three duplicated contents, of which only two are docked results, and those
+    two sit under five filenames. This test fixes the numbers so neither the protocol
+    nor the manuscript can drift from them.
+    """
+    poses = REPO_ROOT / "data" / "poses"
+    if not poses.is_dir():
+        pytest.skip("data/poses is not present in this checkout")
+
+    by: dict[str, list[Path]] = {}
+    for f in sorted(poses.glob("*.pdbqt")):
+        by.setdefault(hashlib.sha256(f.read_bytes()).hexdigest(), []).append(f)
+    dups = {h: v for h, v in by.items() if len(v) > 1}
+    if not dups:
+        pytest.skip("data/poses no longer holds one content under several names")
+
+    docked, inputs = [], []
+    for h, group in dups.items():
+        text = group[0].read_text(errors="replace")
+        (docked if "REMARK VINA RESULT" in text else inputs).append(group)
+
+    assert len(by) == 1239, f"distinct contents changed: {len(by)}"
+    assert sum(len(v) for v in by.values()) == 1244
+    assert len(dups) == 3, "three contents appear under more than one name"
+    assert len(docked) == 2, "only two of the three duplicated contents are docked results"
+    assert len(inputs) == 1, "the third is an input conformer, which is benign"
+    assert sum(len(g) for g in docked) == 5, "the two docked results sit under five names"
+    # and the headline number is one of them
+    affinities = set()
+    for group in docked:
+        for line in group[0].read_text(errors="replace").splitlines():
+            if line.startswith("REMARK VINA RESULT:"):
+                affinities.add(float(line.split()[3]))
+                break
+    assert -8.191 in affinities, "the lead's published 3AIC number is one of the duplicates"
+
+
+def test_an_input_conformer_duplicate_is_told_apart_from_a_docked_one(tmp_path):
+    """The benign case and the real one must be distinguishable by content, not by name."""
+    conformer = ("ATOM      1  N   CYS A   1       0.0  0.0  0.0  0.00  0.00  -0.3 N\n"
+                 "TORSDOF 15\n")
+    pose = ("MODEL 1\nREMARK VINA RESULT:    -8.191      0.000      0.000\n"
+            "ATOM      1  N   CYS A   1       0.0  0.0  0.0  0.00  0.00  -0.3 N\n"
+            "ENDMDL\n")
+    for name in ("a.pdbqt", "b.pdbqt", "c.pdbqt"):
+        (tmp_path / name).write_text(conformer)
+    for name in ("d.pdbqt", "e.pdbqt"):
+        (tmp_path / name).write_text(pose)
+
+    res = an.audit_pose_directory(tmp_path)
+    assert res["contents_under_more_than_one_name"] == 2
+    docked = [names for h, names in res["detail"].items()
+              if "REMARK VINA RESULT" in (tmp_path / names[0]).read_text()]
+    assert len(docked) == 1 and len(docked[0]) == 2

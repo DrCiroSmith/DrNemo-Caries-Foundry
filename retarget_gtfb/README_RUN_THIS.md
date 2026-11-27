@@ -112,11 +112,17 @@ without running anything.
 
 ## Why you cannot end up with one result under three names
 
-Your repository currently holds eight pose filenames over five distinct results: one
-GTF-SI result saved under three names, one 3AIC result under three, and one
-alpha-amylase result under two. The lead CAHWRPWHC is in all three groups. None of
-those files records a seed, a command line or a time, so there is no way to tell from
-them whether that was one run saved three times or three runs that collapsed onto one.
+Of the 1244 pose files in your `data/poses/`, 1239 hold distinct content. Two docked
+results sit under five filenames: your 3AIC result at -8.191 kcal/mol under three
+names, and your 1SMD result at -7.343 under two. The -8.191 is your headline number.
+None of those files records a seed, a command line or a time, so there is no way to
+tell from them whether each was one run saved several times or several runs that
+collapsed onto one.
+
+A third content in that folder also appears under three names, but it is the input
+ligand conformer rather than a docked pose, and one builder at one seed giving one
+file is expected. That one is untidy, not wrong. The point is that you cannot tell
+the two cases apart without opening the files, and nothing in them helps you.
 
 Nothing in this package can do that, and the reason is worth a paragraph because it is
 the part you cannot check by reading the output.
@@ -145,7 +151,7 @@ identifier is reused, it writes the report and then exits non-zero with a banner
 cannot miss. `python3 run_docking.py --check-naming` proves the scheme works:
 eighteen checks, about a second, no Vina and no pytest, and its last line reports what
 the duplicate-content check finds in your existing `data/poses/`. The full suite of
-thirty-eight is `python3 -m pytest test_provenance.py -q`, which additionally takes
+forty is `python3 -m pytest test_provenance.py -q`, which additionally takes
 the duplicated files out of `data/poses/` and shows the check catching them; it needs
 pytest, so `RUN_ME.sh` runs it only if you have it and never blocks the docking on it.
 Either way the gate runs before the overnight job, not after.

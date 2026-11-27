@@ -587,11 +587,15 @@ def build_jobs(boxes: dict, tiers: list[int]) -> list[dict]:
 # --------------------------------------------------------------------------- #
 # Naming
 #
-# The repository this package corrects holds one docking result under three
-# filenames at GTF-SI, a second under three at 3AIC and a third under two at
-# alpha-amylase: eight names over five distinct results, with nothing inside any
-# of the files to say which run produced it. The two functions below are why that
-# cannot happen here.
+# In the repository this package corrects, two docked results appear under five
+# filenames: the 3AIC result at -8.191 kcal/mol under three names, and the 1SMD
+# result at -7.343 under two. Nothing inside any of those files records a seed, a
+# command line, a run id or a time, so from the files alone there is no way to say
+# whether that was one run saved several times or several runs that collapsed onto
+# one. The -8.191 is the lead's published headline number. (A third duplicated
+# content in that directory is the input ligand conformer under three names, which
+# is expected from one builder at one seed and is not a defect.) The two functions
+# below are why none of this can happen here.
 #
 # identity()  the scientific identity of a run: every parameter that can change
 #             the number. Resume and deduplication both key on this, so the same
@@ -727,7 +731,7 @@ def naming_self_check() -> int:
         print(f"\n{failed} naming checks failed. Not docking.")
         return 1
     print(f"\nAll {len(checks)} naming checks passed. "
-          f"Run test_provenance.py for the full set of 38 if pytest is available.")
+          f"Run test_provenance.py for the full set of 40 if pytest is available.")
     return 0
 
 
@@ -810,8 +814,8 @@ def main() -> int:
             "identity_fields": list(IDENTITY_FIELDS),
             "path_stem_rule": "t<tier>__<identity fields>__L<ligand content tag>, "
                               "non-alphanumerics replaced, hashed past 150 characters",
-            "why": "The repository this package corrects holds eight pose filenames over "
-                   "five distinct results, with nothing inside the files to attribute "
+            "why": "In the repository this package corrects, two docked results appear "
+                   "under five filenames and nothing inside those files can attribute "
                    "them. Every path here is derived from the run's own parameters and "
                    "the content of its two input files, so no two runs can share one.",
         },

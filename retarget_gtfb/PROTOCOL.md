@@ -229,14 +229,28 @@ invalidates the comparison, so there is none.
 
 ### 4.1 Naming and provenance of every result
 
-The repository this package corrects holds eight pose filenames over five distinct
-results: one GTF-SI result saved under three names, one 3AIC result under three, and
-one alpha-amylase result under two. The lead CAHWRPWHC appears in all three groups.
-Nothing inside any of those files records a seed, a command line, a run identifier or
-a time, so from the files alone there is no way to tell whether that was one run
-written three times or three runs that collapsed onto one. That ambiguity is not
-recoverable after the fact, which is why it is designed out here rather than audited
-for afterwards.
+Of the 1244 pose files in `data/poses/`, 1239 hold distinct content. Three contents
+appear under more than one name, and they are not equivalent:
+
+| Content | Names | What it is |
+|---|---|---|
+| `27f5671b` | 3 | A docked result at 3AIC, nine modes, mode 1 at -8.191 kcal/mol. This is the lead's published headline number. |
+| `77827776` | 2 | A docked result at 1SMD, nine modes, mode 1 at -7.343 kcal/mol. |
+| `56e034b2` | 3 | The input ligand conformer, with no `MODEL` records and no `REMARK VINA RESULT` lines. Not a docking result. |
+
+So **two docked results appear under five filenames.** The third group is benign: one
+builder at one ETKDG seed gives one file, and three names for it is untidy rather
+than wrong. An earlier revision of this section counted all eight filenames as
+covering five distinct results, which was wrong arithmetic on my part, and it also
+treated the benign group as part of the defect. Corrected here, and reconciled with
+the independent repository-wide count made in the manuscript work.
+
+The defect that remains is the two docked groups. Nothing inside those files records
+a seed, a command line, a run identifier or a time, so from the files alone there is
+no way to tell whether each was one run saved several times or several runs that
+collapsed onto one, and no way to tell the benign case from the real ones without
+inspecting the contents by hand. That ambiguity is not recoverable after the fact,
+which is why it is designed out here rather than audited for afterwards.
 
 - **Every output path is derived, never chosen.** The stem of every file a run writes
   is `t<tier>` followed by the run's kind, ligand identifier, receptor identifier,
@@ -291,6 +305,27 @@ claim in the existing campaign cannot be adjudicated without it.
    Without it, a p value above 0.05 reads as "no effect" when what it means is "no
    power", and those are different claims. Reported for every null test, both
    pairings, both summary statistics.
+
+   **What a larger null would not buy.** The obvious remedy is to enlarge the null,
+   and it does not work here, which is worth stating before anyone spends a week on
+   it. The n in (k+1)/(n+1) bounds the smallest p attainable, so a larger null does
+   lift that bound. But the test itself asks whether the candidate falls in the most
+   extreme 5 percent of its own permutation distribution, and that boundary is a
+   property of the distribution's spread, not of its size. The existing null has a
+   standard deviation of 0.470 kcal/mol, so the 5 percent boundary sits about
+   **0.773 kcal/mol** better than the null mean and stays there however many
+   permutations are drawn. A larger null estimates that boundary more precisely; it
+   does not move it. The claimed 0.15 kcal/mol is **0.32 standard deviations** from
+   the null mean, and in the existing data it falls on the wrong side: the lead's
+   -8.191 kcal/mol is 0.152 kcal/mol **worse** than the null mean of -8.343, with
+   59 percent of null members scoring at least as well. So the honest statement is
+   not that the effect is small and the sample too small to see it. It is that an
+   advantage of this size is not distinguishable from sequence-order noise under this
+   design at any sample size, and that the remedy is a different measurement, not
+   more of the same one. `analyze.py` prints this as
+   `power_by_best.asymptotic_requirement_kcal` and
+   `effect_in_null_terms.advantage_in_null_sd` on every null test, so the sentence in
+   the paper is read off the output rather than reasoned about afresh.
 2. **Score against ligand size.** Vina's reported affinity grows with heavy-atom
    count. Regressed over all 260 contenders in the existing ledger, which span 60 to
    118 heavy atoms, the slope is **-0.0234 kcal/mol per heavy atom**
@@ -335,8 +370,8 @@ after it arrives.
 | 8 | **Box-size effect.** Score and rank change between the 28 A and tight boxes. | Reported, no threshold | A reordering of lead against controls between boxes means the original ranking was an artefact of box size. |
 | 9 | **Off-target selectivity.** Delta delta G against 1SMD and 1LZ1. | Must exceed about 1 kcal/mol to be discussed at all | Vina's own standard error on its reference set is around 2.85 kcal/mol. Differences well inside that are not selectivity. |
 | 10 | **Geometry integrity.** Cys1 SG to CysN SG distance in every built ligand. | 2.00 to 2.15 A | Outside that range the disulfide is not a disulfide and the molecule docked was not the molecule intended. |
-| 11 | **Provenance integrity.** No pose content under more than one run, no path holding more than one content, no reused run identifier. | Zero of each | Any one of them means two results cannot be told apart, so no number in the set can be attributed. This gate runs before any other is read and the analysis exits non-zero when it fails. It is the gate the existing campaign has already failed: eight pose filenames over five distinct results. |
-| 12 | **Power.** Minimum detectable effect from the null's own size and spread, against the difference being claimed. | The claimed difference must exceed the minimum detectable effect before any verdict is read | Where the claimed difference is below the floor, the correct word is uninformative, not negative. A test that could not have found an effect of the claimed size has not ruled one out. On the existing 39-member null the floor is 1.035 kcal/mol against a claimed 0.15, so this gate decides how the result is written up whichever way the p value falls. |
+| 11 | **Provenance integrity.** No pose content under more than one run, no path holding more than one content, no reused run identifier. | Zero of each | Any one of them means two results cannot be told apart, so no number in the set can be attributed. This gate runs before any other is read and the analysis exits non-zero when it fails. It is the gate the existing campaign has already failed: two docked results under five filenames, one of them the lead's headline -8.191. |
+| 12 | **Power.** Minimum detectable effect from the null's own size and spread, against the difference being claimed. | The claimed difference must exceed the minimum detectable effect before any verdict is read | Where the claimed difference is below the floor, the correct word is uninformative, not negative. A test that could not have found an effect of the claimed size has not ruled one out. On the existing 39-member null the floor is 1.035 kcal/mol against a claimed 0.15, so this gate decides how the result is written up whichever way the p value falls. A second, harder floor is reported beside it: the 5 percent boundary of the null's own spread, 0.773 kcal/mol at a null standard deviation of 0.470, which no sample size moves. A claimed difference below that boundary is to be reported as outside this design's resolution rather than as a small effect awaiting more data. |
 
 ### What a positive result would and would not establish
 

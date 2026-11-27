@@ -254,11 +254,64 @@ def minimum_detectable_effect(null: list[float], alpha: float = 0.05) -> dict:
     out["minimum_detectable_effect_in_null_sd"] = (
         round((float(arr.mean()) - threshold) / float(arr.std(ddof=1)), 2)
         if arr.std(ddof=1) > 0 else None)
+    # What a larger null would and would not buy. This test asks whether the candidate
+    # is extreme within its own permutation distribution, so the requirement converges
+    # on the alpha-quantile of that distribution and goes no further. Raising n tightens
+    # the quantile estimate; it does not move the quantile.
+    sd = float(arr.std(ddof=1))
+    z_alpha = 1.6449  # one-sided normal quantile at 0.05, for the large-n limit
+    out["asymptotic_requirement_in_null_sd"] = z_alpha
+    out["asymptotic_requirement_kcal"] = round(z_alpha * sd, 3) if sd > 0 else None
+    out["what_a_larger_null_buys"] = (
+        f"At any n this test asks whether the candidate falls in the most extreme "
+        f"{alpha:.0%} of its own permutation distribution. With a null spread of "
+        f"{sd:.3f} kcal/mol that boundary sits about {z_alpha * sd:.3f} kcal/mol better "
+        f"than the null mean. A larger null sharpens the estimate of that boundary; it "
+        f"does not move it. An advantage below roughly {z_alpha * sd:.2f} kcal/mol "
+        f"therefore cannot be made significant by this test at any sample size, and "
+        f"enlarging the null is not the remedy.")
     out["verdict"] = (
         f"with n = {n} at alpha = {alpha}, the observation must score at or below "
         f"{threshold:.3f} kcal/mol, which is {float(arr.mean()) - threshold:.3f} kcal/mol "
         f"better than the null mean. An advantage smaller than that cannot be detected "
         f"by this test at this n, however real it is.")
+    return out
+
+
+def effect_in_null_terms(observed: float, null: list[float]) -> dict:
+    """Where an observed score sits inside the null distribution, in SD and percentile.
+
+    Reported because an effect that sits in the middle of its own null is not a small
+    significant effect waiting for a bigger sample; it is not an effect this design can
+    ever call one.
+    """
+    if len(null) < 3:
+        return {"reason": "too few null members"}
+    arr = np.asarray(null, dtype=float)
+    mean, sd = float(arr.mean()), float(arr.std(ddof=1))
+    advantage = mean - observed  # positive means the candidate scores better
+    pct = 100.0 * float((arr <= observed).sum()) / arr.size
+    out = {
+        "observed_kcal": round(observed, 3),
+        "null_mean_kcal": round(mean, 3),
+        "null_sd_kcal": round(sd, 3),
+        "advantage_over_null_mean_kcal": round(advantage, 3),
+        "advantage_in_null_sd": round(advantage / sd, 2) if sd > 0 else None,
+        "percentile_of_the_null_the_observation_sits_at": round(pct, 1),
+        "percent_of_null_members_scoring_at_least_as_well": round(pct, 1),
+    }
+    if sd > 0 and advantage / sd < 1.6449:
+        out["reading"] = (
+            f"The observation sits {advantage / sd:.2f} null standard deviations from the "
+            f"null mean, inside the bulk of its own permutation distribution. The 5 percent "
+            f"boundary is 1.64 SD. No sample size moves that boundary, so this is not a "
+            f"small effect awaiting a larger null: it is an effect this design cannot "
+            f"distinguish from sequence order noise at all.")
+    else:
+        out["reading"] = (
+            f"The observation sits {advantage / sd:.2f} null standard deviations from the "
+            f"null mean, outside the 1.64 SD boundary that a one-sided test at 0.05 "
+            f"requires in the large-sample limit.")
     return out
 
 
@@ -369,13 +422,17 @@ def self_test() -> int:
 # --------------------------------------------------------------------------- #
 # Provenance audit
 #
-# The repository this package corrects holds eight pose filenames over five
-# distinct results: one GTF-SI result under three names, one 3AIC result under
-# three, one alpha-amylase result under two. Nothing inside any of those files
-# records a seed, a command line, a run id or a time, so there is no way to tell
-# from the files whether that was one run saved three times or three runs that
-# collapsed onto one. This audit exists so that the same question can always be
-# answered here, from the two files he sends back and nothing else.
+# In the repository this package corrects, two docked results appear under five
+# filenames: the 3AIC result at -8.191 kcal/mol under three names, and the 1SMD
+# result at -7.343 under two. The -8.191 is the lead's published headline number.
+# Nothing inside those files records a seed, a command line, a run id or a time, so
+# from the files alone there is no way to tell whether that was one run saved
+# several times or several runs that collapsed onto one. A third duplicated content
+# in that directory is the input ligand conformer under three names, which is
+# expected from one builder at one seed and is not a defect; the distinction matters
+# and the files cannot make it, which is the point. This audit exists so that the
+# question can always be answered here, from the two files he sends back and
+# nothing else.
 # --------------------------------------------------------------------------- #
 REQUIRED_PROVENANCE = ("run_id", "identity", "path_stem", "vina_command_string",
                        "dock_seed", "exhaustiveness", "box_centre", "box_size",
@@ -432,7 +489,8 @@ def provenance_audit(rows: list[dict]) -> dict:
             f"run. Byte-identical coordinates from runs that differ in seed, box, "
             f"receptor or ligand mean the runs were not independent, whatever the record "
             f"says. This is the failure pattern already present in data/poses/ in this "
-            f"repository and it must be resolved before any of these rows is used.")
+            f"repository, where two docked results sit under five filenames, and it must "
+            f"be resolved before any of these rows is used.")
 
     # 2. one name under more than one content: the resume logic failed
     by_stem: dict[str, set] = {}
@@ -684,6 +742,9 @@ def main() -> int:
                 entry[f"power_by_{stat}"] = minimum_detectable_effect(list(null.values()))
         obs_mde = entry.get("power_by_best", {})
         obs = entry.get("by_best_across_shared_seeds", {}).get("observed")
+        if obs is not None and len(null_by_stat["best"]) >= 3:
+            entry["effect_in_null_terms"] = effect_in_null_terms(
+                obs, list(null_by_stat["best"].values()))
         if obs is not None and "minimum_detectable_effect_kcal" in obs_mde:
             observed_effect = obs_mde["null_mean_kcal"] - obs
             entry["observed_effect_kcal"] = round(observed_effect, 3)
@@ -1010,6 +1071,10 @@ def main() -> int:
         "vina_reference_standard_error_source": VINA_SE_SOURCE,
         "minimum_detectable_effect_kcal":
             (primary_test.get("power_by_best") or {}).get("minimum_detectable_effect_kcal"),
+        "boundary_a_larger_null_would_not_move_kcal":
+            (primary_test.get("power_by_best") or {}).get("asymptotic_requirement_kcal"),
+        "advantage_in_null_sd":
+            (primary_test.get("effect_in_null_terms") or {}).get("advantage_in_null_sd"),
     }
     exceeded = []
     if claimed is not None and claimed <= 0:
