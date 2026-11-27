@@ -462,7 +462,10 @@ def evaluate_angle3_pose_clustering() -> Dict[str, Any]:
         "provenance": PROVENANCE_COMPUTED if docked_pose.exists() else PROVENANCE_CACHED,
         "pose_file": str(docked_pose.relative_to(REPO_ROOT)) if docked_pose.exists() else None,
         "classification": "PASSED_IN_SILICO" if passed else "INCONCLUSIVE_WITHIN_NOISE",
-        "scientific_summary": f"Mode 1 demonstrates an energetic gap of Delta E = +{delta_e_top:.2f} kcal/mol relative to Mode 2, with centroid displacement of {centroid_dist_1_2:.2f} A, indicating a distinct primary binding basin."
+        "scientific_summary": f"Mode 1 scores {delta_e_top:.2f} kcal/mol better than Mode 2 while their centroids lie "
+            f"{centroid_dist_1_2:.2f} A apart and their heavy atoms differ by {rmsd_1_2:.2f} A. A gap that "
+            f"small between poses that different is degeneracy, not a basin: the ranking between them is "
+            f"not resolved by this scoring function, so no single pose can be called the binding mode."
     }
 
 
@@ -880,7 +883,12 @@ def evaluate_angle9_lysozyme_counter_screen() -> Dict[str, Any]:
 
     vina_3aic = -8.191
     selectivity_vs_lysozyme = round(vina_3aic - vina_1lz1, 3)
-    passed = vina_1lz1 > -7.50
+    # Angle 4 judges selectivity by whether the margin clears the assumed scoring
+    # error. Angle 9 used to judge it by an absolute affinity cutoff instead, so a
+    # LARGER margin here (-1.52) was called a pass while a smaller one there (-0.85)
+    # was called inconclusive. One test, applied to both.
+    ASSUMED_VINA_ERROR_KCAL = 2.85  # uncited in this repository, see Angle 4
+    resolved = abs(selectivity_vs_lysozyme) > ASSUMED_VINA_ERROR_KCAL
 
     return {
         "angle": 9,
@@ -891,8 +899,10 @@ def evaluate_angle9_lysozyme_counter_screen() -> Dict[str, Any]:
         "gtf_si_3aic_affinity_kcal": vina_3aic,
         "provenance": PROVENANCE_COMPUTED if docked_1lz1.exists() else PROVENANCE_CACHED,
         "selectivity_ddg_kcal": selectivity_vs_lysozyme,
-        "classification": "PASSED_IN_SILICO" if passed else "INCONCLUSIVE_WITHIN_NOISE",
-        "scientific_summary": f"Counter-docking against the active cleft of human salivary lysozyme (1LZ1) yielded {vina_1lz1:.2f} kcal/mol (DeltaDeltaG = {selectivity_vs_lysozyme:+.2f} kcal/mol vs 3AIC), demonstrating negligible off-target affinity against innate mucosal protective enzymes."
+        "assumed_vina_error_kcal": ASSUMED_VINA_ERROR_KCAL,
+        "ratio_delta_to_assumed_error": round(abs(selectivity_vs_lysozyme) / ASSUMED_VINA_ERROR_KCAL, 2),
+        "classification": "PASSED_IN_SILICO" if resolved else "INCONCLUSIVE_WITHIN_NOISE",
+        "scientific_summary": f"Counter-docking against the active cleft of human salivary lysozyme (1LZ1) yielded {vina_1lz1:.2f} kcal/mol, a margin of {selectivity_vs_lysozyme:+.2f} kcal/mol against 3AIC. Judged by the same test Angle 4 applies, that margin is {abs(selectivity_vs_lysozyme)/ASSUMED_VINA_ERROR_KCAL:.2f} of the assumed {ASSUMED_VINA_ERROR_KCAL} kcal/mol scoring error, so it does not resolve. Nothing here establishes low lysozyme affinity; the comparison is simply unresolved, and the error figure it is judged against is itself uncited in this work."
     }
 
 
@@ -947,7 +957,9 @@ def evaluate_angle10_linear_control() -> Dict[str, Any]:
 
     vault = _query_vault_affinity(LEAD_SEQUENCE)
     cyclic_vina = round(vault["vina_3aic"], 3) if vault else -8.191
-    cyclization_benefit_kcal = round(cyclic_vina - linear_vina, 3)
+    # Positive means the LINEAR peptide scored better, so this is the linear
+    # advantage, not a benefit of cyclisation. The old name said the opposite.
+    linear_advantage_kcal = round(cyclic_vina - linear_vina, 3)
 
     return {
         "angle": 10,
@@ -955,12 +967,12 @@ def evaluate_angle10_linear_control() -> Dict[str, Any]:
         "linear_sequence": "AHWRPWH",
         "linear_vina_3aic_kcal": linear_vina,
         "cyclic_vina_3aic_kcal": cyclic_vina,
-        "cyclization_benefit_kcal": cyclization_benefit_kcal,
+        "linear_advantage_kcal": linear_advantage_kcal,
         "rotatable_bonds_linear": 28,
         "rotatable_bonds_cyclic": 14,
         "provenance": PROVENANCE_COMPUTED if docked_linear_3aic.exists() else PROVENANCE_CACHED,
         "classification": "INCONCLUSIVE_WITHIN_NOISE",
-        "scientific_summary": f"The linear peptide docks at {linear_vina:.2f} kcal/mol against {cyclic_vina:.2f} kcal/mol for the cyclic lead, so cyclisation is worth {cyclization_benefit_kcal:+.2f} kcal/mol by this score, i.e. the floppier molecule scores {abs(cyclization_benefit_kcal):.2f} kcal/mol better. Vina under-penalises the conformational entropy that an unconstrained chain loses on binding, so this is a property of the scoring function rather than evidence against cyclisation. It also means the score cannot be used to argue that the macrocycle is the better binder. Only a measured Kd can settle that."
+        "scientific_summary": f"The linear peptide docks at {linear_vina:.2f} kcal/mol against {cyclic_vina:.2f} kcal/mol for the cyclic lead, so the linear peptide is ahead by {linear_advantage_kcal:+.2f} kcal/mol on this score, i.e. the floppier molecule scores {abs(linear_advantage_kcal):.2f} kcal/mol better. Vina under-penalises the conformational entropy that an unconstrained chain loses on binding, so this is a property of the scoring function rather than evidence against cyclisation. It also means the score cannot be used to argue that the macrocycle is the better binder. Only a measured Kd can settle that."
     }
 
 
@@ -1190,7 +1202,7 @@ def print_disproof_table(report: Dict[str, Any]):
         elif num == 9:
             metric = f"1LZ1 = {a['vina_1lz1_affinity_kcal']:.2f} kcal (DDG = {a['selectivity_ddg_kcal']:+.2f})"
         elif num == 10:
-            metric = f"Cyclic vs Linear Delta = {a['cyclization_benefit_kcal']:+.2f} kcal"
+            metric = f"Cyclic vs Linear Delta = {a['linear_advantage_kcal']:+.2f} kcal"
         elif num == 11:
             metric = f"Min E = {a['minimized_potential_energy_kj_mol']:.1f} kJ, Drift = {a['heavy_atom_drift_rmsd_angstrom']} A"
         elif num == 12:

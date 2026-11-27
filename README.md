@@ -17,7 +17,7 @@
   <a href="https://openmm.org"><img src="https://img.shields.io/badge/ForceField-OpenMM_Amber14-blueviolet.svg" alt="OpenMM Amber14"></a>
 </p>
 
-An open-source computational falsification case study and deterministic screening pipeline evaluating cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-SI (GTF-SI, gtfC gene product, UniProt P13470). Built on AutoDock Vina v1.2.7 / Vinardo empirical grid docking and OpenMM Amber14/GBn2 isolated-ligand steric minimization (200 steps), the platform demonstrates how automated negative controls (4.51 A co-crystal redocking drift, p = 0.5897 scrambled null permutation, and pH 5.2 histidine diprotonation inversion) systematically catch false-positive docking leads, No contender in the 260-row vault is corroborated: the best of them survive every in silico gate, which is not evidence of enzyme inhibition, and the leading candidate does not separate from its charge-matched scrambled nulls ($Z = +0.32$, $p = 0.5897$). All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
+An open-source computational falsification case study and screening pipeline evaluating cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-SI (GTF-SI, gtfC gene product, UniProt P13470). Built on AutoDock Vina v1.2.7 / Vinardo empirical grid docking and OpenMM Amber14/GBn2 isolated-ligand steric minimization (200 steps), the platform demonstrates how automated negative controls (4.51 A co-crystal redocking drift, p = 0.5897 scrambled null permutation, and pH 5.2 histidine diprotonation inversion) systematically catch false-positive docking leads, No contender in the 260-row vault is corroborated: the best of them survive every in silico gate, which is not evidence of enzyme inhibition, and the leading candidate does not separate from its charge-matched scrambled nulls ($Z = +0.32$, $p = 0.5897$). All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
 
 ---
 
@@ -47,7 +47,10 @@ The Foundry designs **arginine-rich cyclic disulfide macrocycles** that dock int
   </picture>
 </p>
 
-The discovery engine executes a deterministic 4-stage Python screening pipeline (`gtfb_orchestrator.py`):
+The discovery engine executes a 4-stage Python screening pipeline (`gtfb_orchestrator.py`). It is not
+deterministic: `biophysics_engine.py` invokes AutoDock Vina without `--seed`, so Vina seeds itself and
+repeated runs of the same ligand need not return the same score or pose. That is what Angle 2 measures,
+and it is why no figure here should be read as bit-reproducible:
 
 1. **Cycle Designer**: C-X-7-C scaffold with P2A hinge; evaluates 260 contenders across discovery and null controls.
 2. **Solubility Shield**: Donnan Q <= +4.0, Stephan DQ >= +1.0, 0 protease cleavage sites.
@@ -95,7 +98,7 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 | **6** | In-Silico Alanine-Scanning Mutagenesis | No residue reaches the +0.70 kcal/mol hotspot threshold; largest loss is W7A at +0.257 kcal/mol; P6A opens a trypsin site | `NO_HOTSPOT_IDENTIFIED` |
 | **7** | Explicit pH 5.2 Histidine Diprotonation | Formal charge +1 -> +3; 3AIC -7.71 vs 1SMD -7.89 kcal/mol (Delta = +0.48, slight 1SMD inversion within noise) | `INCONCLUSIVE_WITHIN_NOISE` |
 | **8** | Broad Oral Protease & Peptidase Check | Trypsin shielded (Arg5-Pro6); Trp4/Trp7 vulnerable to chymotrypsin | `AT_RISK` |
-| **9** | Additional Host Screen (RCSB 1LZ1 Lysozyme) | Human lysozyme DG = -6.67 kcal/mol (DeltaDeltaG = -1.52) | `PASSED_IN_SILICO` |
+| **9** | Additional Host Screen (RCSB 1LZ1 Lysozyme) | Human lysozyme DG = -6.67 kcal/mol (DeltaDeltaG = -1.52), which is 0.53 of the assumed 2.85 kcal/mol error that Angle 4 is judged against | `INCONCLUSIVE_WITHIN_NOISE` |
 | **10** | Linear Control vs Cyclic Macrocycle | Linear AHWRPWH (-9.25 kcal/mol) vs cyclic (-8.19 kcal/mol; Vina under-penalizes unfolded entropy) | `INCONCLUSIVE_WITHIN_NOISE` |
 | **11** | OpenMM Implicit-Solvent Relaxation Drift | Energy minimisation only, no dynamics and no temperature. Last recorded heavy-atom drift 0.92 A; not reproducible without openmm, pdbfixer and rdkit installed | `NOT_COMPUTED` here |
 | **12** | Chitosan Donnan & Stephan Acid Switch | Saliva Q = +2.05 <= +4.0; Stephan Delta Q = +1.62, which is +0.809 per histidine, so this criterion is a histidine count and not independent of the charge one | `PASSED_IN_SILICO` |

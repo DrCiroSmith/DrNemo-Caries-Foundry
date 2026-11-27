@@ -851,7 +851,7 @@ with tab_popper:
                 "Summary": a.get("scientific_summary")
             })
         st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True, hide_index=True)
-        st.markdown("**Battery Verdict:** 2 Passed in Silico | 5 Inconclusive within Noise | 1 At Risk | 1 Calibration Failed | 1 Score Reproducible but Pose Not | 1 No Hotspot | 1 Not Computed")
+        st.markdown("**Battery Verdict:** 1 Passed in Silico | 6 Inconclusive within Noise | 1 At Risk | 1 Calibration Failed | 1 Score Reproducible but Pose Not | 1 No Hotspot | 1 Not Computed")
         st.divider()
 
     col_lead, col_naive = st.columns(2)
@@ -870,7 +870,7 @@ with tab_popper:
         * **Angle 10 (Conformational Control):** Linear AHWRPWH **-9.25 kcal/mol** vs cyclic **-8.19 kcal/mol** (Vina under-penalizes unfolded entropy; `INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 11 (OpenMM Relaxation):** not computed. rdkit, openmm and pdbfixer are absent here, so no relaxation was run and no drift figure exists (`NOT_COMPUTED`).
         * **Angle 12 (Chitosan & Stephan Switch):** Net charge **+2.05 ≤ +4.0**, **ΔQ = +1.618** (`PASSED_IN_SILICO`).
-        * **Honest Verdict:** **2 Passed in Silico, 5 Inconclusive within Noise, 1 At Risk, 1 Calibration Failed, 1 Score Reproducible but Pose Not, 1 No Hotspot Identified, 1 Not Computed.** Nothing was corroborated.
+        * **Honest Verdict:** **1 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 1 Calibration Failed, 1 Score Reproducible but Pose Not, 1 No Hotspot Identified, 1 Not Computed.** Nothing was corroborated.
         """)
 
     with col_naive:

@@ -49,7 +49,9 @@
     "redocking_rmsd_angstrom": 4.51,
     "centroid_displacement_angstrom": 3.03,
     "pose_sha256": "eb2001fcc461ffef78aee622fb2ac45dbe3433eb0ff3c2b3a35922b20698e2b7",
-    "passed_calibration": true
+    "passed_calibration": false,
+    "calibration_standard_angstrom": 2.0,
+    "passed_calibration_provenance": "Recomputed from the RMSD recorded in this same file under the 2.0 A standard that falsification_engine.py applies. No docking was re-run: this field is a function of values already here, and it read true against a 4.51 A drift."
   },
   "linear_control": {
     "sequence": "SPHWRPWHS",

@@ -1,3 +1,38 @@
+> ## Provenance notice: this memo is generated prose, not a measurement
+>
+> This file was written by a general-purpose language model. `analyzer.py` sends five
+> summary numbers from `demo_data/jobs/completed/S_mutans_GtfB_Insoluble_variant_CRRAGWPRRRC.json`
+> to a chat model (`OLLAMA_MODEL`, default `llama3`) and commits the reply. Nothing in this
+> repository measured the interactions described below, and the model was not given any
+> structure. The text is kept here as a record of what was published, with the measurements
+> that contradict it.
+>
+> **Checked against `S_mutans_GtfB_Insoluble_variant_CRRAGWPRRRC.pdb`, the structure deposited
+> beside this memo, and `3AIC_receptor.pdb`:**
+>
+> - The asserted salt bridge to **Glu515 is absent**. The closest guanidinium nitrogen to a
+>   Glu515 carboxylate oxygen is **4.65 A**, and **0** nitrogen-oxygen pairs
+>   lie within 4.0 A. Contacts with **Asp477 are real**: 2 pairs within 4.0 A. So the
+>   sentence is right about one carboxylate and wrong about the other.
+> - The asserted **stacking between Trp517 and Tyr430 does not occur**. Those two rings are
+>   **12.32 A** apart, too far to sandwich a third ring, and in this pose TRP6 is 12.6 A from the Trp517 ring and 19.8 A from the Tyr430 ring.
+> - Net cationic charge at pH 6.8 is **5.0** by this repository's own `calc_net_charge_at_ph`,
+>   not the 4.0 stated below and in the job record.
+>
+> **The job record this memo was written from is simulated, and internally inconsistent:**
+>
+> - It names target `P08987`, which is GtfB (GTF-I), while the header below
+>   names GTF-SI (gtfC, P13470). One memo, two different proteins.
+> - It records `generation: 5`, but the 260-row vault in
+>   `data/foundry_contenders.sqlite` holds generations 0 to 7 only.
+> - It records a binding affinity of -8.29 kcal/mol, a value that
+>   appears nowhere in that vault, whose best score is -9.048 kcal/mol.
+> - Its pLDDT is 78.6 and the memo below states the same value, 78.6.
+>
+> **No AlphaFold, DiffDock, biosecurity screen or peptide synthesis runs anywhere in this
+> repository.** The pLDDT, iPTM, DiffDock RMSD, IGSC result and synthesis yield below have no
+> source here and should not be cited.
+
 # Clinical & Biophysical Synthesis Memo: S_mutans_GtfB_Insoluble_variant_CRRAGWPRRRC
 
 **Lead Sequence:** `CRRAGWPRRRC` (Cyclic 11-mer)  

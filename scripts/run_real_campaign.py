@@ -123,7 +123,11 @@ def worker_dock_calibration(dummy: int = 0) -> Dict[str, Any]:
         "redocking_rmsd_angstrom": rmsd,
         "centroid_displacement_angstrom": cent_dist,
         "pose_sha256": pose_sha,
-        "passed_calibration": rmsd < 5.0 and dock_res["vina_kcal"] < -7.0
+        # One redocking standard for the whole repository: 2.0 A, the convention
+        # falsification_engine.py already applies. The 5.0 A that stood here would
+        # have passed the recorded 4.51 A drift, so the repository held two
+        # standards and reported whichever one passed.
+        "passed_calibration": rmsd < 2.0 and dock_res["vina_kcal"] < -7.0
     }
 
 

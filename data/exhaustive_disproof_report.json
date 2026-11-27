@@ -103,7 +103,7 @@
       "provenance": "computed_this_run",
       "pose_file": "data/poses/contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt",
       "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "Mode 1 demonstrates an energetic gap of Delta E = +0.10 kcal/mol relative to Mode 2, with centroid displacement of 1.74 A, indicating a distinct primary binding basin."
+      "scientific_summary": "Mode 1 scores 0.10 kcal/mol better than Mode 2 while their centroids lie 1.74 A apart and their heavy atoms differ by 5.58 A. A gap that small between poses that different is degeneracy, not a basin: the ranking between them is not resolved by this scoring function, so no single pose can be called the binding mode."
     },
     {
       "angle": 4,
@@ -269,8 +269,10 @@
       "gtf_si_3aic_affinity_kcal": -8.191,
       "provenance": "computed_this_run",
       "selectivity_ddg_kcal": -1.521,
-      "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "Counter-docking against the active cleft of human salivary lysozyme (1LZ1) yielded -6.67 kcal/mol (DeltaDeltaG = -1.52 kcal/mol vs 3AIC), demonstrating negligible off-target affinity against innate mucosal protective enzymes."
+      "classification": "INCONCLUSIVE_WITHIN_NOISE",
+      "scientific_summary": "Counter-docking against the active cleft of human salivary lysozyme (1LZ1) yielded -6.67 kcal/mol, a margin of -1.52 kcal/mol against 3AIC. Judged by the same test Angle 4 applies, that margin is 0.53 of the assumed 2.85 kcal/mol scoring error, so it does not resolve. Nothing here establishes low lysozyme affinity; the comparison is simply unresolved, and the error figure it is judged against is itself uncited in this work.",
+      "assumed_vina_error_kcal": 2.85,
+      "ratio_delta_to_assumed_error": 0.53
     },
     {
       "angle": 10,
@@ -278,12 +280,12 @@
       "linear_sequence": "AHWRPWH",
       "linear_vina_3aic_kcal": -9.25,
       "cyclic_vina_3aic_kcal": -8.191,
-      "cyclization_benefit_kcal": 1.059,
       "rotatable_bonds_linear": 28,
       "rotatable_bonds_cyclic": 14,
       "provenance": "computed_this_run",
       "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "The linear peptide docks at -9.25 kcal/mol against -8.19 kcal/mol for the cyclic lead, so cyclisation is worth +1.06 kcal/mol by this score, i.e. the floppier molecule scores 1.06 kcal/mol better. Vina under-penalises the conformational entropy that an unconstrained chain loses on binding, so this is a property of the scoring function rather than evidence against cyclisation. It also means the score cannot be used to argue that the macrocycle is the better binder. Only a measured Kd can settle that."
+      "scientific_summary": "The linear peptide docks at -9.25 kcal/mol against -8.19 kcal/mol for the cyclic lead, so cyclisation is worth +1.06 kcal/mol by this score, i.e. the floppier molecule scores 1.06 kcal/mol better. Vina under-penalises the conformational entropy that an unconstrained chain loses on binding, so this is a property of the scoring function rather than evidence against cyclisation. It also means the score cannot be used to argue that the macrocycle is the better binder. Only a measured Kd can settle that.",
+      "linear_advantage_kcal": 1.059
     },
     {
       "angle": 11,
@@ -316,10 +318,10 @@
   "classification_summary": {
     "AT_RISK": 1,
     "CALIBRATION_FAILED": 1,
-    "INCONCLUSIVE_WITHIN_NOISE": 5,
+    "INCONCLUSIVE_WITHIN_NOISE": 6,
     "NOT_COMPUTED": 1,
     "NO_HOTSPOT_IDENTIFIED": 1,
-    "PASSED_IN_SILICO": 2,
+    "PASSED_IN_SILICO": 1,
     "SCORE_REPRODUCIBLE_POSE_NOT": 1
   },
   "provenance_summary": {
