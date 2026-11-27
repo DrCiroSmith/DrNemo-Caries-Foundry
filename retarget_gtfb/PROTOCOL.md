@@ -33,6 +33,7 @@ can be read directly.
 | 20:35 | `81b5197` | 4.1b showed seed 42 non-independent but did not say what that costs the two claims built on the sweep | both quantified from the files: the score summary moves to mean -8.078 with population spread 0.4116 over the four real runs, while the pose claim strengthens slightly, the mean pairwise r.m.s.d. rising from 9.25 to 9.33 A over 102 real atoms when seed 42 is dropped. My **first two attempts at that r.m.s.d. are withdrawn**: one counted the two `G0` glue markers as atoms, the other discarded the two real `CG0` carbons, both because columns 78 and 79 truncate `CG0` to `CG`. The selection is now stated in the text and recomputed by two tests |
 | 20:36 | `f8dc497` | three files stated a literal count of the provenance suite, which had gone stale twice | the count is gone from all three and a test bans the phrasing; `--check-naming` keeps its eighteen because that number is derived from the list it runs |
 | 20:40 | `0b4db3e` | 4.1b guessed that its r.m.s.d. figures differed from the manuscript's "most likely in mode choice or superposition" | that **guess is withdrawn**. Sweeping the plausible selections reproduces the manuscript's 9.24 and 12.19 exactly on one of them: mode 1, hydrogens removed, the two `G0` glue markers kept. Those figures therefore count two pseudo-atoms as heavy atoms; the correct values are 9.04 and 11.80. Reported to the manuscript work and pinned by a test that recomputes both of its figures from the pose files |
+| 20:48 | `c2a2bd1` | this package's own analyser carried the same defect it had just reported in the manuscript: `analyze.py` read the type as `line[76:79]`, truncating `CG0` to `CG`, and excluded only hydrogens, so the two `G0` markers entered every r.m.s.d. as element G | the type is read as the last whitespace token in one function, `atom_type_of`, and glue is excluded there rather than at three call sites. **No pre-registered threshold moves.** Rule 1 is acarbose, which carries no glue (59 records, 44 heavy atoms, verified on the file); rule 10 selects by atom name `SG`; `heavy_atoms` comes from RDKit before Meeko writes the pdbqt, 84 for the lead, matching the corrected reader exactly. Only the derived `pose_rmsd_across_seeds_A` changes, so no docking needs rerunning |
 
 Five of these entries withdraw a claim of mine rather than refine one. That record is
 kept deliberately: a protocol whose amendment log contains only improvements is a
@@ -355,7 +356,13 @@ distinct coordinate digests, so the pairwise comparison is over five real poses 
 though one of them was not produced by seed 42.
 
 The atom selection has to be stated, because this ligand's files make it easy to get
-wrong. Mode 1 holds 104 `ATOM` records, but two of them are Meeko glue markers typed
+wrong, and because this package's own analyser got it wrong in the same way until
+`c2a2bd1`. The selection now used everywhere in this package is heavy atoms excluding
+Meeko glue: the type is read as the last whitespace-separated token of the record, `G0`
+through `G3` are dropped as markers rather than atoms, `CG0` through `CG3` are kept as
+carbon, and `H`, `HD` and `HS` are dropped. A test bans reading that field by column at
+all, and the pytest-free self-test checks the selection, because `RUN_ME.sh` runs the
+self-test unconditionally and pytest only if it is installed. Mode 1 holds 104 `ATOM` records, but two of them are Meeko glue markers typed
 `G0`, which are not atoms and are excluded here. Two further records are the
 macrocycle closure carbons typed `CG0`, which are real carbons and are kept. Columns
 78 and 79 alone truncate `CG0` to `CG`, and a selection written on that two-character
