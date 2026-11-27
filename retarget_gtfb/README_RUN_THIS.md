@@ -155,7 +155,7 @@ identifier is reused, it writes the report and then exits non-zero with a banner
 cannot miss. `python3 run_docking.py --check-naming` proves the scheme works:
 eighteen checks, about a second, no Vina and no pytest, and its last line reports what
 the duplicate-content check finds in your existing `data/poses/`. The full suite of
-forty-five is `python3 -m pytest test_provenance.py -q`, which additionally takes
+forty-eight is `python3 -m pytest test_provenance.py -q`, which additionally takes
 the duplicated files out of `data/poses/` and shows the check catching them; it needs
 pytest, so `RUN_ME.sh` runs it only if you have it and never blocks the docking on it.
 Either way the gate runs before the overnight job, not after.

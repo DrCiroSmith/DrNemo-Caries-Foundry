@@ -32,12 +32,12 @@ echo "check finds in your existing data/poses."
 python3 run_docking.py --check-naming
 if python3 -c "import pytest" 2>/dev/null; then
   echo
-  echo "pytest is available, so running the full suite of 45 checks as well."
+  echo "pytest is available, so running the full suite of 48 checks as well."
   python3 -m pytest test_provenance.py -q
 else
   echo
   echo "pytest is not installed, so the 18 checks above are the gate. The full suite of"
-  echo "45 is in test_provenance.py if you ever want it: pip install pytest."
+  echo "48 is in test_provenance.py if you ever want it: pip install pytest."
 fi
 
 step "5/7 Self-testing the statistics code before it is trusted with real data"

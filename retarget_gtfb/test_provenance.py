@@ -526,6 +526,48 @@ def test_the_boundary_claim_is_about_controls_not_all_sample_sizes():
     text = (HERE / "PROTOCOL.md").read_text()
     assert "however\n   many control sequences are added" in text or \
            "however many control sequences are added" in text
-    offenders = [l for l in text.splitlines()
-                 if "at any sample size" in l and "overreach" not in l]
+    # The phrase may survive only as quoted history: inside the amendment log,
+    # where it records what the document used to say, or next to the word that
+    # marks it as overreach. A bare live assertion of it is the failure.
+    offenders = []
+    for l in text.splitlines():
+        if "at any sample size" not in l:
+            continue
+        quoted = '"outside this design\'s resolution at any sample size"' in l
+        if not (quoted or "overreach" in l or "withdraw" in l.lower()):
+            offenders.append(l)
     assert not offenders, f"overreaching wording survives: {offenders[:2]}"
+
+
+def test_the_protocol_carries_a_dated_amendment_log():
+    """A pre-registered plan that changed silently is worth nothing."""
+    text = (HERE / "PROTOCOL.md").read_text()
+    assert "## 0. Amendment log" in text
+    # every amendment names a commit, so the diff can be read rather than trusted
+    import re
+    rows = [l for l in text.splitlines()
+            if l.startswith("| ") and re.search(r"\| `[0-9a-f]{7}` \|", l)]
+    assert len(rows) >= 7, f"only {len(rows)} amendments carry a commit hash"
+    assert "No result from this package existed at any of these" in text
+
+
+def test_both_contrasts_are_named_and_point_opposite_ways():
+    """0.129 and 0.152 measure different comparisons and must never be conflated."""
+    text = (HERE / "PROTOCOL.md").read_text()
+    assert "Contrast A, lead against parent" in text
+    assert "Contrast B, lead against the scrambled null" in text
+    assert "+0.129 kcal/mol" in text and "0.152 kcal/mol worse" in text
+    assert "23 of the 39 controls score at least as well" in text
+    # the gate must name its contrasts, not just its numbers
+    rule12 = [l for l in text.splitlines() if l.startswith("| 12 |")]
+    assert rule12, "decision rule 12 is missing"
+    low = rule12[0].lower()
+    assert "contrast a" in low and "contrast b" in low, (
+        "rule 12 gives numbers without naming which comparison each measures")
+
+
+def test_the_price_of_the_replication_is_stated_with_the_gate():
+    text = (HERE / "PROTOCOL.md").read_text()
+    rule12 = [l for l in text.splitlines() if l.startswith("| 12 |")][0]
+    for token in ("36 seeds per control", "1,440", "82 seeds", "3,280"):
+        assert token in rule12, f"rule 12 states the gate without its price: {token}"

@@ -1,8 +1,63 @@
 # Pre-registered protocol: docking the macrocycle series against an experimental GtfB structure
 
-Written 2026-11-27, before any result from this package existed. Nothing below has
-been edited after seeing an output. That is the point of writing it first: the
-thresholds cannot be moved to suit the numbers once the numbers arrive.
+Written 2026-11-27, before any result from this package existed. No docking run from
+this package has been executed: `out/` is empty and no `results.jsonl` or
+`analysis.json` exists anywhere in the repository. That is the point of writing it
+first, and the thresholds cannot be moved to suit the numbers once the numbers arrive.
+
+This document has been amended since its first commit. Every amendment is logged
+below with its time, what it said before and what it says now. A pre-registered plan
+that is quietly different from its first version is worth nothing, and the git history
+does not spare anyone that, because nobody reads it.
+
+---
+
+## 0. Amendment log
+
+All times UTC on 2026-11-27. **No result from this package existed at any of these
+times**, which is verifiable: the first docking run has not been made, so no amendment
+here could have been informed by an outcome. Each entry gives the commit, so the diff
+can be read directly.
+
+| Time | Commit | Before | After |
+|---|---|---|---|
+| 18:17 | `12bc883` | first version | the plan as originally registered |
+| 19:08 | `0ea6857` | the structural Ca2+ was stripped with every other heteroatom, following the original campaign | Ca2+ retained and stripped are both docked, as tier 6, so the assumption is tested rather than inherited |
+| 19:13 | `74f5088` | the cyclization control was left unnamed | SPHWRPWHS named as a Cys-to-Ser double mutant and therefore not a clean cyclization control, with the reason it is not run |
+| 19:35 | `62f751e` | defect 3 asserted that Meeko left the macrocycle ring rigid, and tier 4 was framed as a workaround for that | that claim is **withdrawn**: 1183 of 1244 pose files carry glue pseudo-atoms, so the ring was sampled. Limitation restated as partial ring sampling, tier 4 restated as a starting-conformer sensitivity test. My detector had read the atom type with a two-character slice and truncated `CG0` to `CG` |
+| 19:45 | `904f2d4` | section 4.1 counted eight duplicate filenames as five distinct results, and no power gate existed | count corrected to three duplicated contents over eight filenames, only two of them docked results; decision rule 12 and section 4.2 measurement 1 added, stating the detectable effect before any run |
+| 19:50 | `03d03fd` | the origin of the duplicated results was recorded as undeterminable, and a guess attributed it to the resume guard | the repository's version history settles it as one result under three names; the **cause** is recorded as unexplained and is not attributed to anyone; the resume-guard guess is **withdrawn**, since the guard cannot write one file's bytes under another file's name |
+| 20:00 | `28f8d07` | the gate was stated against a claimed advantage of 0.15 kcal/mol, and the conclusion read "outside this design's resolution at any sample size" | that 0.15 figure is **withdrawn**: it has no source anywhere in the repository and was mine, not the campaign's. Replaced by the ledger-derived 0.129 kcal/mol lead-against-parent margin, computed at run time rather than stored. The conclusion is narrowed to "however many control sequences are added", with the seed count that would move the boundary stated beside it |
+
+Three of those seven entries withdraw a claim of mine rather than refine one. That
+record is kept deliberately: a protocol whose amendment log contains only improvements
+is a protocol whose author was not checking.
+
+---
+
+## 0.1 The two contrasts, which are not interchangeable
+
+Every effect size in this document belongs to one of two comparisons. Naming the
+number without naming its comparison leaves the gate ambiguous however well sourced
+the number is, so both are fixed here and referred to by name throughout.
+
+**Contrast A, lead against parent.** CAHWRPWHC at -8.191 kcal/mol against CPHWRPWHC,
+the sequence it was derived from, at -8.062. Margin **+0.129 kcal/mol** in the lead's
+favour. This is the only positive margin in the existing data, and it is what the
+design question is actually about: whether the P2A substitution bought anything.
+Source: `data/contenders_ledger.csv`, column `vina_3aic_kcal`.
+
+**Contrast B, lead against the scrambled null.** CAHWRPWHC at -8.191 against the mean
+of its 39 scrambled controls at -8.3433. The lead is **0.152 kcal/mol worse** than the
+mean of its own scrambles, and **23 of the 39 controls score at least as well**, which
+is 59 percent of them. Exact one-sided permutation p = 0.6000. Source: the same ledger.
+
+The two run in opposite directions and that is the central fact of the existing
+result. Contrast A is the margin the power calculation is run against, because a
+power calculation needs a positive effect to be powered for. Contrast B is what the
+significance test actually reports, and it does not merely fail to reach significance:
+it points the other way. Any sentence in the write-up that gives one of these figures
+must name which contrast it is, and no sentence may use A's sign with B's test.
 
 ---
 
@@ -319,14 +374,19 @@ claim in the existing campaign cannot be adjudicated without it.
    p < 0.05 the candidate must beat every null member, which means scoring at or
    below the best of them. On the ledger's own numbers that threshold is
    -9.378 kcal/mol, which is **1.035 kcal/mol better than the null mean** of
-   -8.343 kcal/mol. The margin actually at issue is 0.129 kcal/mol, which is the
-   lead CAHWRPWHC at -8.191 against the parent CPHWRPWHC it was derived from at
-   -8.062, both read from `data/contenders_ledger.csv`. The floor is **8.02 times**
-   that margin. **This is what gates the wording of the conclusion.**
+   -8.3433 kcal/mol. The margin actually at issue is **contrast A**, 0.129 kcal/mol,
+   the lead against its parent. The floor is **8.02 times** that margin. The test this
+   floor belongs to is **contrast B**, the lead against the scrambled null, where the
+   lead is 0.152 kcal/mol on the wrong side and 23 of 39 controls score at least as
+   well. So the gate reads: the only positive margin in the data is contrast A's
+   0.129, the test that would have to detect it is contrast B's, and contrast B's
+   floor is eight times the margin. **This is what gates the wording of the
+   conclusion.**
 
    The margin is computed from the ledger at run time rather than carried here as a
    constant, because an earlier revision of this section asserted a claimed advantage
-   of 0.15 kcal/mol and that figure has no source anywhere in the repository. It
+   of 0.15 kcal/mol, naming no contrast, and that figure has no source anywhere in the
+   repository. It
    appears in no document, no result file and no script, and the only stated threshold
    in the project is the +0.70 kcal/mol alanine hotspot gate, which measures something
    else. The number was mine and it should not have been pre-registered as his.
@@ -378,7 +438,7 @@ claim in the existing campaign cannot be adjudicated without it.
    (Pearson r = -0.282, r-squared = 0.08). The existing null is built from
    permutations of the wild type at 86 heavy atoms while the lead it is compared
    against has 84, so the published comparison carries a 2-atom size difference worth
-   about **-0.047 kcal/mol**, roughly 36 percent of the 0.129 kcal/mol margin. Null B
+   about **-0.047 kcal/mol**, roughly 36 percent of contrast A's 0.129 kcal/mol. Null B
    fixes the pairing; the slope is reported so that the residual size term can be
    subtracted rather than assumed away. Where a subset spans fewer than five heavy
    atoms the slope is withheld rather than printed, because a slope fitted over a
@@ -417,7 +477,7 @@ after it arrives.
 | 9 | **Off-target selectivity.** Delta delta G against 1SMD and 1LZ1. | Must exceed about 1 kcal/mol to be discussed at all | Vina's own standard error on its reference set is around 2.85 kcal/mol. Differences well inside that are not selectivity. |
 | 10 | **Geometry integrity.** Cys1 SG to CysN SG distance in every built ligand. | 2.00 to 2.15 A | Outside that range the disulfide is not a disulfide and the molecule docked was not the molecule intended. |
 | 11 | **Provenance integrity.** No pose content under more than one run, no path holding more than one content, no reused run identifier. | Zero of each | Any one of them means two results cannot be told apart, so no number in the set can be attributed. This gate runs before any other is read and the analysis exits non-zero when it fails. It is the gate the existing campaign has already failed: two docked results under five filenames, one of them the lead's headline -8.191. |
-| 12 | **Power.** Minimum detectable effect from the null's own size and spread, against the difference being claimed. | The claimed difference must exceed the minimum detectable effect before any verdict is read | Where the claimed difference is below the floor, the correct word is uninformative, not negative. A test that could not have found an effect of the claimed size has not ruled one out. On the existing 39-member null the floor is 1.035 kcal/mol against a sourced margin of 0.129, so this gate decides how the result is written up whichever way the p value falls. A second, harder floor is reported beside it: the 5 percent boundary of the null's own spread, 0.773 kcal/mol at a null standard deviation of 0.470, which no sample size moves. A claimed difference below that boundary is to be reported as beyond reach however many control sequences are added, with the seed count that would be needed stated beside it, rather than as a small effect awaiting more data or as beyond reach in principle. The margin is computed from the ledger, never carried as a constant. |
+| 12 | **Power.** Minimum detectable effect from the null's own size and spread, against the margin being claimed, with both named by contrast. | Contrast A's margin must exceed contrast B's minimum detectable effect before any verdict is read. A figure stated without its contrast fails this rule on its own | Where the claimed difference is below the floor, the correct word is uninformative, not negative. A test that could not have found an effect of the claimed size has not ruled one out. On the existing 39-member null the floor is 1.035 kcal/mol against a sourced margin of 0.129, so this gate decides how the result is written up whichever way the p value falls. A second, harder floor is reported beside it: the 5 percent boundary of the null's own spread, 0.773 kcal/mol at a null standard deviation of 0.470, which no sample size moves. A margin below that boundary is to be reported as beyond reach at this level of replication, in the same breath as its price: at contrast A's 0.129 kcal/mol against a control spread of 0.4697, about **36 seeds per control** to reach the one-sided 5 percent boundary, roughly **1,440 docking runs**, and **82 seeds** for 80 percent power, roughly **3,280 runs**. Not "a small effect awaiting more data", and not "beyond reach in principle", because adding controls cannot move the boundary but averaging seeds can. The margin is computed from the ledger, never carried as a constant. |
 
 ### What a positive result would and would not establish
 
