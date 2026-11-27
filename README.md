@@ -200,14 +200,19 @@ only figures that are generated from the committed data and tested against it.
   compiled on 2026-11-21, before the banner was written and before the target
   correction, and there is no LaTeX toolchain in the environment this audit ran
   in, so it could not be rebuilt. Read from the PDF alone, with nothing in it
-  marking it as superseded, it still names the target of PDB 3AIC as GtfB in its
-  title and 11 times in its body; quotes Asp477, Glu515 and Asp588 as that
-  target's catalytic triad, which is GtfC numbering; reports the multi-seed
-  reproducibility check as N = 5, with nothing in it recording that a run was
-  later excluded as a duplicate; gives the scrambled-null result twice as a p
-  value of 0.5897, which is the raw proportion 23 of 39 and not a p value; and
-  concludes a corroborated anti-virulence hypothesis one paragraph after
-  stating that the null was not rejected. The PDF is kept because it is
+  marking it as superseded, it still names the product of PDB 3AIC as GtfB
+  11 times, including in its title; states that structure's resolution as
+  2.10 A, which is the resolution RCSB reports for 3AIE, a companion entry from
+  the same publication, and not for 3AIC, which RCSB reports at 3.11 A; quotes
+  Asp477, Glu515 and Asp588 as that target's catalytic triad, which is the
+  numbering of the GtfC product the structure actually contains; reports the
+  multi-seed reproducibility check as N = 5, with nothing in it recording that a
+  run was later excluded as a duplicate; gives the scrambled-null result twice
+  as a p value of 0.5897, which is the raw proportion 23 of 39 and not a p
+  value; and concludes a corroborated anti-virulence hypothesis one paragraph
+  after stating that the null was not rejected. Its name, resolution and
+  residue numbering are wrong together in one sentence of its Methods, which is
+  how the mislabelling survived: each part corroborated the others. The PDF is kept because it is
   the record of what was claimed, and it needs recompiling from the banner-bearing
   source before it is linked, cited or sent to anyone.
 

@@ -319,3 +319,63 @@ def test_the_manuscript_still_carries_the_recomputed_figures():
                    "0.269", "1.772", "0.384", "0.605",
                    "m = 36", "1,440", "m = 82", "3,280"):
         assert figure in text, f"the manuscript no longer states {figure}"
+
+
+# ---------------------------------------------- the reference pose's own spread
+
+NATIVE_LIGAND = REPO_ROOT / "demo_data" / "receptors" / "3AIC_native_ligand.pdb"
+
+
+def _native_ligand_b_factors():
+    out = []
+    for line in NATIVE_LIGAND.read_text().splitlines():
+        if line.startswith(("ATOM", "HETATM")):
+            out.append((float(line[54:60]), float(line[60:66])))
+    return out
+
+
+def test_the_reference_ligand_displacement_figures_match_the_coordinates():
+    """Section 3.1's counter-argument is computed from the committed file.
+
+    The paper now states the reference acarbose's displacement parameters,
+    because they are the strongest argument against its own redocking
+    conclusion and a reader is entitled to the number. Those figures are
+    recomputed here rather than trusted.
+    """
+    if not NATIVE_LIGAND.exists():
+        pytest.skip("the 3AIC reference ligand is no longer committed")
+    rows = _native_ligand_b_factors()
+    assert len(rows) == 44, (
+        f"the reference ligand now has {len(rows)} atoms, not the 44 the paper "
+        f"states; every figure in Section 3.1 that divides by it needs redoing")
+    occupancies = {o for o, _ in rows}
+    assert occupancies == {1.0}, (
+        f"the reference ligand is no longer at full occupancy ({occupancies}), "
+        f"so the paper's 'at full occupancy' is wrong")
+
+    b = [x for _, x in rows]
+    mean_b = statistics.fmean(b)
+    u = math.sqrt(mean_b / (8 * math.pi ** 2))
+    paper = PAPER.read_text()
+
+    for value in (f"{min(b):.2f}", f"{max(b):.2f}", f"{mean_b:.2f}"):
+        assert value in paper, (
+            f"the paper does not carry the recomputed displacement parameter "
+            f"{value} from the committed reference ligand")
+    assert f"{u:.2f}" in paper, (
+        f"the paper does not carry the RMS displacement {u:.2f} A implied by "
+        f"those parameters")
+    assert f"{4.507 / u:.1f} times" in paper, (
+        f"the paper does not state the redocking RMSD as "
+        f"{4.507 / u:.1f} times the reference ligand's mean displacement, "
+        f"which is the bound that keeps the objection from closing the gap")
+
+
+def test_the_crystallization_reference_is_cited_in_the_body():
+    """A listed-but-uncited reference is a loose end in a paper about rigour."""
+    paper = PAPER.read_text()
+    body, _, refs = paper.partition("# References")
+    assert "[6]" in body, (
+        "reference 6 is listed but never cited in the body; it is the source "
+        "of the 2.1 A figure that the superseded preprint attached to 3AIC")
+    assert "Crystallization and preliminary X-ray analysis" in refs

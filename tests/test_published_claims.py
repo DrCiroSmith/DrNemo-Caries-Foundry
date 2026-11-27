@@ -549,11 +549,36 @@ def test_the_readme_records_what_the_unbannered_pdf_still_asserts():
         "about the PDF's contents can be relied on")
 
     gtfb = letters.count(b"GtfB")
-    assert f"{gtfb} times in its" in readme, (
+    assert f"{gtfb} times, including in its title" in readme, (
         f"the README does not state the measured count of GtfB in the PDF, "
-        f"which is {gtfb}")
+        f"which is {gtfb} with the title among them")
+    assert b"Glucosyltransferase" in letters and b"GtfB" in letters, (
+        "the title page no longer carries both names, so the README's account "
+        "of how the two were conflated needs rechecking")
     for residue in ("Asp477", "Glu515", "Asp588"):
         assert residue.encode() in tokens, (
             f"{residue} is no longer in the PDF, so the README should not "
             f"quote it among the claims the PDF still makes")
         assert residue in readme
+
+
+def test_the_receptor_files_carry_no_resolution_record():
+    """Why the preprint's 2.10 A could not be caught from the artefacts.
+
+    The deposited receptor was stripped to coordinates, so nothing in this
+    repository states which PDB entry it came from or at what resolution. The
+    paper says so, and this holds that statement to the files.
+    """
+    receptor = REPO / "demo_data" / "receptors" / "3AIC_receptor.pdb"
+    if not receptor.exists():
+        pytest.skip("the demo receptor is no longer committed")
+    kinds = {line[:6].strip() for line in receptor.read_text().splitlines() if line}
+    assert kinds <= {"ATOM", "TER", "END", "HETATM"}, (
+        f"the receptor file now carries record types beyond coordinates "
+        f"({sorted(kinds)}); if a header was restored, the paper's note that "
+        f"the resolution cannot be checked from the artefacts is out of date")
+    paper = (REPO / "paper" / "negative_result_GTF-SI.md").read_text()
+    assert "REMARK   2 RESOLUTION" in paper, (
+        "the paper no longer records that the receptor carries no resolution "
+        "line, which is the reason the preprint's figure could not be checked "
+        "locally")
