@@ -152,6 +152,59 @@ def sd_interval(sd, n, level=0.95):
             sd * math.sqrt(df / chi2_ppf(tail, df)))
 
 
+def _betacf(a, b, x):
+    """Continued fraction for the incomplete beta function, modified Lentz."""
+    tiny, eps = 1e-300, 3e-16
+    qab, qap, qam = a + b, a + 1.0, a - 1.0
+    c, d = 1.0, 1.0 - qab * x / qap
+    if abs(d) < tiny:
+        d = tiny
+    d = 1.0 / d
+    h = d
+    for m in range(1, 300):
+        m2 = 2 * m
+        for aa in (m * (b - m) * x / ((qam + m2) * (a + m2)),
+                   -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))):
+            d = 1.0 + aa * d
+            if abs(d) < tiny:
+                d = tiny
+            c = 1.0 + aa / c
+            if abs(c) < tiny:
+                c = tiny
+            d = 1.0 / d
+            delta = d * c
+            h *= delta
+        if abs(delta - 1.0) < eps:
+            return h
+    raise RuntimeError("incomplete beta did not converge")
+
+
+def betainc(a, b, x):
+    """Regularized incomplete beta I_x(a, b)."""
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    lead = math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b)
+    if x < (a + 1.0) / (a + b + 2.0):
+        return math.exp(lead + a * math.log(x) + b * math.log1p(-x)) * _betacf(a, b, x) / a
+    return 1.0 - math.exp(lead + b * math.log1p(-x) + a * math.log(x)) \
+        * _betacf(b, a, 1.0 - x) / b
+
+
+def f_sf(x, df1, df2):
+    """P(F > x), the one-sided p value for a ratio of two variances.
+
+    Verified against published 95th percentiles at (3,3), (5,5), (10,10),
+    (2,10), (10,2), (20,20) and (1,30), against the closed form
+    (2/pi)arctan(sqrt(x)) at df1 = df2 = 1, and against the identity
+    P(F_a,b <= x) = 1 - P(F_b,a <= 1/x).
+    """
+    if x <= 0.0:
+        return 1.0
+    return 1.0 - betainc(df1 / 2.0, df2 / 2.0, df1 * x / (df1 * x + df2))
+
+
 def heading(text):
     print()
     print(text)
@@ -1347,33 +1400,52 @@ def main():
         noise_sd = statistics.stdev(indep)
         emit("R", "one ligand, independent repeat runs / their sample sd (kcal/mol)",
              f"{len(indep)} / {noise_sd:.4f}", "data/exhaustive_disproof_report.json")
-        emit("R", "ratio of the repeat-run sd to the null sd",
-             f"{noise_sd / null_sd:.4f}", "this script")
-        n_lo, n_hi = sd_interval(noise_sd, len(indep))
+        # The exclusion of the duplicated value is an analyst choice that a
+        # reviewer can see and reverse, so report the comparison both ways. The
+        # claim has to survive either reading or it is not a claim.
+        for label, data in (("four runs, duplicate excluded", indep),
+                            ("five runs, as the record states them", seeds)):
+            sd = statistics.stdev(data)
+            var = statistics.variance(data)
+            lo, hi = sd_interval(sd, len(data))
+            fstat = null_sd ** 2 / var
+            pval = f_sf(fstat, n_null - 1, len(data) - 1)
+            emit("R", f"{label}: sample sd (kcal/mol) and ratio to the null sd",
+                 f"{sd:.4f} / {sd / null_sd:.4f}", "data/exhaustive_disproof_report.json")
+            emit("R", f"{label}: 95 percent interval on that sd",
+                 f"{lo:.4f} to {hi:.4f}", "this script")
+            emit("R", f"{label}: F for equal variances against the null, and one-sided p",
+                 f"{fstat:.4f} on {n_null - 1} and {len(data) - 1} df / {pval:.4f}",
+                 "this script")
+            emit("R", f"{label}: null variance minus this one (kcal/mol squared)",
+                 f"{null_sd ** 2 - var:+.6f}", "this script")
+            if pval < 0.05:
+                note(f"under the reading '{label}' the null's variance now differs "
+                     f"significantly from the single-ligand variance (p={pval:.4f}), so "
+                     "section 3.3b's statement that the data cannot resolve a "
+                     "sequence-dependent component no longer holds")
+            if not (lo <= null_sd <= hi):
+                note(f"under the reading '{label}' the null sd falls outside the "
+                     "interval on the single-ligand sd, so section 3.3b's comparison of "
+                     "the two no longer holds")
         k_lo, k_hi = sd_interval(null_sd, n_null)
-        emit("R", f"95 percent interval on the repeat-run sd (n={len(indep)})",
-             f"{n_lo:.4f} to {n_hi:.4f}", "this script")
         emit("R", f"95 percent interval on the null sd (n={n_null})",
              f"{k_lo:.4f} to {k_hi:.4f}", "this script")
-        between = null_sd ** 2 - noise_sd ** 2
-        emit("R", "null variance minus repeat-run variance (kcal/mol squared)",
-             f"{between:+.4f}", "this script")
-        remark("What this does and does not support. The two spreads differ by "
-               f"{abs(1 - noise_sd / null_sd) * 100:.1f} per cent, and each interval "
-               "contains the other estimate, so the data cannot distinguish a null whose "
-               "dispersion is entirely run-to-run noise from one with a real "
-               "sequence-dependent component. The difference of variances is "
-               f"{between:+.4f}, and a negative point estimate is what two close "
-               "estimates give when one of them rests on three degrees of freedom; it is "
-               "not evidence that the component is nil. The supportable claim is only "
-               "that the null's dispersion is not demonstrably sequence-driven. The "
-               "repeat runs are also the four that remain after the duplicate of "
-               "unestablished origin was removed from the original five, and all of them "
-               "were unseeded.")
-        if not (n_lo <= null_sd <= n_hi):
-            discrepancies.append(
-                "the null sd now falls outside the interval on the single-ligand "
-                "repeat-run sd, so section 3.3b's comparison of the two no longer holds")
+        remark("What this does and does not support. Under either reading the single "
+               "ligand's spread is of the same order as the spread across 39 sequences, "
+               "each interval contains the other estimate, and an F test cannot reject "
+               "equal variances. So the data cannot resolve a sequence-dependent "
+               "component at all, in either direction. The sign of the variance "
+               "difference does flip between the two readings, which is why the paper "
+               "states neither sign as a result: a negative point estimate is what two "
+               "close estimates give when one rests on three or four degrees of freedom. "
+               "One further caveat runs against the stronger reading. The record's own "
+               "name for the sweep is multi-seed conformer and docking reproducibility, "
+               "so each run reseeded the conformer as well as the search, while every "
+               "null member is one conformer docked once. The single-ligand figure "
+               "therefore contains a conformer-generation term the null does not, which "
+               "makes it an upper bound on the run-to-run noise inside the null rather "
+               "than an estimate of it.")
 
         # What would move the boundary: averaging m seeds per member.
         if MARGIN:
