@@ -1,0 +1,401 @@
+{
+  "provenance": {
+    "source_ledger": "data/contenders_ledger.csv",
+    "source_ledger_sha256": "52ef96325c8a484b29ebfffcef67a1f3c95f8f460adcd45e83559a42c4de45fa",
+    "null_b_generator": "distinct permutations of CAHWRPWHC positions 2-8, Cys termini fixed, python random.Random(20261127).sample, lead itself excluded",
+    "null_b_candidate_pool_size": 1259
+  },
+  "contenders": [
+    {
+      "id": "contender_mutant_P2A_CAHWRPWHC",
+      "sequence": "CAHWRPWHC",
+      "role": "reference_scaffold_P2A",
+      "heavy_atoms_ledger": 84,
+      "vina_3aic_kcal_ledger": -8.191,
+      "vina_1smd_kcal_ledger": -7.343,
+      "status_ledger": "CORROBORATED"
+    },
+    {
+      "id": "contender_g01_CPHWRPWHC",
+      "sequence": "CPHWRPWHC",
+      "role": "wild_type_lead",
+      "heavy_atoms_ledger": 86,
+      "vina_3aic_kcal_ledger": -8.062,
+      "vina_1smd_kcal_ledger": -7.902,
+      "status_ledger": "FALSIFIED_AMYLASE_CROSSREACTIVITY"
+    },
+    {
+      "id": "contender_mutant_P6A_CPHWRAWHC",
+      "sequence": "CPHWRAWHC",
+      "role": "mutant_P6A",
+      "heavy_atoms_ledger": 84,
+      "vina_3aic_kcal_ledger": -8.89,
+      "vina_1smd_kcal_ledger": -7.302,
+      "status_ledger": "FALSIFIED_ORAL_BARRIER"
+    },
+    {
+      "id": "naive_baseline_CRRRWWRRRRC",
+      "sequence": "CRRRWWRRRRC",
+      "role": "naive_arginine_baseline",
+      "heavy_atoms_ledger": 118,
+      "vina_3aic_kcal_ledger": -7.586,
+      "vina_1smd_kcal_ledger": -7.58,
+      "status_ledger": "FALSIFIED_ORAL_BARRIER"
+    }
+  ],
+  "null_a_wt_permutations": [
+    {
+      "id": "scrambled_01_CHRPWHPWC",
+      "sequence": "CHRPWHPWC",
+      "vina_3aic_kcal_ledger": -8.955
+    },
+    {
+      "id": "scrambled_02_CRHWPPWHC",
+      "sequence": "CRHWPPWHC",
+      "vina_3aic_kcal_ledger": -7.497
+    },
+    {
+      "id": "scrambled_03_CRWPHWHPC",
+      "sequence": "CRWPHWHPC",
+      "vina_3aic_kcal_ledger": -8.854
+    },
+    {
+      "id": "scrambled_04_CWWPRHHPC",
+      "sequence": "CWWPRHHPC",
+      "vina_3aic_kcal_ledger": -8.475
+    },
+    {
+      "id": "scrambled_05_CHRWHPWPC",
+      "sequence": "CHRWHPWPC",
+      "vina_3aic_kcal_ledger": -8.599
+    },
+    {
+      "id": "scrambled_06_CWPRPHHWC",
+      "sequence": "CWPRPHHWC",
+      "vina_3aic_kcal_ledger": -8.289
+    },
+    {
+      "id": "scrambled_07_CPWHWHRPC",
+      "sequence": "CPWHWHRPC",
+      "vina_3aic_kcal_ledger": -7.735
+    },
+    {
+      "id": "scrambled_08_CWPHWRPHC",
+      "sequence": "CWPHWRPHC",
+      "vina_3aic_kcal_ledger": -9.378
+    },
+    {
+      "id": "scrambled_09_CHPRWHWPC",
+      "sequence": "CHPRWHWPC",
+      "vina_3aic_kcal_ledger": -8.512
+    },
+    {
+      "id": "scrambled_10_CWPRHHPWC",
+      "sequence": "CWPRHHPWC",
+      "vina_3aic_kcal_ledger": -8.387
+    },
+    {
+      "id": "scrambled_11_CPWWRPHHC",
+      "sequence": "CPWWRPHHC",
+      "vina_3aic_kcal_ledger": -8.513
+    },
+    {
+      "id": "scrambled_12_CRPPHHWWC",
+      "sequence": "CRPPHHWWC",
+      "vina_3aic_kcal_ledger": -8.53
+    },
+    {
+      "id": "scrambled_13_CRPHHPWWC",
+      "sequence": "CRPHHPWWC",
+      "vina_3aic_kcal_ledger": -7.875
+    },
+    {
+      "id": "scrambled_14_CHPPWWRHC",
+      "sequence": "CHPPWWRHC",
+      "vina_3aic_kcal_ledger": -8.136
+    },
+    {
+      "id": "scrambled_15_CHRPHPWWC",
+      "sequence": "CHRPHPWWC",
+      "vina_3aic_kcal_ledger": -8.751
+    },
+    {
+      "id": "scrambled_16_CPHWHPWRC",
+      "sequence": "CPHWHPWRC",
+      "vina_3aic_kcal_ledger": -7.634
+    },
+    {
+      "id": "scrambled_17_CPHWPRWHC",
+      "sequence": "CPHWPRWHC",
+      "vina_3aic_kcal_ledger": -8.18
+    },
+    {
+      "id": "scrambled_18_CPRWPHWHC",
+      "sequence": "CPRWPHWHC",
+      "vina_3aic_kcal_ledger": -7.959
+    },
+    {
+      "id": "scrambled_19_CWPHHRPWC",
+      "sequence": "CWPHHRPWC",
+      "vina_3aic_kcal_ledger": -8.452
+    },
+    {
+      "id": "scrambled_20_CHWWPRPHC",
+      "sequence": "CHWWPRPHC",
+      "vina_3aic_kcal_ledger": -7.959
+    },
+    {
+      "id": "scrambled_21_CPPWRHWHC",
+      "sequence": "CPPWRHWHC",
+      "vina_3aic_kcal_ledger": -7.767
+    },
+    {
+      "id": "scrambled_22_CPHWWPHRC",
+      "sequence": "CPHWWPHRC",
+      "vina_3aic_kcal_ledger": -9.007
+    },
+    {
+      "id": "scrambled_23_CHHRWWPPC",
+      "sequence": "CHHRWWPPC",
+      "vina_3aic_kcal_ledger": -8.647
+    },
+    {
+      "id": "scrambled_24_CWHPHRWPC",
+      "sequence": "CWHPHRWPC",
+      "vina_3aic_kcal_ledger": -7.862
+    },
+    {
+      "id": "scrambled_25_CRPPHWHWC",
+      "sequence": "CRPPHWHWC",
+      "vina_3aic_kcal_ledger": -9.092
+    },
+    {
+      "id": "scrambled_26_CPRPHWWHC",
+      "sequence": "CPRPHWWHC",
+      "vina_3aic_kcal_ledger": -8.668
+    },
+    {
+      "id": "scrambled_27_CRWWPPHHC",
+      "sequence": "CRWWPPHHC",
+      "vina_3aic_kcal_ledger": -8.267
+    },
+    {
+      "id": "scrambled_28_CHPHWWPRC",
+      "sequence": "CHPHWWPRC",
+      "vina_3aic_kcal_ledger": -8.302
+    },
+    {
+      "id": "scrambled_29_CWWRHPHPC",
+      "sequence": "CWWRHPHPC",
+      "vina_3aic_kcal_ledger": -8.469
+    },
+    {
+      "id": "scrambled_30_CWRWHPPHC",
+      "sequence": "CWRWHPPHC",
+      "vina_3aic_kcal_ledger": -8.044
+    },
+    {
+      "id": "scrambled_31_CWHPRWHPC",
+      "sequence": "CWHPRWHPC",
+      "vina_3aic_kcal_ledger": -8.062
+    },
+    {
+      "id": "scrambled_32_CPPHHRWWC",
+      "sequence": "CPPHHRWWC",
+      "vina_3aic_kcal_ledger": -7.824
+    },
+    {
+      "id": "scrambled_33_CWRPHWHPC",
+      "sequence": "CWRPHWHPC",
+      "vina_3aic_kcal_ledger": -8.356
+    },
+    {
+      "id": "scrambled_34_CRWPWHHPC",
+      "sequence": "CRWPWHHPC",
+      "vina_3aic_kcal_ledger": -9.269
+    },
+    {
+      "id": "scrambled_35_CRWPHPHWC",
+      "sequence": "CRWPHPHWC",
+      "vina_3aic_kcal_ledger": -8.999
+    },
+    {
+      "id": "scrambled_36_CPWRHPWHC",
+      "sequence": "CPWRHPWHC",
+      "vina_3aic_kcal_ledger": -7.878
+    },
+    {
+      "id": "scrambled_37_CWWPRHPHC",
+      "sequence": "CWWPRHPHC",
+      "vina_3aic_kcal_ledger": -8.387
+    },
+    {
+      "id": "scrambled_38_CWPWPHRHC",
+      "sequence": "CWPWPHRHC",
+      "vina_3aic_kcal_ledger": -7.767
+    },
+    {
+      "id": "scrambled_39_CHPHPWRWC",
+      "sequence": "CHPHPWRWC",
+      "vina_3aic_kcal_ledger": -8.05
+    }
+  ],
+  "null_b_lead_permutations": [
+    {
+      "id": "leadnull_01_CAPRWHWHC",
+      "sequence": "CAPRWHWHC"
+    },
+    {
+      "id": "leadnull_02_CWWHAPHRC",
+      "sequence": "CWWHAPHRC"
+    },
+    {
+      "id": "leadnull_03_CHWWRHAPC",
+      "sequence": "CHWWRHAPC"
+    },
+    {
+      "id": "leadnull_04_CPHWRHAWC",
+      "sequence": "CPHWRHAWC"
+    },
+    {
+      "id": "leadnull_05_CWPHRWHAC",
+      "sequence": "CWPHRWHAC"
+    },
+    {
+      "id": "leadnull_06_CHPAHWWRC",
+      "sequence": "CHPAHWWRC"
+    },
+    {
+      "id": "leadnull_07_CHPWHARWC",
+      "sequence": "CHPWHARWC"
+    },
+    {
+      "id": "leadnull_08_CPHHARWWC",
+      "sequence": "CPHHARWWC"
+    },
+    {
+      "id": "leadnull_09_CRHWWHPAC",
+      "sequence": "CRHWWHPAC"
+    },
+    {
+      "id": "leadnull_10_CHWPWAHRC",
+      "sequence": "CHWPWAHRC"
+    },
+    {
+      "id": "leadnull_11_CPAHWRWHC",
+      "sequence": "CPAHWRWHC"
+    },
+    {
+      "id": "leadnull_12_CAWWRHPHC",
+      "sequence": "CAWWRHPHC"
+    },
+    {
+      "id": "leadnull_13_CHPRWHAWC",
+      "sequence": "CHPRWHAWC"
+    },
+    {
+      "id": "leadnull_14_CWAWHRHPC",
+      "sequence": "CWAWHRHPC"
+    },
+    {
+      "id": "leadnull_15_CAPHWWHRC",
+      "sequence": "CAPHWWHRC"
+    },
+    {
+      "id": "leadnull_16_CHPWAHRWC",
+      "sequence": "CHPWAHRWC"
+    },
+    {
+      "id": "leadnull_17_CHRWWPAHC",
+      "sequence": "CHRWWPAHC"
+    },
+    {
+      "id": "leadnull_18_CAPWRHHWC",
+      "sequence": "CAPWRHHWC"
+    },
+    {
+      "id": "leadnull_19_CWRWPAHHC",
+      "sequence": "CWRWPAHHC"
+    },
+    {
+      "id": "leadnull_20_CWHHWPARC",
+      "sequence": "CWHHWPARC"
+    },
+    {
+      "id": "leadnull_21_CHPAWRWHC",
+      "sequence": "CHPAWRWHC"
+    },
+    {
+      "id": "leadnull_22_CAHWWRHPC",
+      "sequence": "CAHWWRHPC"
+    },
+    {
+      "id": "leadnull_23_CARWHWHPC",
+      "sequence": "CARWHWHPC"
+    },
+    {
+      "id": "leadnull_24_CWAHRPWHC",
+      "sequence": "CWAHRPWHC"
+    },
+    {
+      "id": "leadnull_25_CWHWAPRHC",
+      "sequence": "CWHWAPRHC"
+    },
+    {
+      "id": "leadnull_26_CWRPHHWAC",
+      "sequence": "CWRPHHWAC"
+    },
+    {
+      "id": "leadnull_27_CWPRAHWHC",
+      "sequence": "CWPRAHWHC"
+    },
+    {
+      "id": "leadnull_28_CPAWHWHRC",
+      "sequence": "CPAWHWHRC"
+    },
+    {
+      "id": "leadnull_29_CWHARHPWC",
+      "sequence": "CWHARHPWC"
+    },
+    {
+      "id": "leadnull_30_CAPHWWRHC",
+      "sequence": "CAPHWWRHC"
+    },
+    {
+      "id": "leadnull_31_CWHWRPAHC",
+      "sequence": "CWHWRPAHC"
+    },
+    {
+      "id": "leadnull_32_CAPHRWWHC",
+      "sequence": "CAPHRWWHC"
+    },
+    {
+      "id": "leadnull_33_CWHARPWHC",
+      "sequence": "CWHARPWHC"
+    },
+    {
+      "id": "leadnull_34_CHWRAPHWC",
+      "sequence": "CHWRAPHWC"
+    },
+    {
+      "id": "leadnull_35_CWHRPWAHC",
+      "sequence": "CWHRPWAHC"
+    },
+    {
+      "id": "leadnull_36_CHPWHWRAC",
+      "sequence": "CHPWHWRAC"
+    },
+    {
+      "id": "leadnull_37_CRHWAPHWC",
+      "sequence": "CRHWAPHWC"
+    },
+    {
+      "id": "leadnull_38_CHWWAHRPC",
+      "sequence": "CHWWAHRPC"
+    },
+    {
+      "id": "leadnull_39_CHPHWARWC",
+      "sequence": "CHPHWARWC"
+    }
+  ]
+}
