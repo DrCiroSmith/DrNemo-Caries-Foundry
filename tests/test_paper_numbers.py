@@ -705,3 +705,145 @@ def test_the_documents_partition_the_ledger_the_way_the_ledger_does():
     assert "220 design" in readme, (
         "the README no longer states the 220 design partition that the ledger "
         "holds")
+
+
+def test_the_classifier_reproduction_counts_are_derivable_from_the_ledger():
+    """Section 3.10b's 212, 146, 137, 75 and 9 are derived here, not quoted.
+
+    These were the last five numbers in the project with no traced source. Each
+    chain is transcribed from its own module's branch order and evaluated on the
+    ledger's own gate columns, so the test fails if either chain is edited
+    without the paper being rewritten, and fails if the ledger changes.
+    """
+    rows = list(csv.DictReader(LEDGER.open(encoding="utf-8")))
+    max_donnan = 4.0
+
+    def gates(r):
+        f = lambda k: None if r[k] in ("", "None", "null") else float(r[k])
+        return dict(ss=f("ss_bond_angstrom"), q60=f("q_ph60"), dq=f("delta_q_stephan"),
+                    p=int(float(r["protease_sites"])), v=f("vina_3aic_kcal"),
+                    sel=f("selectivity_ddg"))
+
+    def campaign(g):
+        # scripts/run_campaign.py: no disulfide branch, a Stephan failure falls
+        # through to SUBTHRESHOLD_AFFINITY.
+        donnan, prot = g["q60"] <= max_donnan, g["p"] == 0
+        steph, aff, sel = g["dq"] >= 1.0, g["v"] < -7.5, g["sel"] <= -0.80
+        if donnan and prot and steph and aff and sel:
+            return "CORROBORATED"
+        if not donnan or not prot:
+            return "FALSIFIED_ORAL_BARRIER"
+        if not sel:
+            return "FALSIFIED_AMYLASE_CROSSREACTIVITY"
+        return "SUBTHRESHOLD_AFFINITY"
+
+    def hunter(g):
+        # scripts/continuous_hunter.py: a disulfide branch first, and a Stephan
+        # failure routed into FALSIFIED_ORAL_BARRIER.
+        ss = g["ss"] is not None and 1.95 <= g["ss"] <= 2.25
+        donnan, prot = g["q60"] <= max_donnan, g["p"] == 0
+        steph, aff, sel = g["dq"] >= 1.0, g["v"] < -7.5, g["sel"] <= -0.80
+        if not ss:
+            return "FALSIFIED_BROKEN_DISULFIDE"
+        if donnan and prot and steph and aff and sel:
+            return "CORROBORATED"
+        if not donnan or not prot or not steph:
+            return "FALSIFIED_ORAL_BARRIER"
+        if not sel:
+            return "FALSIFIED_AMYLASE_CROSSREACTIVITY"
+        return "SUBTHRESHOLD_AFFINITY"
+
+    nonscram = [r for r in rows if not r["contender_id"].startswith("scrambled")]
+    assert len(nonscram) == 221
+    rec = lambda r: r["falsification_status"]
+    a = {r["contender_id"] for r in nonscram if campaign(gates(r)) == rec(r)}
+    b = {r["contender_id"] for r in nonscram if hunter(gates(r)) == rec(r)}
+    both = a & b
+    assert (len(a), len(b), len(both)) == (212, 146, 137), (
+        "the paper states that run_campaign.py reproduces 212 of the 221 non-scrambled "
+        "rows, continuous_hunter.py reproduces 146, and they agree on 137; got "
+        f"{len(a)}, {len(b)}, {len(both)}")
+    assert len(a | b) == 221, (
+        "the paper states every non-scrambled row is reproduced by one chain or the "
+        f"other; {221 - len(a | b)} are reproduced by neither")
+    assert (len(a - b), len(b - a)) == (75, 9), (
+        "the paper states 75 rows carry the status only run_campaign.py produces and "
+        f"9 only continuous_hunter.py produces; got {len(a - b)} and {len(b - a)}")
+    scram = [r for r in rows if r["contender_id"].startswith("scrambled")]
+    assert len(scram) == 39
+    assert all(rec(r) == "SCRAMBLED_NULL_CONTROL" for r in scram)
+    assert not any(rec(r) in (campaign(gates(r)), hunter(gates(r))) for r in scram), (
+        "the paper states neither chain emits the scrambled controls' status")
+
+
+def test_the_readme_comparison_table_agrees_with_the_ledger():
+    """Every cell of the README's four-candidate table is read out of the ledger.
+
+    One cell did not: the P6A amylase affinity was published as -7.300 while the
+    ledger, the sqlite vault and two other artefacts all carry -7.302, and
+    -7.300 appeared in no artefact at all. Two cells of the benchmark table had
+    already been corrected for the same reason, which is why this guard reads
+    the whole table rather than that one cell.
+    """
+    rows = {r["sequence"]: r for r in csv.DictReader(LEDGER.open(encoding="utf-8"))}
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    header = next((ln for ln in readme.splitlines()
+                   if ln.startswith("| Parameter |") and "CRRRWWRRRRC" in ln), None)
+    assert header, "the four-candidate comparison table is no longer in the README"
+    order = ["CRRRWWRRRRC", "CPHWRPWHC", "CPHWRAWHC", "CAHWRPWHC"]
+    for seq in order:
+        assert seq in header, f"{seq} is no longer a column of that table"
+    fields = {"GTF-SI (3AIC) Vina DG": "vina_3aic_kcal",
+              "Amylase (1SMD) Vina DG": "vina_1smd_kcal",
+              "Host Selectivity DDG": "selectivity_ddg",
+              "Oral protease sites": "protease_sites"}
+    checked = 0
+    for label, column in fields.items():
+        line = next((ln for ln in readme.splitlines() if ln.startswith(f"| **{label}**")), None)
+        assert line, f"the {label} row is no longer in that table"
+        cells = [c.strip().strip("*").strip() for c in line.strip("|").split("|")][1:5]
+        for seq, cell in zip(order, cells):
+            published = float(re.match(r"-?\d+(?:\.\d+)?", cell).group(0))
+            recorded = float(rows[seq][column])
+            assert abs(published - recorded) < 5e-4, (
+                f"the README publishes {label} for {seq} as {published}, the ledger "
+                f"records {recorded}; the ledger is the record of the run")
+            checked += 1
+    assert checked == 16, f"expected 16 cells, checked {checked}"
+
+
+def test_the_published_gate_criteria_are_the_criteria_the_code_enforces():
+    """The dashboard's gate list is read against the thresholds in the source.
+
+    It published the disulfide window as 2.00 to 2.15 Angstroms while every
+    implementation enforces 1.95 to 2.25, so a reader was told the gate was
+    narrower than it is. The other five matched and are pinned here so the pair
+    cannot drift apart again.
+    """
+    dash = (REPO_ROOT / "dashboard.py").read_text(encoding="utf-8")
+    hunter = (REPO_ROOT / "scripts" / "continuous_hunter.py").read_text(encoding="utf-8")
+    campaign = (REPO_ROOT / "scripts" / "run_campaign.py").read_text(encoding="utf-8")
+    shield = (REPO_ROOT / "solubility_shield.py").read_text(encoding="utf-8")
+    assert "1.95 <= ss_dist <= 2.25" in hunter, "the enforced disulfide window moved"
+    assert "1.95-2.25" in dash, (
+        "the dashboard must publish the disulfide window the code enforces, "
+        "1.95 to 2.25 Angstroms")
+    assert "2.00-2.15" not in dash, "the withdrawn 2.00 to 2.15 window is back"
+    for enforced, published in (("vina_3aic < -7.5", "-7.50 kcal/mol"),
+                                ("selectivity_ddg <= -0.80", "-0.80 kcal/mol"),
+                                ("delta_q >= 1.0", "+1.00")):
+        assert enforced in campaign or enforced in hunter, (
+            f"the enforced threshold {enforced} moved; the dashboard still publishes "
+            f"{published}")
+        assert published in dash, f"the dashboard no longer publishes {published}"
+    assert "MAX_DONNAN_CHARGE_PH6 = 4.0" in shield, "the Donnan ceiling moved"
+    assert "+4.0" in dash, "the dashboard no longer publishes the Donnan ceiling"
+    # No ledger row sits on any of these boundaries, so the published "<=" and
+    # the enforced "<" cannot disagree on this data. Asserted, not assumed.
+    rows = list(csv.DictReader(LEDGER.open(encoding="utf-8")))
+    for column, boundary in (("vina_3aic_kcal", -7.5), ("selectivity_ddg", -0.80),
+                             ("delta_q_stephan", 1.0), ("q_ph60", 4.0)):
+        on_edge = [r["contender_id"] for r in rows if float(r[column]) == boundary]
+        assert not on_edge, (
+            f"{len(on_edge)} rows sit exactly on the {column} boundary {boundary}, so "
+            "the published <= and the enforced < now disagree: " + ", ".join(on_edge[:3]))
