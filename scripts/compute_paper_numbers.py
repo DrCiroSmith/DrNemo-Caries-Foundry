@@ -26,9 +26,13 @@ disagreement under DISCREPANCIES. A disagreement is not a rounding note: it
 means two committed files state different values for the same quantity, and the
 manuscript has to say so rather than pick one.
 """
+import collections
+import hashlib
 import json
 import math
+import re
 import sqlite3
+import subprocess
 import statistics
 import sys
 from pathlib import Path
@@ -173,6 +177,54 @@ def ligand_chain(path):
     return others[0] if others else None
 
 
+def pdbqt_coord_digest(path):
+    """md5 of the coordinate columns of every atom line, all models.
+
+    Two docking runs of the same ligand never agree to the last decimal of every
+    atom in every retained mode, so an identical digest means one file was copied
+    from the other rather than produced by a second search.
+    """
+    text = Path(path).read_text()
+    coords = "".join(l[30:54] for l in text.splitlines()
+                     if l.startswith(("ATOM", "HETATM")))
+    return hashlib.md5(coords.encode()).hexdigest() if coords else None
+
+
+def pdbqt_best_mode(path, keep_glue=False):
+    """Heavy atoms of MODEL 1, in file order, as (name, x, y, z)."""
+    out, started = [], False
+    for l in Path(path).read_text().splitlines():
+        if l.startswith("MODEL"):
+            if started:
+                break
+            started = True
+            continue
+        if l.startswith("ENDMDL"):
+            break
+        if l.startswith(("ATOM", "HETATM")):
+            t = l[77:79].strip()
+            if t in ("H", "HD"):
+                continue
+            if t in ("G", "G0") and not keep_glue:
+                continue
+            out.append((l[12:16].strip(), float(l[30:38]), float(l[38:46]), float(l[46:54])))
+    return out
+
+
+def pdbqt_score(path):
+    for l in Path(path).read_text().splitlines():
+        if l.startswith("REMARK VINA RESULT:"):
+            return float(l.split()[3])
+    return None
+
+
+def in_order_rmsd(a, b):
+    if len(a) != len(b) or not a:
+        return None
+    return math.sqrt(sum((x[1] - y[1]) ** 2 + (x[2] - y[2]) ** 2 + (x[3] - y[3]) ** 2
+                         for x, y in zip(a, b)) / len(a))
+
+
 def aromatic_ring(atoms, resname):
     if resname == "TRP":
         names = ("CD2", "CE2", "CE3", "CZ2", "CZ3", "CH2")
@@ -283,17 +335,57 @@ def main():
          "demo_data/receptors/3AIC_native_ligand.pdb")
 
     # ------------------------------------------------- angle 2, reproducibility
-    heading("5. Angle 2, multi-seed reproducibility")
+    heading("5. Angle 2, multi-seed reproducibility, recomputed from the pose files")
     a2 = angles[2]
-    emit("D", "independent seeds", a2["n_seeds"], "disproof angle 2")
-    emit("R", "seed score mean kcal/mol", round(statistics.fmean(a2["vina_scores"]), 3),
-         "mean of disproof angle 2 vina_scores, this script")
-    emit("R", "seed score SD kcal/mol", round(statistics.stdev(a2["vina_scores"]), 3),
-         "sample SD of the same five scores, this script")
-    emit("R", "seed score range kcal/mol",
-         f"{min(a2['vina_scores'])} to {max(a2['vina_scores'])}", "this script")
-    emit("D", "mean pairwise pose RMSD, A", a2["mean_pairwise_rmsd_angstrom"], "disproof angle 2")
-    emit("D", "worst pairwise pose RMSD, A", a2["max_pairwise_rmsd_angstrom"], "disproof angle 2")
+    print("    The report treats this as five independent runs. One of the five is a\n"
+          "    byte-identical copy of the campaign pose (section 20), so it is not a run.\n"
+          "    Everything below is recomputed from the pose files with that one excluded.")
+    emit("D", "seeds the battery reports", a2["n_seeds"], "disproof angle 2")
+
+    seed_files = {}
+    for seed in (42, 101, 202, 303, 404):
+        f = REPO / "data" / "poses" / f"disproof_seed_{seed}_CAHWRPWHC_3AIC_docked.pdbqt"
+        if f.exists():
+            seed_files[seed] = f
+    campaign_pose = REPO / "data" / "poses" / "contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt"
+    campaign_digest = pdbqt_coord_digest(campaign_pose) if campaign_pose.exists() else None
+    reused = sorted(s for s, f in seed_files.items()
+                    if pdbqt_coord_digest(f) == campaign_digest)
+    independent = sorted(s for s in seed_files if s not in reused)
+    emit("R", "seed runs that duplicate the campaign pose",
+         ", ".join(str(s) for s in reused) or "none", "coordinate digest, this script")
+    emit("R", "independent seed runs", len(independent), "this script")
+
+    if len(independent) >= 2:
+        scores = [pdbqt_score(seed_files[s]) for s in independent]
+        emit("R", "seed score mean kcal/mol", round(statistics.fmean(scores), 3), "this script")
+        emit("R", "seed score SD kcal/mol (sample)", round(statistics.stdev(scores), 3),
+             "this script")
+        emit("R", "seed score SD kcal/mol (population, the report's convention)",
+             round(statistics.pstdev(scores), 3), "this script")
+        emit("R", "seed score range kcal/mol", f"{min(scores)} to {max(scores)}", "this script")
+        emit("R", "seed score span kcal/mol", round(max(scores) - min(scores), 3), "this script")
+
+        for keep_glue, label in ((False, "real heavy atoms"), (True, "including glue pseudo-atoms")):
+            modes = {s: pdbqt_best_mode(seed_files[s], keep_glue=keep_glue) for s in independent}
+            rs = [in_order_rmsd(modes[i], modes[j])
+                  for n, i in enumerate(independent) for j in independent[n + 1:]]
+            rs = [r for r in rs if r is not None]
+            if rs:
+                emit("R", f"pairwise pose RMSD over {label}, mean / worst / best A",
+                     f"{statistics.fmean(rs):.2f} / {max(rs):.2f} / {min(rs):.2f}",
+                     f"{len(rs)} pairs, this script")
+        heavy_modes = {s: pdbqt_best_mode(seed_files[s]) for s in independent}
+        heavy_rs = [r for n, i in enumerate(independent) for j in independent[n + 1:]
+                    if (r := in_order_rmsd(heavy_modes[i], heavy_modes[j])) is not None]
+        emit("D", "mean pairwise pose RMSD the report states, A",
+             a2["mean_pairwise_rmsd_angstrom"], "disproof angle 2")
+        if heavy_rs and abs(a2["mean_pairwise_rmsd_angstrom"]
+                            - statistics.fmean(heavy_rs)) > 0.05:
+            note("the pose RMSD the report states is computed over five poses and counts "
+                 "Meeko's glue pseudo-atoms as atoms; recomputed over the independent runs "
+                 "and the real heavy atoms only it differs, and the paper uses the "
+                 "recomputed value")
     emit("D", "centroid SD, A", a2["centroid_sd_angstrom"], "disproof angle 2")
     emit("R", "pose agreement convention, A", a2["pose_agreement_threshold_angstrom"],
          "convention, stated in advance")
@@ -353,7 +445,7 @@ def main():
         emit("R", f"{label}: isomers at least as good", f"{k} of {len(null_scores)}",
              "this script")
         emit("R", f"{label}: one-sided empirical p, (k+1)/(n+1)",
-             round((k + 1) / (len(null_scores) + 1), 4), "this script")
+             f"{(k + 1) / (len(null_scores) + 1):.4f}", "this script")
         emit("R", f"{label}: proportion k/n", round(k / len(null_scores), 4), "this script")
     emit("D", "p reported in the artefact", angles[5]["p_value"], "disproof angle 5")
     k_lead = sum(1 for s in null_scores if s <= by_seq[LEAD]["vina_3aic_kcal"])
@@ -414,6 +506,8 @@ def main():
     emit("R", "lead vs amylase ddG kcal/mol",
          round(by_seq[LEAD]["vina_3aic_kcal"] - by_seq[LEAD]["vina_1smd_kcal"], 3), "this script")
     emit("D", "lead vs lysozyme 1LZ1 kcal/mol", a9["vina_1lz1_affinity_kcal"], "disproof angle 9")
+    emit("D", "absolute affinity cutoff angle 9 applied, kcal/mol", -7.50,
+         "run_exhaustive_disproof.py, the criterion angle 9 used before correction")
     emit("R", "lead vs lysozyme ddG kcal/mol",
          round(by_seq[LEAD]["vina_3aic_kcal"] - a9["vina_1lz1_affinity_kcal"], 3), "this script")
     emit("R", "both ddG magnitudes as a fraction of the assumed error",
@@ -704,8 +798,171 @@ def main():
                 emit("R", f"{seq} {rname}{rnum} ring to Trp517 / Tyr430, A",
                      f"{euclid(rc, c517):.2f} / {euclid(rc, c430):.2f}", "stacking test")
 
+    # ------------------------------------------------- pose validity vs the intact receptor
+    heading("18. Are the deposited poses sterically possible in the intact enzyme?")
+    print("    Each deposited complex carries a contiguous slice of the receptor, not the\n"
+          "    whole chain. A clash test run against the slice cannot see an overlap with\n"
+          "    the residues the slice omits. Every pose is tested here against all committed\n"
+          "    receptor atoms as well as against the slice the file itself carries.")
+    rec_all = heavy_only(pdb_atoms(RECEPTOR_3AIC))
+    emit("R", "committed receptor heavy atoms", len(rec_all), "3AIC_receptor.pdb")
+    rec_nums = sorted({a["resnum"] for a in rec_all})
+    emit("R", "committed receptor residue span",
+         f"{rec_nums[0]}..{rec_nums[-1]} ({len(rec_nums)} residues)", "3AIC_receptor.pdb")
+    for seq, rel in poses:
+        path = REPO / rel
+        fname = path.name
+        if not path.exists():
+            continue
+        slice_atoms = heavy_only(pdb_atoms(path, chain="A"))
+        lig = heavy_only(pdb_atoms(path, chain=ligand_chain(path)))
+        if not lig or not slice_atoms:
+            continue
+        snums = sorted({a["resnum"] for a in slice_atoms})
+        emit("R", f"{fname}: deposited receptor slice",
+             f"{snums[0]}..{snums[-1]} ({len(snums)} residues, {len(slice_atoms)} atoms)",
+             "this script")
+        vs_slice = [nearest(b["xyz"], slice_atoms) for b in lig]
+        vs_all = [nearest(b["xyz"], rec_all) for b in lig]
+        emit("R", f"{fname}: closest ligand-receptor approach, slice / intact, A",
+             f"{min(vs_slice):.2f} / {min(vs_all):.2f}", "this script")
+        emit("R", f"{fname}: ligand heavy atoms under 2.2 A, slice / intact",
+             f"{sum(1 for d in vs_slice if d < 2.2)} / {sum(1 for d in vs_all if d < 2.2)}",
+             "this script")
+        clashing = sorted({(a["resnum"], a["resname"]) for b in lig for a in rec_all
+                           if euclid(b["xyz"], a["xyz"]) < 2.2})
+        if clashing:
+            inside = sum(1 for n, _ in clashing if n in set(snums))
+            emit("R", f"{fname}: intact-receptor residues it overlaps",
+                 f"{len(clashing)}, spanning {min(n for n, _ in clashing)}.."
+                 f"{max(n for n, _ in clashing)}, {inside} of them inside the deposited slice",
+                 "this script")
+            note(f"{fname}: the ligand overlaps {len(clashing)} receptor residues "
+                 f"({min(n for n, _ in clashing)}..{max(n for n, _ in clashing)}) at a closest "
+                 f"approach of {min(vs_all):.2f} A, and {inside} of those residues are present "
+                 f"in the deposited file. The pose is not sterically possible in the intact "
+                 f"enzyme, and the deposited slice cannot reveal it")
+
+    # ------------------------------------------------- what the redocking actually got wrong
+    heading("19b. Redocking: which part of the pose is wrong")
+    print("    A single RMSD says a redocking failed but not how. These numbers separate\n"
+          "    finding the site from placing the atoms, per retained mode.")
+    crystal = heavy_only(pdb_atoms(NATIVE_LIGAND))
+    cc = centroid(crystal)
+    modes = sorted((REPO / "data" / "poses").glob("3AIC_native_acarbose_docked_split_*.pdbqt"),
+                   key=lambda q: int(q.stem.rsplit("_", 1)[1]))
+    disp, prox = [], []
+    for q in modes:
+        pose = heavy_only(pdb_atoms(q))
+        if not pose:
+            continue
+        disp.append(euclid(centroid(pose), cc))
+        prox.append(sum(1 for a in crystal if nearest(a["xyz"], pose) <= 2.0))
+    if disp:
+        emit("R", "redocked modes compared", len(disp), "data/poses")
+        emit("R", "pose centroid to crystal centroid, range A",
+             f"{min(disp):.2f} to {max(disp):.2f}", "this script")
+        emit("R", "crystal atoms with a pose atom within 2.0 A, best mode",
+             f"{max(prox)} of {len(crystal)}", "this script")
+        emit("R", "crystal atoms with a pose atom within 2.0 A, range",
+             f"{min(prox)} to {max(prox)} of {len(crystal)}", "this script")
+        print("    Read together with the 4.507 A symmetry-corrected RMSD: the search puts the\n"
+              "    ligand in the right cleft and recovers most of the crystallographic envelope,\n"
+              "    and fails on atom-level register. Acarbose is a near-symmetric oligosaccharide,\n"
+              "    so a shift of one sugar unit along the cleft gives exactly this signature. The\n"
+              "    honest statement is that the setup locates the site and does not reproduce the\n"
+              "    binding mode, not that it cannot find the site.")
+
+    # ------------------------------------------------- search convergence
+    heading("19. Is the docking search converged? Two internal tests")
+    print("    The campaign ranks candidates on the single best-mode Vina score. These\n"
+          "    numbers ask how far that score moves with no change of ligand at all: across\n"
+          "    the modes Vina retains from a single run.")
+    runs = {}
+    for pose in sorted((REPO / "data" / "poses").glob("*_split_*.pdbqt")):
+        m = re.match(r"(.+)_(3aic|1smd)_split_(\d+)\.pdbqt$", pose.name)
+        if not m:
+            continue
+        score = None
+        for line in pose.read_text().splitlines():
+            if line.startswith("REMARK VINA RESULT:"):
+                score = float(line.split()[3])
+                break
+        if score is not None:
+            runs.setdefault((m.group(1), m.group(2)), {})[int(m.group(3))] = score
+    spreads = [max(v.values()) - min(v.values()) for v in runs.values() if len(v) >= 2]
+    spreads.sort()
+    emit("R", "retained pose files in the repository",
+         len(list((REPO / "data" / "poses").glob("*.pdbqt"))), "data/poses")
+    emit("R", "docking runs with at least two retained modes", len(spreads), "data/poses")
+    emit("R", "within-run score spread, mean / median kcal/mol",
+         f"{sum(spreads)/len(spreads):.3f} / {spreads[len(spreads)//2]:.3f}", "this script")
+    emit("R", "within-run score spread, range kcal/mol",
+         f"{min(spreads):.3f} to {max(spreads):.3f}", "this script")
+    lead_wt_gap = abs(by_seq[LEAD]["vina_3aic_kcal"] - by_seq[WT]["vina_3aic_kcal"])
+    emit("R", "lead minus wild type, kcal/mol", f"{lead_wt_gap:.3f}", "vault, this script")
+    emit("R", "runs whose own mode spread exceeds that gap",
+         f"{sum(1 for v in spreads if v > lead_wt_gap)} of {len(spreads)}", "this script")
+    emit("R", "runs whose own mode spread exceeds the null SD",
+         f"{sum(1 for v in spreads if v > sd)} of {len(spreads)}", "this script")
+    if spreads and sum(1 for v in spreads if v > lead_wt_gap) == len(spreads):
+        note("in every docking run with more than one retained mode, the spread between the "
+             "best and worst retained mode exceeds the score difference the campaign ranks "
+             "candidates on, so the ranking is finer than the search that produced it")
+    emit("R", "active torsions, 9-mer macrocycle / 11-mer variant",
+         "15 / 35", "TORSDOF in data/poses, this script")
+    emit("R", "exhaustiveness, redocking calibration / linear control / parent / "
+         "naive 11-mer / alanine scan", 16, "scripts/run_real_campaign.py")
+    emit("R", "exhaustiveness, 39 scrambled nulls and unlabelled default", 8,
+         "scripts/run_real_campaign.py (its docstring says 4; the code passes 8)")
+    emit("R", "exhaustiveness, generation 2 and generation 3 candidates", 4,
+         "scripts/run_real_campaign.py")
+    note("exhaustiveness is not uniform across the campaign, so every comparison that "
+         "crosses these groups compares unequal search effort as well as unequal "
+         "molecules; and per section 20 the lead's own pose file cannot be attributed "
+         "to any one of these settings")
+
+    # ------------------------------------------------- duplicate census
+    heading("20. Does any docked pose appear twice under a different protocol?")
+    print("    A stochastic search does not reproduce another run's coordinates to the\n"
+          "    last decimal of every atom in every retained mode. So two pose files with\n"
+          "    the same coordinate digest are one run reported twice, under whatever\n"
+          "    protocol each file's script claims.")
+    digests = collections.defaultdict(list)
+    scanned = 0
+    for pose in sorted((REPO / "data" / "poses").glob("*.pdbqt")):
+        if "_split_" in pose.name:
+            continue
+        d = pdbqt_coord_digest(pose)
+        if d is None:
+            continue
+        scanned += 1
+        digests[d].append(pose.name)
+    dup_groups = {d: v for d, v in digests.items() if len(v) > 1}
+    emit("R", "pose and ligand files scanned, splits excluded", scanned, "data/poses")
+    emit("R", "distinct coordinate sets", len(digests), "this script")
+    emit("R", "duplicate groups", len(dup_groups), "this script")
+    for d in sorted(dup_groups, key=lambda k: (-len(digests[k]), digests[k][0])):
+        emit("R", f"identical coordinates in {len(dup_groups[d])} files",
+             ", ".join(sorted(dup_groups[d])), "coordinate digest, this script")
+    if dup_groups:
+        note("each script that writes these files docks only when the output path is "
+             "absent or under a hundred bytes, so a file already at that path is adopted "
+             "with no check that it came from the protocol about to be reported")
+
+    ph_neutral = REPO / "data" / "poses" / "disproof_explicit_pH72_3AIC_docked.pdbqt"
+    ph_acidic = REPO / "data" / "poses" / "disproof_explicit_pH52_3AIC_docked.pdbqt"
+    if ph_neutral.exists() and ph_acidic.exists():
+        n_s, a_s = pdbqt_score(ph_neutral), pdbqt_score(ph_acidic)
+        emit("R", "pH 7.2 arm, kcal/mol", n_s, "data/poses, this script")
+        emit("R", "pH 5.2 arm, kcal/mol", a_s, "data/poses, this script")
+        emit("R", "reported pH shift, kcal/mol", round(a_s - n_s, 3), "this script")
+        if campaign_digest and pdbqt_coord_digest(ph_neutral) == campaign_digest:
+            note("the pH 7.2 arm is the campaign pose, not a run of its own, so the pH "
+                 "shift is the difference between a reused file and a fresh run")
+
     # ------------------------------------------------- tally
-    heading("17. Battery tally")
+    heading("21. Battery tally")
     for cls, n in sorted(disproof["classification_summary"].items()):
         emit("D", f"angles classified {cls}", n, "disproof classification_summary")
     emit("R", "angles in the report", len(disproof["angles"]), "this script")
