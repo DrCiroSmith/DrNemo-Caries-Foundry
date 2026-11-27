@@ -892,3 +892,114 @@ def test_the_manuscripts_rmsd_figures_reproduce_under_a_glue_inclusive_selection
     text = (HERE / "PROTOCOL.md").read_text()
     assert "9.04" in text and "11.80" in text, (
         "4.1b must state the corrected heavy-atom values beside the reproduced ones")
+
+
+def _load_analyze():
+    spec = importlib.util.spec_from_file_location("analyze_mod", HERE / "analyze.py")
+    mod = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(mod)
+    except Exception as exc:  # numpy absent, for instance
+        pytest.skip(f"analyze.py will not import here: {exc}")
+    return mod
+
+
+def test_the_shared_reader_excludes_glue_on_every_ligand_in_the_repository():
+    """One reader, checked on a glued peptide, a differently glued peptide and acarbose.
+
+    The hazard this guards is that a selection can look correct on one ligand and be
+    wrong on another: acarbose carries no glue markers at all, so a reader that admits
+    them passes every acarbose check and still corrupts every peptide figure. So the
+    identity records minus glue minus hydrogens is asserted per ligand rather than a
+    single expected count.
+    """
+    mod = _load_analyze()
+    poses = REPO_ROOT / "data" / "poses"
+    if not poses.exists():
+        pytest.skip("data/poses is not present in this checkout")
+
+    cases = {
+        "contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt": 84,   # the lead, glued
+        "scrambled_01_CHRPWHPWC_1smd.pdbqt": 86,           # a null, glued, different size
+        "3AIC_native_acarbose_docked.pdbqt": 44,           # acarbose, no glue at all
+    }
+    checked = 0
+    for name, expected in cases.items():
+        path = poses / name
+        if not path.exists():
+            continue
+        records = glue = hydrogens = 0
+        started = False
+        for line in path.read_text().splitlines():
+            if line.startswith("MODEL"):
+                if started:
+                    break
+                started = True
+                continue
+            if line.startswith("ENDMDL") and started:
+                break
+            if line.startswith(("ATOM", "HETATM")):
+                records += 1
+                t = mod.atom_type_of(line)
+                if t in mod.GLUE_PSEUDO_ATOM_TYPES:
+                    glue += 1
+                if t in ("H", "HD", "HS"):
+                    hydrogens += 1
+
+        coords, elements = mod.read_pdbqt_atoms(path)
+        assert len(coords) == records - glue - hydrogens, (
+            f"{name}: reader selected {len(coords)} but records minus glue minus "
+            f"hydrogens is {records - glue - hydrogens}")
+        assert len(coords) == expected, (
+            f"{name}: expected {expected} heavy atoms, reader gave {len(coords)}")
+        assert "G" not in elements, f"{name}: a glue marker reached the element list"
+        checked += 1
+
+    assert checked >= 2, (
+        "at least two ligands must be checked, one glued and one not; only "
+        f"{checked} were present")
+
+
+def test_no_module_reads_the_atom_type_with_a_fixed_short_slice():
+    """Fix the reader, not the call sites. This is what stops a fourth recurrence.
+
+    A two-character slice of the type field truncates CG0 to CG, which makes a real
+    closure carbon indistinguishable from a glue marker. Three figures were reported
+    wrongly from that slice. The only place allowed to touch those columns is
+    analyze.py's atom_type_of, as a documented fallback for plain PDB input whose
+    element field genuinely is columns 77 and 78.
+    """
+    # a subscript of something, so that prose describing the old bug is not flagged
+    subscript = re.compile(r"\w\[\s*7[67]\s*:\s*79\s*\]")
+    narrow = re.compile(r"\w\[\s*76\s*:\s*78\s*\]")
+    offenders = []
+    for path in sorted(HERE.glob("*.py")):
+        if path.name == "test_provenance.py":
+            continue
+        for n, line in enumerate(path.read_text().splitlines(), 1):
+            if subscript.search(line):
+                offenders.append(f"{path.name}:{n}: {line.strip()}")
+            if narrow.search(line) and path.name != "analyze.py":
+                offenders.append(f"{path.name}:{n}: {line.strip()}")
+    assert not offenders, (
+        "read the AutoDock type as the last whitespace token, not by column:\n"
+        + "\n".join(offenders))
+
+    mod = _load_analyze()
+    assert mod.atom_type_of(
+        "ATOM      1  CA  CYS A   1       1.000   0.000   0.000  1.00  0.00    +0.152 CG0"
+    ) == "CG0"
+    assert mod.atom_type_of(
+        "ATOM      2  G   CYS A   1       2.000   0.000   0.000  1.00  0.00    +0.000 G0"
+    ) == "G0"
+
+
+def test_the_pytest_free_gate_also_checks_the_atom_selection():
+    """He may run without pytest, so the selection check cannot live only here."""
+    text = (HERE / "analyze.py").read_text()
+    assert "Atom selection" in text, (
+        "analyze.py --self-test must carry the atom-selection block; RUN_ME.sh runs "
+        "the self-test unconditionally but pytest only if it is installed")
+    for needle in ("the glue pseudo-atom G0 is excluded",
+                   "the closure carbon CG0 is kept, as carbon"):
+        assert needle in text, f"the self-test no longer asserts: {needle}"

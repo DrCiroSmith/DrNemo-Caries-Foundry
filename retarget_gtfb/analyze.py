@@ -98,19 +98,58 @@ def hungarian(cost: np.ndarray) -> np.ndarray:
     return out
 
 
+# The glue markers Meeko inserts when it opens a macrocycle ring. Gn is a pseudo-atom
+# and is not an atom at all; CGn is the real closure carbon and is kept.
+GLUE_PSEUDO_ATOM_TYPES = {"G0", "G1", "G2", "G3"}
+RING_CLOSURE_CARBON_TYPES = {"CG0", "CG1", "CG2", "CG3"}
+KNOWN_AUTODOCK_TYPES = ({"C", "A", "N", "NA", "NS", "O", "OA", "OS", "S", "SA",
+                         "H", "HD", "HS", "F", "CL", "BR", "I", "P",
+                         "MG", "CA", "MN", "FE", "ZN"}
+                        | GLUE_PSEUDO_ATOM_TYPES | RING_CLOSURE_CARBON_TYPES)
+
+
+def atom_type_of(line: str) -> str:
+    """The AutoDock type of one ATOM record, read whole.
+
+    Read as the last whitespace-separated token, never as a fixed column slice. The
+    type sits at the end of the record after the partial charge, so its column varies,
+    and a two-character slice silently truncates CG0 to CG and so cannot tell a real
+    closure carbon from a glue pseudo-atom. Three separate figures were reported wrongly
+    from that truncation before this function existed, which is why the parsing lives
+    here and not at the call sites. Falls back to the PDB element column, then to the
+    atom name, for plain PDB input that carries no type.
+    """
+    token = (line.split() or [""])[-1].upper()
+    if token in KNOWN_AUTODOCK_TYPES:
+        return token
+    return (line[76:78].strip() or line[12:16].strip()[:1]).upper()
+
+
 def read_pdbqt_atoms(path: Path, first_model_only: bool = True):
-    """Return (coords, elements) for a PDBQT or PDB file, heavy atoms only."""
+    """Return (coords, elements) for a PDBQT or PDB file.
+
+    The selection is: heavy atoms, excluding Meeko glue pseudo-atoms. Stated as a rule
+    and not as an intention, because every r.m.s.d. this module reports depends on it.
+    Hydrogens (H, HD, HS) are dropped. Glue pseudo-atoms (G0 to G3) are dropped, since
+    they are markers rather than atoms, they sit at the macrocycle closure and move with
+    it, so including them inflates any r.m.s.d. rather than only adding noise. Ring
+    closure carbons (CG0 to CG3) are real carbons and are kept as carbon.
+    """
     coords, elems = [], []
     for line in path.read_text().splitlines():
         if line.startswith("ENDMDL") and first_model_only and coords:
             break
         if line.startswith(("ATOM", "HETATM")):
-            el = line[76:79].strip() or line[12:16].strip()[:1]
-            el = el.upper()
+            el = atom_type_of(line)
             if el in ("H", "HD", "HS"):
                 continue
+            if el in GLUE_PSEUDO_ATOM_TYPES:
+                continue
             # AutoDock types map onto elements
-            el = {"A": "C", "NA": "N", "OA": "O", "SA": "S"}.get(el, el)
+            if el in RING_CLOSURE_CARBON_TYPES:
+                el = "C"
+            el = {"A": "C", "NA": "N", "NS": "N", "OA": "O", "OS": "O",
+                  "SA": "S"}.get(el, el)
             coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
             elems.append(el[0] if el not in ("CL", "BR") else el)
     return np.array(coords), elems
@@ -434,6 +473,34 @@ def self_test() -> int:
         if got > brute + 1e-9:
             worse += 1
     chk("matches brute force on 200 random matrices", worse == 0, f"{worse} mismatches")
+
+    print("Atom selection")
+    import tempfile
+    glued = "\n".join([
+        "MODEL 1",
+        "ATOM      1  CA  CYS A   1       1.000   0.000   0.000  1.00  0.00    +0.152 CG0",
+        "ATOM      2  G   CYS A   1       2.000   0.000   0.000  1.00  0.00    +0.000 G0",
+        "ATOM      3  N   CYS A   1       3.000   0.000   0.000  1.00  0.00    -0.343 N",
+        "ATOM      4  HN  CYS A   1       4.000   0.000   0.000  1.00  0.00    +0.164 HD",
+        "ATOM      5  OD  CYS A   1       5.000   0.000   0.000  1.00  0.00    -0.272 OA",
+        "ENDMDL",
+    ])
+    with tempfile.NamedTemporaryFile("w", suffix=".pdbqt", delete=False) as fh:
+        fh.write(glued + "\n")
+        synthetic = Path(fh.name)
+    try:
+        c, e = read_pdbqt_atoms(synthetic)
+        chk("the glue pseudo-atom G0 is excluded", "G" not in e, f"elements={e}")
+        chk("the closure carbon CG0 is kept, as carbon", e.count("C") == 1, f"elements={e}")
+        chk("the polar hydrogen HD is excluded", "H" not in e, f"elements={e}")
+        chk("three atoms selected from five records", len(c) == 3, f"n={len(c)}")
+        chk("CG0 is not read as a glue marker by a short slice",
+            atom_type_of(glued.splitlines()[1]) == "CG0",
+            f"got {atom_type_of(glued.splitlines()[1])!r}")
+        chk("G0 is read whole", atom_type_of(glued.splitlines()[2]) == "G0",
+            f"got {atom_type_of(glued.splitlines()[2])!r}")
+    finally:
+        synthetic.unlink(missing_ok=True)
 
     print("Identity and translation RMSD")
     pts = rng.random((20, 3)) * 10
