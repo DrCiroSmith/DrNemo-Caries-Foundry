@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Real Biophysical Campaign Runner — 100% Empirical 28Å Physics across AutoDock Vina v1.2.7,
-Vinardo, OpenMM Amber14/GBn2 (310.15 K), and Karl Popper Falsification Controls.
+Vinardo, OpenMM Amber14/GBn2 energy minimisation (no dynamics), and Karl Popper Falsification Controls.
 Author: Dr. Roi Castrellon, DDS (DrNemo Caries Foundry)
 
 Rules:
@@ -157,7 +157,7 @@ def worker_dock_linear_control(dummy: int = 0) -> Dict[str, Any]:
 def worker_dock_contender(item: Dict[str, Any]) -> Dict[str, Any]:
     """
     Evaluates a candidate cyclic peptide on 3AIC and 1SMD,
-    computes OpenMM potential energy at 310.15 K, S-S bond distance,
+    computes the OpenMM minimised potential energy of the isolated ligand, S-S bond distance,
     charges, and falsification status.
     """
     seq = item["sequence"]
@@ -197,7 +197,9 @@ def worker_dock_contender(item: Dict[str, Any]) -> Dict[str, Any]:
     vina_1smd = dock_1smd["vina_kcal"]
     selectivity_ddg = round(vina_3aic - vina_1smd, 2)
 
-    # 3. OpenMM Amber14/GBn2 Implicit Solvent Potential Energy at 310.15 K
+    # 3. OpenMM Amber14/GBn2 implicit-solvent energy minimisation of the isolated ligand.
+    #    temp_k only parameterises the integrator object; no integrator step is ever taken,
+    #    so no temperature is sampled and this is not molecular dynamics.
     try:
         openmm_kj = relax_with_openmm(ligand_pdb, temp_k=310.15)
     except Exception:
@@ -448,7 +450,7 @@ def main():
         ("R5A", "CPHWAPWHC", "Electrostatic Salt-Bridge"),
         ("P6A", "CPHWRAWHC", "Macrocycle Turn Lock"),
         ("W7A", "CPHWRPAHC", "Lipophilic Cleft Wall"),
-        ("H8A", "CPHWRPWAC", "Primary Anchor Hotspot")
+        ("H8A", "CPHWRPWAC", "Second acid-switch histidine")
     ]
     ala_scan_dict = {}
     for pos_label, seq, role in ala_mutant_keys:

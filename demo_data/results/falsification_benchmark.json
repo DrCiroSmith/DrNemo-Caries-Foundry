@@ -3,7 +3,7 @@
   "author": "Dr. Roi Castrellon, DDS",
   "affiliation": "DrNemo Oral Biophysics Research, Miami, FL, USA",
   "receptors": {
-    "target": "RCSB PDB 3AIC (S. mutans GTF-SI catalytic domain, 2.10 A)",
+    "target": "RCSB PDB 3AIC (S. mutans GTF-SI, gtfC gene product, UniProt P13470, 3.11 A)",
     "counter_screen": "RCSB PDB 1SMD (Human Salivary alpha-Amylase, 1.60 A)",
     "grid_dimensions_angstrom": [
       28.0,
@@ -24,7 +24,7 @@
   },
   "pareto_champion": {
     "sequence": "CAHWRPWHC",
-    "role": "P2A Hinge Mutant",
+    "role": "the wild type's P2A mutant, the lead this campaign pursued",
     "vina_3aic_kcal": -8.191,
     "vinardo_3aic_kcal": -4.99,
     "ligand_efficiency": 0.098,
@@ -32,9 +32,14 @@
     "selectivity_ddg": -0.85,
     "openmm_relaxed_kj": -1234.68,
     "ss_bond_angstrom": 2.06,
-    "falsification_status": "CORROBORATED",
+    "falsification_status": "SURVIVED_ALL_GATES",
     "pareto_rank": 1,
-    "pose_sha256": "d476318723b90a0c6d622e46383b0815d8a5c805ac4d2a1631c77e112f57178b"
+    "pose_sha256": "d476318723b90a0c6d622e46383b0815d8a5c805ac4d2a1631c77e112f57178b",
+    "pareto_rank_is_not_a_dominance_rank": true,
+    "dominated_by_count_all_candidates": 87,
+    "dominated_by_count_among_survivors": 9,
+    "on_pareto_front": false,
+    "note": "The key name is kept because consumers look this record up by it. The candidate is not non-dominated: on the recorded objectives (Vina 3AIC and selectivity ddG) it is dominated by 87 of 260 rows and by 9 of the 17 other rows that survived every gate. Recompute with scripts/compute_pareto_front.py."
   },
   "co_crystal_control": {
     "target": "RCSB 3AIC (S. mutans GTF-SI catalytic domain)",
@@ -936,7 +941,7 @@
       "vina_3aic_kcal": -7.869,
       "vinardo_3aic_kcal": -4.251,
       "delta_binding_affinity_kcal": 0.193,
-      "is_hotspot": true
+      "is_hotspot": false
     },
     "W4A": {
       "mutant_sequence": "CPHARPWHC",
@@ -968,16 +973,24 @@
       "vina_3aic_kcal": -7.805,
       "vinardo_3aic_kcal": -4.485,
       "delta_binding_affinity_kcal": 0.257,
-      "is_hotspot": true
+      "is_hotspot": false
     },
     "H8A": {
       "mutant_sequence": "CPHWRPWAC",
-      "structural_role": "Primary Catalytic Anchor",
+      "structural_role": "Imidazole side chain (no anchoring measured)",
       "vina_3aic_kcal": -7.978,
       "vinardo_3aic_kcal": -4.696,
       "delta_binding_affinity_kcal": 0.084,
-      "is_hotspot": true
+      "is_hotspot": false
     }
+  },
+  "alanine_scan_meta": {
+    "parent_sequence": "CPHWRPWHC",
+    "parent_affinity_kcal": -8.062,
+    "hotspot_threshold_kcal": 0.7,
+    "identified_hotspots": [],
+    "largest_affinity_loss_kcal": 0.257,
+    "note": "Deltas are against the wild type CPHWRPWHC, of which the lead CAHWRPWHC is the P2A mutant. No substitution reaches the hotspot threshold, so no residue is an energetic anchor."
   },
   "solubility_and_formulation": {
     "q_ph72": 1.129,

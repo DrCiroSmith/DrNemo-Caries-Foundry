@@ -275,15 +275,25 @@ def test_falsification_angle3_scrambled_null_permutation():
 
 
 def test_falsification_angle4_alanine_hotspot_scan():
-    """Angle 4: In-silico alanine scanning identifies energetic hotspots."""
+    """Angle 4: the alanine scan finds no energetic hotspot, and the gate says so.
+
+    This test asserted the opposite until the scan was recomputed against its real parent.
+    The scan is parented on the wild type CPHWRPWHC, and the largest affinity loss anywhere
+    in it is W7A at +0.257 kcal/mol, well under the +0.70 kcal/mol threshold the repository
+    set in advance. No residue is an energetic anchor, so this gate must not report a pass.
+    """
     engine = FalsificationEngine()
     audit = engine.run_falsification_audit("CAHWRPWHC")
     gate4 = audit["gates"]["gate4_alanine_hotspot_scan"]
-    
-    assert gate4["passed"] is True
-    assert gate4["hotspot_count"] >= 1
-    # Verify primary anchor His8 is identified
-    assert "H8A" in gate4["hotspots"]
+
+    assert gate4["passed"] is False
+    assert gate4["hotspot_count"] == 0
+    assert gate4["hotspots"] == []
+    assert gate4["classification"] == "NO_HOTSPOT_IDENTIFIED"
+    assert gate4["parent_sequence"] == "CPHWRPWHC"
+    assert abs(gate4["largest_affinity_loss_kcal"] - 0.257) < 1e-6
+    # H8A was previously named the primary anchor; it loses only +0.084 kcal/mol.
+    assert "H8A" not in gate4["hotspots"]
 
 
 def test_falsification_angle5_protease_resistance():
@@ -966,3 +976,45 @@ def test_protease_gate_does_discriminate():
         "the protease criterion rejects a large fraction of the library, so it must not be "
         "described as a gate that cannot fail"
     )
+
+
+def test_the_lead_is_not_on_the_pareto_front():
+    """The 'non-dominated candidate' claim was false, and must not come back.
+
+    scripts/compute_pareto_front.py is the only producer of a dominance result in
+    this repository. pareto_rank is assigned from the falsification status, so it
+    says nothing about dominance.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    from compute_pareto_front import (
+        LEAD_SEQUENCE,
+        SURVIVED_STATUSES,
+        dominates,
+        load_rows,
+        pareto_front,
+    )
+
+    rows = load_rows()
+    assert len(rows) > 200
+    lead = next(r for r in rows if r["sequence"] == LEAD_SEQUENCE)
+
+    front = pareto_front(rows)
+    assert front, "there must be a front"
+    assert lead["sequence"] not in [r["sequence"] for r in front], (
+        "the lead is dominated; do not describe it as the non-dominated candidate"
+    )
+    assert len([r for r in rows if dominates(r, lead)]) > 50
+
+    survivors = [r for r in rows if r["falsification_status"] in SURVIVED_STATUSES]
+    survivor_front = pareto_front(survivors)
+    assert lead["sequence"] not in [r["sequence"] for r in survivor_front], (
+        "the lead is dominated even among the rows that survived every gate"
+    )
+    assert len([r for r in survivors if dominates(r, lead)]) >= 9
+
+    # pareto_rank tracks the status exactly, which is the evidence that it is a tier
+    # rather than a dominance rank.
+    for row in rows:
+        assert (row["pareto_rank"] == 1) == (
+            row["falsification_status"] in SURVIVED_STATUSES
+        ), "pareto_rank is a status tier; if that ever stops holding, re-read the code"

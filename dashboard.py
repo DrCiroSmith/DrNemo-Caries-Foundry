@@ -396,7 +396,7 @@ st.markdown(f"""
         </div>
         <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.9em; flex-wrap: wrap;">
             <span style="color: #cbd5e1;">Evaluated: <strong style="color: #38bdf8;">{vault_count} Contenders</strong></span>
-            <span style="color: #cbd5e1;">Pareto Champion: <strong style="color: #4ade80;">{champ_seq}</strong> ({best_vina:.3f} kcal/mol)</span>
+            <span style="color: #cbd5e1;">Best survivor by affinity (not non-dominated): <strong style="color: #4ade80;">{champ_seq}</strong> ({best_vina:.3f} kcal/mol)</span>
             <span style="color: #cbd5e1;">Protease Resistance: <strong style="color: #4ade80;">0 Cleavage Sites</strong></span>
             <span style="color: #cbd5e1;">Stephan Switch: <strong style="color: #4ade80;">ΔQ = +1.618</strong></span>
         </div>
@@ -513,9 +513,9 @@ with tab_cmd:
     with c_stat4:
         champ = ContenderVault().get_pareto_champion()
         if champ:
-            st.metric("Pareto Champion", f"{champ.get('sequence')}", delta=f"{champ.get('vina_3aic_kcal')} kcal/mol")
+            st.metric("Best survivor by affinity", f"{champ.get('sequence')}", delta=f"{champ.get('vina_3aic_kcal')} kcal/mol", help="Ordered by score, not by Pareto dominance. Run scripts/compute_pareto_front.py for the real front.")
         else:
-            st.metric("Pareto Champion", "CAHWRPWHC")
+            st.metric("Best survivor by affinity", "CAHWRPWHC")
 
     # 5 Action Buttons
     b1, b2, b3, b4, b5 = st.columns(5)
@@ -851,15 +851,15 @@ with tab_popper:
                 "Summary": a.get("scientific_summary")
             })
         st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True, hide_index=True)
-        st.markdown(f"**Battery Verdict:** 5 Passed in Silico | 6 Inconclusive within Noise | 1 At Risk | 0 Falsified")
+        st.markdown("**Battery Verdict:** 2 Passed in Silico | 5 Inconclusive within Noise | 1 At Risk | 1 Calibration Failed | 1 Score Reproducible but Pose Not | 1 No Hotspot | 1 Not Computed")
         st.divider()
 
     col_lead, col_naive = st.columns(2)
     with col_lead:
         st.info("### 🏆 Evaluated Candidate: `CAHWRPWHC` (P2A Hinge Variant)")
         st.markdown("""
-        * **Angle 1 (3AIC Redocking Calibration):** **-7.915 kcal/mol**, RMSD **4.51 Å** (exceeds 2.0-4.0 Å rigid standard due to wide cleft and glycosidic flexibility; `INCONCLUSIVE_WITHIN_NOISE`).
-        * **Angle 2 (Multi-Seed N=5):** Score mean **-8.10 ± 0.37 kcal/mol**, centroid SD **0.46 Å** (`PASSED_IN_SILICO`).
+        * **Angle 1 (3AIC Redocking Calibration):** **-7.915 kcal/mol**, symmetry-corrected RMSD **4.51 Å** against the **2.0 Å** convention, so the scoring function is not calibrated for pose prediction in this box (`CALIBRATION_FAILED`).
+        * **Angle 2 (Multi-Seed N=5):** Score mean **-8.10 ± 0.37 kcal/mol** and centroid SD **0.46 Å** both reproduce, but mean pairwise pose RMSD is **9.24 Å** (worst pair 12.19 Å) against a 2.0 Å convention, so the seeds are not finding the same binding mode (`SCORE_REPRODUCIBLE_POSE_NOT`).
         * **Angle 3 (Pose Mode Clustering):** Mode 1-2 gap **+0.10 kcal/mol**, centroid shift **1.74 Å** (`INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 4 (1SMD Selectivity Reality Check):** ΔΔG = **-0.85 kcal/mol** vs Vina SE ~2.85 kcal/mol (`INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 5 (Null Permutation, N=39):** Z = **+0.32σ**, p = **0.5897** (null mean -8.343 ± 0.470 kcal/mol; static docking fails to reject H0; `INCONCLUSIVE_WITHIN_NOISE`).
@@ -868,9 +868,9 @@ with tab_popper:
         * **Angle 8 (Protease Vulnerability):** Trypsin shielded by Pro6, but chymotrypsin/cathepsin G cleaves Trp4/Trp7 (`AT_RISK`).
         * **Angle 9 (Human Lysozyme 1LZ1):** **-6.67 kcal/mol** (ΔΔG = **-1.52 kcal/mol** vs 3AIC; `PASSED_IN_SILICO`).
         * **Angle 10 (Conformational Control):** Linear AHWRPWH **-9.25 kcal/mol** vs cyclic **-8.19 kcal/mol** (Vina under-penalizes unfolded entropy; `INCONCLUSIVE_WITHIN_NOISE`).
-        * **Angle 11 (OpenMM Relaxation):** Amber14/GBn2 310.15 K minimization drift **0.92 Å** (`PASSED_IN_SILICO`).
+        * **Angle 11 (OpenMM Relaxation):** not computed. rdkit, openmm and pdbfixer are absent here, so no relaxation was run and no drift figure exists (`NOT_COMPUTED`).
         * **Angle 12 (Chitosan & Stephan Switch):** Net charge **+2.05 ≤ +4.0**, **ΔQ = +1.618** (`PASSED_IN_SILICO`).
-        * **Honest Verdict:** **5 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 0 Falsified.**
+        * **Honest Verdict:** **2 Passed in Silico, 5 Inconclusive within Noise, 1 At Risk, 1 Calibration Failed, 1 Score Reproducible but Pose Not, 1 No Hotspot Identified, 1 Not Computed.** Nothing was corroborated.
         """)
 
     with col_naive:
@@ -879,24 +879,24 @@ with tab_popper:
         * **Angle 1 (3AIC Pocket Binding):** **-7.586 kcal/mol** (Weak surface association, lacks deep triad penetration).
         * **Angle 2 (1SMD Salivary Amylase):** **-7.580 kcal/mol** (ΔΔG = **-0.006 kcal/mol**; complete lack of selectivity, binds host amylase!).
         * **Angle 3 (Null Permutation, N=39):** Z = **+1.61σ** (Poor discrimination from random poly-cationic sequences).
-        * **Angle 4 (Alanine Hotspot Scan):** Non-specific electrostatic binding (no localized stereochemical anchor).
+        * **Alanine Scan:** non-specific electrostatic binding, with no localized stereochemical anchor. (The alanine scan is Angle 6 in the battery, not Angle 4.)
         * **Angle 5 (Oral Protease Clearance):** **7 cleavage sites** (Rapid degradation by salivary proteases in <2 minutes).
         * **Angle 6 (Chitosan & Stephan Switch):** Net charge **+7.00 > +4.0** (Donnan precipitation collapse; ΔQ = 0.00, no acid-switch).
         * **Verdict:** **FALSIFIED (Failed 5 of 6 Gates).**
         """)
 
     st.divider()
-    st.subheader("🔬 Alanine-Scanning Energetic Hotspot Spectrum (Parent: `CPHWRPWHC` | Champion: `CAHWRPWHC`)")
+    st.subheader("🔬 Alanine Scan vs the Wild-Type Parent `CPHWRPWHC`: No Hotspot Found")
 
     # Load Alanine scan data directly from falsification_benchmark.json
     ala_rows = [
         {"Position": "P2A", "Sequence": "CAHWRPWHC", "Role": "Conformational Hinge", "Vina ΔG (kcal/mol)": -8.191, "Vinardo ΔG (kcal/mol)": -4.990, "ΔΔG Binding": -0.129, "Hotspot": "No (Permissive/Lead)"},
-        {"Position": "H3A", "Sequence": "CPAWRPWHC", "Role": "Acid-Switch Residue", "Vina ΔG (kcal/mol)": -7.869, "Vinardo ΔG (kcal/mol)": -4.251, "ΔΔG Binding": +0.193, "Hotspot": "YES (Anchor Loss)"},
+        {"Position": "H3A", "Sequence": "CPAWRPWHC", "Role": "Acid-Switch Residue", "Vina ΔG (kcal/mol)": -7.869, "Vinardo ΔG (kcal/mol)": -4.251, "ΔΔG Binding": +0.193, "Hotspot": "No (+0.193, under the +0.70 threshold)"},
         {"Position": "W4A", "Sequence": "CPHARPWHC", "Role": "Pi-Stacking Platform", "Vina ΔG (kcal/mol)": -8.269, "Vinardo ΔG (kcal/mol)": -5.094, "ΔΔG Binding": -0.207, "Hotspot": "No"},
         {"Position": "R5A", "Sequence": "CPHWAPWHC", "Role": "Electrostatic Salt-Bridge", "Vina ΔG (kcal/mol)": -8.531, "Vinardo ΔG (kcal/mol)": -5.265, "ΔΔG Binding": -0.469, "Hotspot": "No"},
         {"Position": "P6A", "Sequence": "CPHWRAWHC", "Role": "Macrocycle Turn Lock", "Vina ΔG (kcal/mol)": -8.890, "Vinardo ΔG (kcal/mol)": -5.672, "ΔΔG Binding": -0.828, "Hotspot": "No (Protease Shield Loss)"},
-        {"Position": "W7A", "Sequence": "CPHWRPAHC", "Role": "Lipophilic Cleft Wall", "Vina ΔG (kcal/mol)": -7.805, "Vinardo ΔG (kcal/mol)": -4.485, "ΔΔG Binding": +0.257, "Hotspot": "YES (Pocket Contact Loss)"},
-        {"Position": "H8A", "Sequence": "CPHWRPWAC", "Role": "Primary Catalytic Anchor", "Vina ΔG (kcal/mol)": -7.978, "Vinardo ΔG (kcal/mol)": -4.696, "ΔΔG Binding": +0.084, "Hotspot": "YES (Triad Anchor)"}
+        {"Position": "W7A", "Sequence": "CPHWRPAHC", "Role": "Lipophilic Cleft Wall", "Vina ΔG (kcal/mol)": -7.805, "Vinardo ΔG (kcal/mol)": -4.485, "ΔΔG Binding": +0.257, "Hotspot": "No (+0.257, the largest loss in the scan)"},
+        {"Position": "H8A", "Sequence": "CPHWRPWAC", "Role": "Second acid-switch histidine", "Vina ΔG (kcal/mol)": -7.978, "Vinardo ΔG (kcal/mol)": -4.696, "ΔΔG Binding": +0.084, "Hotspot": "No (+0.084)"}
     ]
     ala_df = pd.DataFrame(ala_rows)
 
@@ -943,7 +943,7 @@ with tab7:
             <h3>🥉 Tier 3: Oral Dynamics & Stephan Activation</h3>
             <p><strong>Priority: BASELINE</strong> | Ambient Salivary pH Shift</p>
             <ul>
-                <li><strong>Biophysics:</strong> OpenMM Amber14/GBn2 relaxation at 310.15 K.</li>
+                <li><strong>Biophysics:</strong> OpenMM Amber14/GBn2 energy minimisation (no dynamics, no temperature sampled).</li>
                 <li><strong>Gate:</strong> Stephan charge-switch ΔQ ≥ +1.00 at acidic pH 5.2.</li>
             </ul>
         </div>

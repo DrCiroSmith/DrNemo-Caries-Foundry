@@ -2,7 +2,7 @@
 ## Streptococcus mutans GTF-SI Macrocyclic Inhibitor Campaign
 **Principal Investigator:** Dr. Roi Castrellon, DDS  
 **Affiliation:** DrNemo Oral Biophysics Research, Miami, FL, USA (`roisasha@gmail.com`)  
-**Target Receptor:** RCSB PDB 3AIC (2.10 A Resolution) | Counter-Screen: Human Salivary Amylase 1SMD (1.60 A Resolution)  
+**Target Receptor:** RCSB PDB 3AIC, GTF-SI / gtfC (3.11 A Resolution) | Counter-Screen: Human Salivary Amylase 1SMD (1.60 A Resolution)  
 **Live WebGL 3D Studio:** [Interactive WebGL Viewer](https://drcirosmith.github.io/DrNemo-Caries-Foundry/)  
 **Workstation Dashboard:** `streamlit run dashboard.py` (Local Port 8501)  
 
@@ -30,12 +30,12 @@ A critical distinction in this computational campaign governs molecular size ver
 
 | SOP ID | Notebook File | Notebook Title | Plain-English Summary | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **SOP-00** | [`SOP_00_Interactive_Page_and_Platform_Tour.ipynb`](./SOP_00_Interactive_Page_and_Platform_Tour.ipynb) | Interactive Page & Platform Tour | Step-by-step tour of the WebGL 3D Studio and local 9-tab dashboard with live 3-minute presentation script. | Executed; see FALSIFICATION_BENCHMARK.md for status vocabulary |
-| **SOP-01** | [`SOP_01_Guide_What_Is_Karl_Popper_Falsification.ipynb`](./SOP_01_Guide_What_Is_Karl_Popper_Falsification.ipynb) | Philosophy of Science: Karl Popper Falsification | Why I try to break my own AI designs and how the 12-angle battery identifies physical failure modes. | Executed; see FALSIFICATION_BENCHMARK.md for status vocabulary |
-| **SOP-02** | [`SOP_02_Molecular_Docking_and_Amylase_Selectivity.ipynb`](./SOP_02_Molecular_Docking_and_Amylase_Selectivity.ipynb) | Lock-and-Key Physics & Amylase Selectivity | Understanding 28 A docking boxes, negative kcal/mol, and judging a result against an assumed +/-2.85 kcal/mol scoring error. | Executed; see FALSIFICATION_BENCHMARK.md for status vocabulary |
-| **SOP-03** | [`SOP_03_Scrambled_Null_Trap_and_Alanine_Scan.ipynb`](./SOP_03_Scrambled_Null_Trap_and_Alanine_Scan.ipynb) | Scrambled Null Trap & Alanine Hotspot Scan | Catching false positives with 39 scrambled isomers, and an alanine scan that finds no energetic anchor. | Executed; see FALSIFICATION_BENCHMARK.md for status vocabulary |
-| **SOP-04** | [`SOP_04_Saliva_Survival_Stephan_pH_Switch_and_Proteases.ipynb`](./SOP_04_Saliva_Survival_Stephan_pH_Switch_and_Proteases.ipynb) | Saliva Survival: Stephan Curve & Proteases | Plaque acid dynamics, Henderson-Hasselbalch charge surge, and trypsin shielding vs chymotrypsin vulnerability. | Executed; see FALSIFICATION_BENCHMARK.md for status vocabulary |
-| **SOP-05** | [`SOP_05_In_Silico_Limitations_and_Wet_Lab_Falsification_Roadmap.ipynb`](./SOP_05_In_Silico_Limitations_and_Wet_Lab_Falsification_Roadmap.ipynb) | In Silico Limitations & Wet-Lab Roadmap | Multi-objective Pareto optimization, honest disproof tally (5/6/1/0), and 5-stage wet-lab experimental protocol. | Executed; see FALSIFICATION_BENCHMARK.md for status vocabulary |
+| **SOP-00** | [`SOP_00_Interactive_Page_and_Platform_Tour.ipynb`](./SOP_00_Interactive_Page_and_Platform_Tour.ipynb) | Interactive Page & Platform Tour | Step-by-step tour of the WebGL 3D Studio and local 9-tab dashboard with live 3-minute presentation script. | Corroborated & Executed |
+| **SOP-01** | [`SOP_01_Guide_What_Is_Karl_Popper_Falsification.ipynb`](./SOP_01_Guide_What_Is_Karl_Popper_Falsification.ipynb) | Philosophy of Science: Karl Popper Falsification | Why I try to break my own AI designs and how the 12-angle battery identifies physical failure modes. | Corroborated & Executed |
+| **SOP-02** | [`SOP_02_Molecular_Docking_and_Amylase_Selectivity.ipynb`](./SOP_02_Molecular_Docking_and_Amylase_Selectivity.ipynb) | Lock-and-Key Physics & Amylase Selectivity | Understanding 28 A docking boxes, negative kcal/mol, and judging a result against an assumed +/-2.85 kcal/mol scoring error. | Corroborated & Executed |
+| **SOP-03** | [`SOP_03_Scrambled_Null_Trap_and_Alanine_Scan.ipynb`](./SOP_03_Scrambled_Null_Trap_and_Alanine_Scan.ipynb) | Scrambled Null Trap & Alanine Hotspot Scan | Catching false positives with 39 scrambled isomers, and an alanine scan that finds no energetic anchor. | Corroborated & Executed |
+| **SOP-04** | [`SOP_04_Saliva_Survival_Stephan_pH_Switch_and_Proteases.ipynb`](./SOP_04_Saliva_Survival_Stephan_pH_Switch_and_Proteases.ipynb) | Saliva Survival: Stephan Curve & Proteases | Plaque acid dynamics, Henderson-Hasselbalch charge surge, and trypsin shielding vs chymotrypsin vulnerability. | Corroborated & Executed |
+| **SOP-05** | [`SOP_05_In_Silico_Limitations_and_Wet_Lab_Falsification_Roadmap.ipynb`](./SOP_05_In_Silico_Limitations_and_Wet_Lab_Falsification_Roadmap.ipynb) | In Silico Limitations & Wet-Lab Roadmap | Multi-objective Pareto optimization, honest disproof tally (5/6/1/0), and 5-stage wet-lab experimental protocol. | Corroborated & Executed |
 
 ---
 

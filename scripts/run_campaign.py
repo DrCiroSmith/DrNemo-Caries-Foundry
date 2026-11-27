@@ -123,7 +123,8 @@ def evaluate_single_contender(item: Dict[str, Any]) -> Dict[str, Any]:
     vina_1smd = dock_1smd["vina_kcal"]
     selectivity_ddg = round(vina_3aic - vina_1smd, 2)
 
-    # 4. OpenMM Amber14 / GBn2 Relaxation at 310.15 K
+    # 4. OpenMM Amber14 / GBn2 energy minimisation. temp_k parameterises the integrator
+    #    object only; no step is taken, so this samples no temperature and is not dynamics.
     try:
         openmm_kj = relax_with_openmm(pdb_ligand, temp_k=310.15)
     except Exception:

@@ -170,6 +170,9 @@ class FalsificationEngine:
         })
 
         ala_scan = benchmark.get("alanine_scan", {})
+        ala_meta = benchmark.get("alanine_scan_meta", {})
+        _ala_hotspots = [k for k, v in ala_scan.items() if v.get("is_hotspot", False)]
+        _ala_hotspots_found = bool(_ala_hotspots)
 
         gate1_rmsd = benchmark.get("co_crystal_control", {}).get("redocking_rmsd_angstrom", CO_CRYSTAL_REDOCKING_RMSD)
         gate1_delta_g = benchmark.get("co_crystal_control", {}).get("vina_3aic_kcal", CO_CRYSTAL_CONTROL_DELTA_G)
@@ -216,10 +219,14 @@ class FalsificationEngine:
             },
             "gate4_alanine_hotspot_scan": {
                 "name": "Angle 4: In-Silico Alanine-Scanning Mutagenesis",
-                "passed": any(v.get("is_hotspot", False) for v in ala_scan.values()),
-                "hotspot_count": sum(1 for v in ala_scan.values() if v.get("is_hotspot", False)),
-                "hotspots": [k for k, v in ala_scan.items() if v.get("is_hotspot", False)],
-                "classification": "PASSED_IN_SILICO",
+                # The classification is derived, not asserted: on this scaffold no substitution
+                # reaches the threshold, so this gate reports NO_HOTSPOT_IDENTIFIED, not a pass.
+                "passed": _ala_hotspots_found,
+                "hotspot_count": len(_ala_hotspots),
+                "hotspots": _ala_hotspots,
+                "parent_sequence": ala_meta.get("parent_sequence"),
+                "largest_affinity_loss_kcal": ala_meta.get("largest_affinity_loss_kcal"),
+                "classification": "PASSED_IN_SILICO" if _ala_hotspots_found else "NO_HOTSPOT_IDENTIFIED",
                 "criterion": "At least 1 energetic hotspot residue with DeltaDeltaG > +0.70 kcal/mol"
             },
             "gate5_oral_protease_resistance": {

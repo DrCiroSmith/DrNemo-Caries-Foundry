@@ -445,7 +445,7 @@ def build_pipeline_architecture(theme: str = "dark"):
         ("1", "Evolutionary Generator", "C-X7-C cyclic scaffold<br>P2A hinge mutant pool", t['cyan']),
         ("2", "Oral Shield Gate", "Donnan Q ≤ +4.0<br>Stephan ΔQ ≥ +1.0<br>Protease assessment", t['emerald']),
         ("3", "28.0 Å Dual Docking", "3AIC target (GTF-SI)<br>1SMD host counter (amylase)<br>Vina + Vinardo", t['amber']),
-        ("4", "OpenMM Relaxation", "Amber14/GBn2 at 310.15 K<br>All-atom minimization<br>S-S 2.06 Å check", t['coral']),
+        ("4", "OpenMM Relaxation", "Amber14/GBn2 minimisation<br>No dynamics, no temperature<br>S-S 2.06 Å check", t['coral']),
         ("5", "Popper Falsification", "12-angle exhaustive battery<br>N=39 scrambled nulls<br>Alanine scanning", t['cyan']),
         ("6", "Contender Vault", "SQLite registry<br>Limitless O(1) sequence scale<br>Fmoc SPPS protocol", t['emerald']),
     ]
@@ -759,14 +759,14 @@ def build_falsification_plate(theme: str = "dark"):
         scatter_svg += f'<circle cx="{px:.1f}" cy="{py:.1f}" r="8.5" fill="{t["cyan"]}" stroke="#ffffff" stroke-width="2"/>'
         scatter_svg += f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px-15:.1f}" y2="{py-22:.1f}" stroke="{t["cyan"]}" stroke-width="1.5"/>'
         scatter_svg += f'<rect x="{px-175:.1f}" y="{py-38:.1f}" width="180" height="24" rx="4" fill="{t["card"]}" stroke="{t["cyan"]}" stroke-width="1"/>'
-        scatter_svg += f'<text x="{px-85:.1f}" y="{py-22:.1f}" text-anchor="middle" fill="{t["cyan"]}" font-family="{MONO}" font-size="12" font-weight="700">#1 CAHWRPWHC (-8.191, -0.85)</text>'
+        scatter_svg += f'<text x="{px-85:.1f}" y="{py-22:.1f}" text-anchor="middle" fill="{t["cyan"]}" font-family="{MONO}" font-size="12" font-weight="700">Lead CAHWRPWHC (-8.191, -0.85)</text>'
 
     if cphw_coords:
         px, py = cphw_coords
         scatter_svg += f'<circle cx="{px:.1f}" cy="{py:.1f}" r="7.5" fill="{t["emerald"]}" stroke="#ffffff" stroke-width="1.5"/>'
         scatter_svg += f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px-10:.1f}" y2="{py+22:.1f}" stroke="{t["emerald"]}" stroke-width="1.5"/>'
         scatter_svg += f'<rect x="{px-95:.1f}" y="{py+22:.1f}" width="170" height="24" rx="4" fill="{t["card"]}" stroke="{t["emerald"]}" stroke-width="1"/>'
-        scatter_svg += f'<text x="{px-10:.1f}" y="{py+38:.1f}" text-anchor="middle" fill="{t["emerald"]}" font-family="{MONO}" font-size="12" font-weight="700">#2 CPHWRPAHC (-7.805, -0.96)</text>'
+        scatter_svg += f'<text x="{px-10:.1f}" y="{py+38:.1f}" text-anchor="middle" fill="{t["emerald"]}" font-family="{MONO}" font-size="12" font-weight="700">W7A CPHWRPAHC (-7.805, -0.96)</text>'
 
     # (B) Histogram data for scrambled nulls
     perm_vals = [p["vina_3aic_kcal"] for p in scrambled["permutations"]]
@@ -814,7 +814,7 @@ def build_falsification_plate(theme: str = "dark"):
         if k == "P6A":
             ala_svg += f'<text x="510" y="{y_pos+15}" text-anchor="end" fill="{t["coral"]}" font-family="{MONO}" font-size="12" font-weight="700">Trypsin Lysis (Arg5)</text>'
         elif is_hot:
-            ala_svg += f'<text x="510" y="{y_pos+15}" text-anchor="end" fill="{t["amber"]}" font-family="{MONO}" font-size="12" font-weight="600">Catalytic Anchor</text>'
+            ala_svg += f'<text x="510" y="{y_pos+15}" text-anchor="end" fill="{t["amber"]}" font-family="{MONO}" font-size="12" font-weight="600">Loss ≥ +0.70 (none)</text>'
 
     # (D) Stephan Charge Curve
     def map_stephan(ph, q):
@@ -944,7 +944,7 @@ body {{ width:1200px; height:760px; overflow:hidden; padding:18px; }}
       </svg>
     </div>
     <div class="legend-bar">
-      <span style="display:flex;align-items:center;gap:6px;"><span class="legend-dot" style="background:{t['amber']}"></span>Hotspot Anchor</span>
+      <span style="display:flex;align-items:center;gap:6px;"><span class="legend-dot" style="background:{t['amber']}"></span>Hotspot, loss ≥ +0.70 (none found)</span>
       <span style="display:flex;align-items:center;gap:6px;"><span class="legend-dot" style="background:{t['coral']}"></span>Trypsin Lysis</span>
       <span style="display:flex;align-items:center;gap:6px;"><span class="legend-dot" style="background:{t['cyan']}"></span>Hinge / Permissive</span>
     </div>
