@@ -66,7 +66,7 @@ Mean = -8.34 ± 0.47 kcal/mol  No hotspot ≥ +0.70 kcal/mol     Zero Cleavage S
 
 ### Angle 1: RCSB 3AIC Co-Crystal Redocking Control (Assay Calibration)
 * **Target:** *Streptococcus mutans* Glucosyltransferase-SI (GTF-SI, gtfC gene product) catalytic $(\beta/\alpha)_8$ TIM-barrel domain (RCSB PDB ID: `3AIC`, 3.11 Å resolution).
-* **Native Co-Crystallized Ligand:** Acarbose pseudo-tetrasaccharide (`GLC 1 - GLC 2 - AC1 3`) residing in the glucan elongation cleft adjacent to catalytic triad residues **Asp477** (nucleophile), **Glu515** (general acid/base), and **Asp588** (stabilizer), plus $\pi$-stacking platform **Trp517**.
+* **Native Co-Crystallized Ligand:** Acarbose pseudo-tetrasaccharide (`GLC 1 - GLC 2 - AC1 3`) residing in the glucan elongation cleft adjacent to catalytic triad residues **Asp477** (nucleophile), **Glu515** (general acid/base), and **Asp588** (transition-state stabilizer, assignment from the QM/MM study cited as reference 7 of `paper/negative_result_GTF-SI.md`, which is computational and not mutagenesis), plus $\pi$-stacking platform **Trp517**.
 * **Methodology:** Native coordinates were extracted directly from `3AIC.pdb`, hydrogenated at pH 6.0, and converted to PDBQT. AutoDock Vina was calibrated across the active cleft centroid $(x=192.072, y=44.370, z=197.309)$ with an uncompressed bounding box of $28.0 \times 28.0 \times 28.0\text{ \AA}$.
 * **Empirical Results:**
   * **Binding Affinity ($\Delta G_{\text{Vina}}$):** $\mathbf{-7.915\text{ kcal/mol}}$ (Vinardo: $-5.186\text{ kcal/mol}$).

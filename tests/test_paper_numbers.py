@@ -16,6 +16,7 @@ difference, which sits inside the noise and would flip on a rerun for no
 scientific reason.
 """
 
+import re
 import csv
 import json
 import math
@@ -408,3 +409,107 @@ def test_nothing_still_calls_the_scoring_error_uncited():
     assert not offenders, (
         f"these lines still call the 2.85 kcal/mol constant uncited or "
         f"untraceable after that claim was withdrawn: {offenders}")
+
+
+def _reference_list():
+    """The numbered references, as {number: line}."""
+    text = PAPER.read_text()
+    start = text.index("# References")
+    refs = {}
+    for line in text[start:].splitlines():
+        m = re.match(r"^(\d+)\.\s+(.*)$", line.strip())
+        if m:
+            refs[int(m.group(1))] = m.group(2)
+    return refs
+
+
+def _body_citations():
+    """Every citation marker in the body, excluding the reference list.
+
+    Handles [n], [n,m] and [n-m]. A bracket holding digits in any other shape
+    is a reported failure rather than a skipped token: an earlier version of
+    this helper matched only [n], so the grouped citation [2,3] was invisible
+    and it reported reference 3 as uncited when the paper cites it correctly.
+    A citation parser that silently drops a form it does not know produces
+    exactly the false accusation this paper exists to avoid making.
+    """
+    text = PAPER.read_text()
+    body = text[: text.index("# References")]
+    cited, parsed_spans = set(), []
+    for m in re.finditer(r"\[([0-9][0-9,\s\u2013-]*)\]", body):
+        parsed_spans.append(m.span())
+        for part in re.split(r"[,\s]+", m.group(1).strip()):
+            if not part:
+                continue
+            rng = re.fullmatch(r"(\d+)[\u2013-](\d+)", part)
+            if rng:
+                cited.update(range(int(rng.group(1)), int(rng.group(2)) + 1))
+            else:
+                assert part.isdigit(), f"unparsed citation fragment {part!r}"
+                cited.add(int(part))
+    # Anything bracketed that holds a digit and was not parsed above must be a
+    # markdown label, not a citation. Surface it rather than assume.
+    for m in re.finditer(r"\[[^\]]*\d[^\]]*\]", body):
+        if m.span() in parsed_spans:
+            continue
+        label = m.group(0)
+        assert body[m.end():m.end() + 1] == "(", (
+            f"{label} is bracketed, holds a digit, is not a link label and was "
+            "not read as a citation, so this audit cannot say whether it is one")
+    return cited
+
+
+def test_every_bracketed_citation_resolves_to_a_reference():
+    """A citation to a reference that does not exist is a broken claim."""
+    refs = _reference_list()
+    assert refs, "the paper has no parsable reference list"
+    dangling = sorted(_body_citations() - set(refs))
+    assert not dangling, (
+        f"the body cites {dangling} and the reference list has "
+        f"{sorted(refs)}, so those claims point at nothing")
+
+
+def test_every_reference_is_cited_at_least_once():
+    """An uncited reference is either a missing citation or padding."""
+    refs = _reference_list()
+    uncited = sorted(set(refs) - _body_citations())
+    assert not uncited, (
+        f"references {uncited} are listed and never cited in the body, so "
+        "either a claim is missing its marker or the entry should be cut")
+
+
+def test_the_reference_numbering_is_contiguous_from_one():
+    refs = _reference_list()
+    assert sorted(refs) == list(range(1, len(refs) + 1)), (
+        f"the reference numbers are {sorted(refs)}, which is not 1..n")
+
+
+def test_the_catalytic_assignment_carries_a_citation():
+    """Which residue is nucleophile is not readable from coordinates.
+
+    The identities of residues 477, 515 and 588 are read from the committed
+    structure. Their mechanistic roles are not, and this paper objects
+    elsewhere to residue claims it cannot trace, so the assignment has to name
+    its source and say what kind of source it is.
+    """
+    text = PAPER.read_text()
+    i = text.index("Asp477 as nucleophile")
+    window = text[i : i + 900]
+    assert re.search(r"\[\d+\]", window), (
+        "the catalytic triad assignment no longer cites a source within the "
+        "passage that makes it")
+    assert "QM/MM" in window and "computational" in window, (
+        "the assignment no longer says that its source is computational rather "
+        "than experimental, which overstates how well established it is")
+
+
+def test_the_qmmm_reference_is_the_one_that_was_verified():
+    """Pinned to the DOI, so swapping the source cannot pass silently."""
+    refs = _reference_list()
+    match = [r for r in refs.values() if "10.1039/C8OB00284C" in r]
+    assert len(match) == 1, (
+        "the QM/MM source verified for the catalytic assignment "
+        "(doi 10.1039/C8OB00284C) is not in the reference list exactly once")
+    entry = match[0]
+    for part in ("Jaña GA", "Org Biomol Chem", "2018", "16(14):2438-47"):
+        assert part in entry, f"the verified citation no longer states {part!r}: {entry}"
