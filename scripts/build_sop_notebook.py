@@ -37,14 +37,14 @@ def generate_notebook():
 
     # Title & Overview
     title_md = r"""# SOP-01: Biophysical Falsification and Contender Characterization Protocol
-## Streptococcus mutans Glucosyltransferase-SI (GtfB) Macrocyclic Inhibitor Campaign
+## Streptococcus mutans Glucosyltransferase-SI (GTF-SI, gtfC gene product) Macrocyclic Inhibitor Campaign
 **Principal Investigator:** Dr. Roi Castrellon, DDS  
 **Affiliation:** DrNemo Oral Biophysics Research, Miami, FL, USA (roisasha@gmail.com)  
 **Target Structure:** RCSB PDB 3AIC (2.10 Å Resolution) | Counter-Screen: Human Salivary Amylase 1SMD (1.60 Å)  
 
 ---
 ### Objective & Epistemological Framework
-This Standard Operating Procedure (SOP) executes the formal biophysical characterization and Popperian falsification protocol for candidate cyclic peptide inhibitors of *Streptococcus mutans* Glucosyltransferase-SI (GtfB). Following Karl Popper's criterion of demarcation, candidate scaffolds are subjected to severe, falsifiable biophysical barriers:
+This Standard Operating Procedure (SOP) executes the formal biophysical characterization and Popperian falsification protocol for candidate cyclic peptide inhibitors of *Streptococcus mutans* Glucosyltransferase-SI (GTF-SI, gtfC gene product). Following Karl Popper's criterion of demarcation, candidate scaffolds are subjected to severe, falsifiable biophysical barriers:
 1. **Uncompressed 28 Å Grid Docking:** Dual AutoDock Vina and Vinardo scoring centered on catalytic triad oxygens (`Asp477`, `Glu515`, `Asp588`).
 2. **All-Atom Molecular Mechanics:** OpenMM Amber14/GBn2 implicit solvent energy minimization at oral body temperature ($310.15\text{ K}$).
 3. **Oral Microenvironment Barriers:** Stephan-curve protonation shift ($\Delta Q_{\text{Stephan}} \ge +1.0$) and Donnan exclusion ceiling ($Q_{\text{pH } 6.0} \le +3.0$).
@@ -108,7 +108,7 @@ display(df[['contender_id', 'sequence', 'generation', 'vina_3aic_kcal', 'vinardo
 
     # Section 2 Markdown
     s2_md = """## 2. Dual-Scoring Biophysical Affinity Distribution (Vina vs Vinardo)
-We analyze the distribution of binding free energies against GtfB (`3AIC`) across all evaluated contenders. Dual scoring (AutoDock Vina and Vinardo) guards against single-scoring-function artifacts by evaluating complementary steric and desolvation terms."""
+We analyze the distribution of binding free energies against GTF-SI (`3AIC`) across all evaluated contenders. Dual scoring (AutoDock Vina and Vinardo) guards against single-scoring-function artifacts by evaluating complementary steric and desolvation terms."""
     cells.append(make_cell("markdown", s2_md))
 
     # Section 2 Code
@@ -116,7 +116,7 @@ We analyze the distribution of binding free energies against GtfB (`3AIC`) acros
 
 # Panel A: Vina 3AIC Distribution
 sns.histplot(data=df, x='vina_3aic_kcal', hue='falsification_status', kde=True, ax=axes[0], palette='Set1', bins=12)
-axes[0].set_title('A: GtfB Affinity (AutoDock Vina Scoring)')
+axes[0].set_title('A: GTF-SI Affinity (AutoDock Vina Scoring)')
 axes[0].set_xlabel('Vina Binding Energy (kcal/mol)')
 axes[0].set_ylabel('Candidate Count')
 axes[0].axvline(-7.5, color='crimson', linestyle='--', label='Affinity Gate (-7.5 kcal)')
@@ -124,7 +124,7 @@ axes[0].legend(loc='upper left', frameon=True)
 
 # Panel B: Vinardo 3AIC Distribution
 sns.histplot(data=df, x='vinardo_3aic_kcal', hue='falsification_status', kde=True, ax=axes[1], palette='Set1', bins=12)
-axes[1].set_title('B: GtfB Affinity (Vinardo Empirical Scoring)')
+axes[1].set_title('B: GTF-SI Affinity (Vinardo Empirical Scoring)')
 axes[1].set_xlabel('Vinardo Binding Energy (kcal/mol)')
 axes[1].set_ylabel('Candidate Count')
 axes[1].axvline(-4.8, color='crimson', linestyle='--', label='Vinardo Gate (-4.8 kcal)')
@@ -175,7 +175,7 @@ if not champ.empty:
 
 ax.set_title('Stephan-Switch Activation vs Target Affinity')
 ax.set_xlabel('Stephan Charge Shift ΔQ (pH 5.2 - pH 7.2)')
-ax.set_ylabel('GtfB 3AIC Affinity (kcal/mol)')
+ax.set_ylabel('GTF-SI 3AIC Affinity (kcal/mol)')
 ax.legend(loc='upper right', frameon=True)
 plt.tight_layout()
 
@@ -187,8 +187,8 @@ plt.show()"""
     cells.append(make_cell("code", s3_code))
 
     # Section 4 Markdown
-    s4_md = r"""## 4. Host Counter-Screening: GtfB vs Human Salivary Amylase Selectivity (Pareto Frontier)
-Off-target inhibition of human salivary $\alpha$-amylase (`1SMD`) disrupts physiologic oral carbohydrate digestion. We quantify selectivity via $\Delta\Delta G = \Delta G_{\text{3AIC}} - \Delta G_{\text{1SMD}}$, where $\Delta\Delta G \le -0.80\text{ kcal/mol}$ confirms selective GtfB inhibition."""
+    s4_md = r"""## 4. Host Counter-Screening: GTF-SI vs Human Salivary Amylase Selectivity (Pareto Frontier)
+Off-target inhibition of human salivary $\alpha$-amylase (`1SMD`) disrupts physiologic oral carbohydrate digestion. We quantify selectivity via $\Delta\Delta G = \Delta G_{\text{3AIC}} - \Delta G_{\text{1SMD}}$, where $\Delta\Delta G \le -0.80\text{ kcal/mol}$ confirms selective GTF-SI inhibition."""
     cells.append(make_cell("markdown", s4_md))
 
     # Section 4 Code
@@ -211,9 +211,9 @@ ax.plot(lims, [x - 0.8 for x in lims], color='green', linestyle='--', label='Sel
 
 ax.set_xlim(-10.5, -5.5)
 ax.set_ylim(-10.5, -5.5)
-ax.set_title('Host Counter-Screen: Salivary Amylase (1SMD) vs GtfB (3AIC)')
+ax.set_title('Host Counter-Screen: Salivary Amylase (1SMD) vs GTF-SI (3AIC)')
 ax.set_xlabel('Salivary Amylase 1SMD Affinity (kcal/mol) [Host Off-Target]')
-ax.set_ylabel('GtfB 3AIC Affinity (kcal/mol) [Cariogenic Target]')
+ax.set_ylabel('GTF-SI 3AIC Affinity (kcal/mol) [Cariogenic Target]')
 ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', frameon=True)
 
 plt.tight_layout()
@@ -312,11 +312,11 @@ plt.show()"""
 
     # Final Summary Markdown Cell
     summary_md = r"""### Q&A
-**Q1: Does cyclic peptide macrocyclization confer true biophysical affinity over linear peptides in the GtfB catalytic cleft?**  
+**Q1: Does cyclic peptide macrocyclization confer true biophysical affinity over linear peptides in the GTF-SI catalytic cleft?**  
 *Answer:* Yes. Enforced disulfide cyclization between terminal cysteines (`Cys1-Cys9`, $S-S = 2.06\text{ \AA}$) pre-organizes the nonapeptide into a solvent-stable conformation, establishing an empirical conformational advantage over the unconstrained linear sequence.
 
 **Q2: How does Pareto champion CAHWRPWHC overcome host salivary amylase cross-reactivity and mucosal entrapment?**  
-*Answer:* `CAHWRPWHC` satisfies both the Donnan mucosal partition ceiling ($Q_{\text{pH } 6.0} = +2.05 \le +3.0$) and host counter-screening ($\Delta\Delta G = -0.85\text{ kcal/mol} \le -0.80\text{ kcal/mol}$ preference for GtfB over human salivary $\alpha$-amylase `1SMD`). It activates dynamically via histidine protonation during cariogenic acidogenesis ($\Delta Q_{\text{Stephan}} = +1.62 \ge +1.0$).
+*Answer:* `CAHWRPWHC` satisfies both the Donnan mucosal partition ceiling ($Q_{\text{pH } 6.0} = +2.05 \le +3.0$) and host counter-screening ($\Delta\Delta G = -0.85\text{ kcal/mol} \le -0.80\text{ kcal/mol}$ preference for GTF-SI over human salivary $\alpha$-amylase `1SMD`). It activates dynamically via histidine protonation during cariogenic acidogenesis ($\Delta Q_{\text{Stephan}} = +1.62 \ge +1.0$).
 
 ### Data Analysis Key Findings
 - **Pareto Champion Corroboration:** `CAHWRPWHC` achieved top-ranked multi-objective optimization with 3AIC Vina affinity of $-8.191\text{ kcal/mol}$, 1SMD affinity of $-7.343\text{ kcal/mol}$ ($\Delta\Delta G = -0.85\text{ kcal/mol}$), intact disulfide distance ($2.06\text{ \AA}$), zero protease cleavage sites, and Stephan charge shift of $+1.62$.

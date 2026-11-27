@@ -139,15 +139,15 @@ def load_foundry_data():
                 df['Status'] = 'SUCCESS'
 
             if 'Project' not in df.columns or df['Project'].isnull().all():
-                df['Project'] = 'S_mutans_GtfB_3AIC'
+                df['Project'] = 'S_mutans_GTF_SI_3AIC'
             else:
                 legacy_mapping = {
-                    "S_mutans_GtfB_Insoluble": "S_mutans_GtfB_3AIC",
-                    "S_mutans_Baseline": "S_mutans_GtfB_3AIC",
-                    "smutans": "S_mutans_GtfB_3AIC",
-                    "smutans_adhesion_blocker_01": "S_mutans_GtfB_3AIC",
-                    "sample_smutans": "S_mutans_GtfB_3AIC",
-                    "S_mutans_GtfB_Glucan": "S_mutans_GtfB_3AIC"
+                    "S_mutans_GtfB_Insoluble": "S_mutans_GTF_SI_3AIC",
+                    "S_mutans_Baseline": "S_mutans_GTF_SI_3AIC",
+                    "smutans": "S_mutans_GTF_SI_3AIC",
+                    "smutans_adhesion_blocker_01": "S_mutans_GTF_SI_3AIC",
+                    "sample_smutans": "S_mutans_GTF_SI_3AIC",
+                    "S_mutans_GtfB_Glucan": "S_mutans_GTF_SI_3AIC"
                 }
                 df["Project"] = df["Project"].map(lambda p: legacy_mapping.get(p, p))
 
@@ -191,9 +191,9 @@ if TARGETS_FILE.exists():
 
 df = load_foundry_data()
 
-# Ensure S_mutans_GtfB_3AIC is present in target_list
-if "S_mutans_GtfB_3AIC" not in target_list:
-    target_list.insert(0, "S_mutans_GtfB_3AIC")
+# Ensure S_mutans_GTF_SI_3AIC is present in target_list
+if "S_mutans_GTF_SI_3AIC" not in target_list:
+    target_list.insert(0, "S_mutans_GTF_SI_3AIC")
 
 
 def save_targets():
@@ -205,13 +205,13 @@ def save_targets():
 teacher_mode = st.sidebar.checkbox("Educational Walkthrough Mode", value=False)
 
 st.sidebar.header("Target Project Control")
-selected_project = st.sidebar.selectbox("Active Project Target:", target_list, index=0 if "S_mutans_GtfB_3AIC" in target_list else 0)
+selected_project = st.sidebar.selectbox("Active Project Target:", target_list, index=0 if "S_mutans_GTF_SI_3AIC" in target_list else 0)
 
 with st.sidebar.expander("Manage Target Catalog", expanded=False):
     m_action = st.radio("Action:", ["Add New Target", "Edit Selected"], horizontal=True, label_visibility="collapsed")
     if m_action == "Add New Target":
         with st.form("add_project_form"):
-            new_id = st.text_input("Target ID (e.g. S_mutans_GtfB_3AIC):")
+            new_id = st.text_input("Target ID (e.g. S_mutans_GTF_SI_3AIC):")
             new_name = st.text_input("Display Name:")
             new_desc = st.text_area("Function Description:")
             new_seq = st.text_input("Target Protein Sequence:")
@@ -227,18 +227,19 @@ with st.sidebar.expander("Manage Target Catalog", expanded=False):
                     save_targets()
                     st.rerun()
                 else:
-                    st.error("Target ID and Sequence are required.")
+                    st.error("Target ID is required.")
     elif m_action == "Edit Selected" and selected_project:
         with st.form("edit_project_form"):
             edit_name = st.text_input("Display Name:", value=targets_data.get(selected_project, {}).get("name", ""))
             edit_desc = st.text_area("Function Description:", value=targets_data.get(selected_project, {}).get("description", ""))
-            edit_seq = st.text_input("Target Protein Sequence:", value=targets_data.get(selected_project, {}).get("sequence", ""))
+            edit_seq = st.text_input("Target Protein Sequence (optional; canonical sequence lives in UniProt):", value=targets_data.get(selected_project, {}).get("sequence", ""))
             edit_pep = st.text_input("Base Peptide:", value=targets_data.get(selected_project, {}).get("base_peptide", ""))
             if st.form_submit_button("Save Changes", use_container_width=True):
-                if edit_seq:
+                if edit_name:
                     targets_data[selected_project]["name"] = edit_name
                     targets_data[selected_project]["description"] = edit_desc
-                    targets_data[selected_project]["sequence"] = edit_seq
+                    if edit_seq:
+                        targets_data[selected_project]["sequence"] = edit_seq
                     targets_data[selected_project]["base_peptide"] = edit_pep
                     save_targets()
                     st.rerun()
@@ -247,7 +248,7 @@ with st.sidebar.expander("Manage Target Catalog", expanded=False):
 
 if teacher_mode:
     with st.sidebar.expander("🎓 Teacher Insight: Targets", expanded=True):
-        st.info("A Project Target is an essential microbial protein (e.g. GtfB catalytic cleft) that oral pathogens rely on to assemble cariogenic biofilms.")
+        st.info("A Project Target is an essential microbial protein (e.g. GTF-SI catalytic cleft) that oral pathogens rely on to assemble cariogenic biofilms.")
 
 if selected_project and selected_project in targets_data:
     st.sidebar.info(f"**Target:** {targets_data[selected_project].get('name', selected_project)}\n\n{targets_data[selected_project].get('description', '')}")

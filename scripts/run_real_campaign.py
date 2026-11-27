@@ -116,7 +116,7 @@ def worker_dock_calibration(dummy: int = 0) -> Dict[str, Any]:
         pose_sha = hashlib.sha256(f.read()).hexdigest()
 
     return {
-        "target": "RCSB 3AIC (S. mutans GtfB catalytic domain)",
+        "target": "RCSB 3AIC (S. mutans GTF-SI catalytic domain)",
         "native_ligand": "Acarbose pseudo-tetrasaccharide (GLC-GLC-AC1)",
         "vina_3aic_kcal": dock_res["vina_kcal"],
         "vinardo_3aic_kcal": dock_res["vinardo_kcal"],

@@ -71,7 +71,7 @@ def create_nature_biotech_hero():
     draw = ImageDraw.Draw(img)
     f40 = font(40); f28 = font(28); f20 = font(20)
     draw.text((80, 90), "DrNemo Caries Foundry", fill=TEXT, font=f40)
-    draw.text((80, 150), "Targeted GtfB Macrocycle Biophysics  ·  CAHWRPWHC Rank-1 Champion", fill=ACCENT, font=f28)
+    draw.text((80, 150), "Targeted GTF-SI Macrocycle Biophysics  ·  CAHWRPWHC Rank-1 Champion", fill=ACCENT, font=f28)
     draw.text((80, 210), "AutoDock Vina · Vinardo · OpenMM Amber14/GBn2 · Popperian Falsification", fill=MUTED, font=f20)
     cards = [("Vina ΔG", "-8.191 kcal/mol"), ("Vinardo ΔG", "-4.990 kcal/mol"),
              ("1SMD ΔΔG", "-0.85 kcal/mol"), ("OpenMM", "-1234.68 kJ/mol")]

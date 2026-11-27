@@ -17,7 +17,7 @@
     urlcolor=blue
 }
 
-\title{\textbf{Computational Biophysics and Empirical Falsification of Stephan-Selective Cyclic Peptide Macrocycles Targeting \textit{Streptococcus mutans} Glucosyltransferase-SI (GtfB)}}
+\title{\textbf{Computational Biophysics and Empirical Falsification of Stephan-Selective Cyclic Peptide Macrocycles Targeting \textit{Streptococcus mutans} Glucosyltransferase-SI (GTF-SI, gtfC gene product)}}
 
 \author{\textbf{Roi Castrellon, DDS}}
 \affil{DrNemo Oral Biophysics Research, Miami, FL, USA \\ \texttt{roisasha@gmail.com}}
@@ -29,23 +29,23 @@
 \maketitle
 
 \begin{abstract}
-\noindent\textbf{Background:} \textit{Streptococcus mutans} glucosyltransferase-SI (GtfB; EC 2.4.1.5) synthesizes water-insoluble $\alpha$-(1,3)-glucan polymers that construct the protective extracellular matrix of cariogenic biofilms. Conventional cationic antimicrobial peptides frequently fail in clinical translation due to rapid salivary mucosal entrapment, uncontrolled proteolysis, and off-target inhibition of human salivary $\alpha$-amylase. \\
+\noindent\textbf{Background:} \textit{Streptococcus mutans} glucosyltransferase-SI (GTF-SI, gtfC gene product; EC 2.4.1.5) synthesizes water-insoluble $\alpha$-(1,3)-glucan polymers that construct the protective extracellular matrix of cariogenic biofilms. Conventional cationic antimicrobial peptides frequently fail in clinical translation due to rapid salivary mucosal entrapment, uncontrolled proteolysis, and off-target inhibition of human salivary $\alpha$-amylase. \\
 \textbf{Methods:} This study establishes an automated biophysical engine utilizing uncompressed $28.0 \times 28.0 \times 28.0\text{ \AA}$ search grids centered on the catalytic triad (\texttt{Asp477}, \texttt{Glu515}, \texttt{Asp588} of RCSB PDB: \texttt{3AIC}) with dual AutoDock Vina and Vinardo scoring. Macrocyclic geometries were parameterized with MMFF94 force-field distance geometry and relaxed via all-atom OpenMM Amber14/GBn2 implicit solvent energy minimization at oral body temperature ($310.15\text{ K}$). Biological filtering integrated Donnan equilibrium mucosal charge partitioning and Stephan-curve electrostatic protonation shifts ($\Delta Q_{\text{Stephan}}$ from pH 7.2 to 5.2). \\
 \textbf{Biophysical Falsification:} In accordance with Karl Popper's demarcation principle, candidate scaffolds were subjected to an exhaustive 12-angle computational disproof battery: co-crystal acarbose redocking calibration, multi-seed conformer reproducibility ($N=5$), pose mode clustering, force-field error boundary assessment on \texttt{1SMD} selectivity, an empirical scrambled-sequence null permutation battery ($N=39$), comprehensive alanine scanning, explicit pH 5.2 diprotonation, broad oral protease/peptidase vulnerability mapping, human lysozyme counter-screening (\texttt{1LZ1}), linear versus cyclic conformational penalty evaluation, OpenMM relaxation drift, and chitosan Donnan compatibility. \\
-\textbf{Results:} Across 259 fully-docked contenders in the repository vault, removing $22\text{ \AA}$ grid-compression artifacts revealed that initial lead \texttt{CPHWRPWHC} suffered from off-target amylase cross-reactivity ($-7.902\text{ kcal/mol}$, $\Delta\Delta G = -0.16\text{ kcal/mol}$). Conformational hinge relaxation yielded \texttt{CAHWRPWHC} (\texttt{P2A}) as the primary candidate, delivering $-8.191\text{ kcal/mol}$ GtfB affinity, an intact disulfide bridge ($2.06\text{ \AA}$), favorable OpenMM relaxation ($-1234.68\text{ kJ/mol}$), resistance to salivary trypsin, and a $+1.62$ elementary charge surge across the Stephan acidogenic transition. Crucially, the 12-angle disproof battery reveals that measured host selectivity ($\Delta\Delta G = -0.85\text{ kcal/mol}$) and sequence permutation differentiation ($Z = +0.32, p = 0.5897$) fall within force-field uncertainty boundaries and fail to reject the static null hypothesis, while aromatic residues \texttt{Trp4} and \texttt{Trp7} present chymotryptic vulnerabilities classified as \texttt{AT\_RISK}. \\
+\textbf{Results:} Across 259 fully-docked contenders in the repository vault, removing $22\text{ \AA}$ grid-compression artifacts revealed that initial lead \texttt{CPHWRPWHC} suffered from off-target amylase cross-reactivity ($-7.902\text{ kcal/mol}$, $\Delta\Delta G = -0.16\text{ kcal/mol}$). Conformational hinge relaxation yielded \texttt{CAHWRPWHC} (\texttt{P2A}) as the primary candidate, delivering $-8.191\text{ kcal/mol}$ GTF-SI affinity, an intact disulfide bridge ($2.06\text{ \AA}$), favorable OpenMM relaxation ($-1234.68\text{ kJ/mol}$), resistance to salivary trypsin, and a $+1.62$ elementary charge surge across the Stephan acidogenic transition. Crucially, the 12-angle disproof battery reveals that measured host selectivity ($\Delta\Delta G = -0.85\text{ kcal/mol}$) and sequence permutation differentiation ($Z = +0.32, p = 0.5897$) fall within force-field uncertainty boundaries and fail to reject the static null hypothesis, while aromatic residues \texttt{Trp4} and \texttt{Trp7} present chymotryptic vulnerabilities classified as \texttt{AT\_RISK}. \\
 \textbf{Conclusions:} Stephan-selective cyclic peptide macrocycles provide a computationally corroborated anti-virulence hypothesis. However, all findings are strictly in silico computational predictions requiring wet-lab enzymatic, whole human saliva, and cellular biofilm falsification prior to translational claims.
 \end{abstract}
 
 \vspace{0.5em}
-\noindent\textbf{Keywords:} \textit{Streptococcus mutans}, GtfB, Cyclic Peptides, AutoDock Vina, Vinardo, OpenMM, Stephan Curve, Karl Popper, Biophysical Falsification.
+\noindent\textbf{Keywords:} \textit{Streptococcus mutans}, GTF-SI, Cyclic Peptides, AutoDock Vina, Vinardo, OpenMM, Stephan Curve, Karl Popper, Biophysical Falsification.
 
 \section{Introduction}
 
 Dental caries remains one of the most prevalent chronic infectious diseases globally, driven by carbohydrate-induced dysbiosis within supragingival oral biofilms \cite{Bowen2018, Marsh2006}. Broad-spectrum antiseptics such as chlorhexidine non-specifically suppress commensal oral flora and fail to arrest localized biofilm acidogenesis \cite{Scharnow2019}.
 
-The primary ecological engine of cariogenic virulence is the synthesis of water-insoluble $\alpha$-(1,3)-linked glucans by glucosyltransferase-SI (GtfB, PDB: \texttt{3AIC}) secreted by \textit{Streptococcus mutans} \cite{Ito2011, Koo2013}. These sticky glucans anchor bacteria to enamel hydroxyapatite and construct a dense barrier that impedes salivary buffering \cite{Xiao2012}. As first demonstrated by Robert Stephan in 1944, consumption of fermentable sugars induces rapid acidification ($\text{pH} < 5.5$) within biofilm microcolonies, driving calcium and phosphate demineralization from enamel \cite{Stephan1944, Zero1999, Burne2000}.
+The primary ecological engine of cariogenic virulence is the synthesis of water-insoluble $\alpha$-(1,3)-linked glucans by glucosyltransferase-SI (GTF-SI, gtfC gene product, PDB: \texttt{3AIC}) secreted by \textit{Streptococcus mutans} \cite{Ito2011, Koo2013}. These sticky glucans anchor bacteria to enamel hydroxyapatite and construct a dense barrier that impedes salivary buffering \cite{Xiao2012}. As first demonstrated by Robert Stephan in 1944, consumption of fermentable sugars induces rapid acidification ($\text{pH} < 5.5$) within biofilm microcolonies, driving calcium and phosphate demineralization from enamel \cite{Stephan1944, Zero1999, Burne2000}.
 
-Previous anti-GtfB peptide design initiatives frequently fail due to two fundamental biophysical hurdles:
+Previous anti-glucosyltransferase peptide design initiatives frequently fail due to two fundamental biophysical hurdles:
 \begin{enumerate}
     \item \textbf{Donnan Boundary Entrapment:} Polycationic peptides ($Q \ge +4$) adhere non-specifically to anionic salivary mucins and the exopolysaccharide matrix boundary, halting diffusion into deep cariogenic niches.
     \item \textbf{Host Counter-Screen Cross-Reactivity:} Unconstrained linear peptides cross-react with human salivary $\alpha$-amylase (PDB: \texttt{1SMD}) \cite{Ramasubbu1996}, impairing physiologic starch digestion.
@@ -56,7 +56,7 @@ To overcome these pitfalls, the \textit{DrNemo Caries Foundry} implements an aut
 \section{Computational Biophysics Methodology}
 
 \subsection{Structural Receptor Preparation}
-The experimental X-ray crystal structure of \textit{Streptococcus mutans} GtfB at 2.10~\AA\ resolution (PDB: \texttt{3AIC}) \cite{Ito2011} was prepared by isolating Chain~A, adding polar hydrogens, and assigning Gasteiger charges. The catalytic triad (\texttt{Asp477}, \texttt{Glu515}, \texttt{Asp588}) was mapped to active-site coordinates $(192.072, 44.370, 197.309)\text{ \AA}$. An uncompressed $28.0 \times 28.0 \times 28.0\text{ \AA}$ docking box was established to ensure that macrocyclic ligands do not suffer artificial box-wall repulsion artifacts.
+The experimental X-ray crystal structure of \textit{Streptococcus mutans} GTF-SI at 3.11~\AA\ resolution (PDB: \texttt{3AIC}) \cite{Ito2011} was prepared by isolating Chain~A, adding polar hydrogens, and assigning Gasteiger charges. The catalytic triad (\texttt{Asp477}, \texttt{Glu515}, \texttt{Asp588}) was mapped to active-site coordinates $(192.072, 44.370, 197.309)\text{ \AA}$. An uncompressed $28.0 \times 28.0 \times 28.0\text{ \AA}$ docking box was established to ensure that macrocyclic ligands do not suffer artificial box-wall repulsion artifacts.
 
 For host counter-screening, human salivary $\alpha$-amylase at 1.60~\AA\ resolution (PDB: \texttt{1SMD}) \cite{Ramasubbu1996} was prepared with its catalytic triad (\texttt{Asp197}, \texttt{Glu233}, \texttt{Asp300}) centered at $(8.778, 49.724, 17.278)\text{ \AA}$ on an identical $28.0\text{ \AA}$ grid. For mucosal enzyme counter-screening, human salivary lysozyme at 1.50~\AA\ resolution (PDB: \texttt{1LZ1}) was prepared with its active cleft centered at $(10.319, 8.503, 25.960)\text{ \AA}$. Receptor coordinates for \texttt{3AIC}, \texttt{1SMD}, and \texttt{1LZ1} were prepared under physiological pH 7.4 protonation states, while Angle 7 explicitly evaluated the diprotonated $\text{His}^+$ ligand state under localized cariogenic pH 5.2.
 
@@ -90,7 +90,7 @@ Across 259 contenders evaluated in the Contender Vault, removing grid compressio
 
 Conformational hinge relaxation via the \texttt{P2A} mutation yielded \texttt{CAHWRPWHC} as the primary candidate (Figure~\ref{fig:pareto}):
 \begin{itemize}
-    \item \textbf{GtfB Affinity (\texttt{3AIC}):} $-8.191\text{ kcal/mol}$ (Vinardo: $-4.990\text{ kcal/mol}$, $LE = 0.098$)
+    \item \textbf{GTF-SI Affinity (\texttt{3AIC}):} $-8.191\text{ kcal/mol}$ (Vinardo: $-4.990\text{ kcal/mol}$, $LE = 0.098$)
     \item \textbf{Amylase Counter-Screen (\texttt{1SMD}):} $-7.343\text{ kcal/mol}$ ($\Delta\Delta G = -0.85\text{ kcal/mol}$, noting force-field uncertainty boundaries)
     \item \textbf{Stephan Shift:} $Q(\text{pH } 7.2) = +1.13 \rightarrow Q(\text{pH } 5.2) = +2.75$ ($\Delta Q_{\text{Stephan}} = +1.62$, Figure~\ref{fig:stephan})
     \item \textbf{Donnan Salivary Baseline:} $Q(\text{pH } 6.0) = +2.05 \le +4.0$ (clearing the Donnan exclusion ceiling)
@@ -101,14 +101,14 @@ Conformational hinge relaxation via the \texttt{P2A} mutation yielded \texttt{CA
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.82\textwidth]{figures/fig1_pareto_frontier.png}
-\caption{\textbf{Host Counter-Screening Pareto Frontier.} Dual-objective scatter of binding affinity against cariogenic GtfB (PDB: \texttt{3AIC}, y-axis) versus human salivary $\alpha$-amylase (PDB: \texttt{1SMD}, x-axis). Green dashed line demarcates the selectivity threshold ($\Delta\Delta G \le -0.80\text{ kcal/mol}$). Candidate \texttt{CAHWRPWHC} clears the computational threshold, though force-field error margins require empirical enzymatic testing.}
+\caption{\textbf{Host Counter-Screening Pareto Frontier.} Dual-objective scatter of binding affinity against cariogenic GTF-SI (PDB: \texttt{3AIC}, y-axis) versus human salivary $\alpha$-amylase (PDB: \texttt{1SMD}, x-axis). Green dashed line demarcates the selectivity threshold ($\Delta\Delta G \le -0.80\text{ kcal/mol}$). Candidate \texttt{CAHWRPWHC} clears the computational threshold, though force-field error margins require empirical enzymatic testing.}
 \label{fig:pareto}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.82\textwidth]{figures/fig4_stephan_acid_switch.png}
-\caption{\textbf{Stephan-Curve Electrostatic Switch and Donnan Equilibrium.} Correlation of Stephan charge surge ($\Delta Q_{\text{Stephan}} = Q_{\text{pH } 5.2} - Q_{\text{pH } 7.2}$) against GtfB target affinity. Points are color-coded by net charge at saliva baseline ($\text{pH } 6.0$). Candidates satisfying the Donnan ceiling ($Q \le +4.0$) and showing active charge surge ($\Delta Q \ge +1.0$) selectively target acidogenic biofilms without mucosal entrapment.}
+\caption{\textbf{Stephan-Curve Electrostatic Switch and Donnan Equilibrium.} Correlation of Stephan charge surge ($\Delta Q_{\text{Stephan}} = Q_{\text{pH } 5.2} - Q_{\text{pH } 7.2}$) against GTF-SI target affinity. Points are color-coded by net charge at saliva baseline ($\text{pH } 6.0$). Candidates satisfying the Donnan ceiling ($Q \le +4.0$) and showing active charge surge ($\Delta Q \ge +1.0$) selectively target acidogenic biofilms without mucosal entrapment.}
 \label{fig:stephan}
 \end{figure}
 
@@ -157,7 +157,7 @@ To implement rigorous falsificationism, candidate \texttt{CAHWRPWHC} was challen
 
 \section{Discussion and Wet-Lab Validation Boundary}
 
-The evaluation of \texttt{CAHWRPWHC} demonstrates the critical role of Popperian falsification over naive score optimization. By identifying that uncompressed grid boundaries reveal host amylase cross-reactivity in initial candidates, the platform enabled rational hinge relaxation to optimize GtfB interaction characteristics.
+The evaluation of \texttt{CAHWRPWHC} demonstrates the critical role of Popperian falsification over naive score optimization. By identifying that uncompressed grid boundaries reveal host amylase cross-reactivity in initial candidates, the platform enabled rational hinge relaxation to optimize GTF-SI interaction characteristics.
 
 \vspace{0.5em}
 \noindent\textbf{Scope and Wet-Lab Validation Boundary:}

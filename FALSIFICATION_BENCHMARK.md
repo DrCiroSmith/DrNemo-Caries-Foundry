@@ -1,6 +1,6 @@
 # Biophysical Falsification Benchmark: Operation Karl Popper
 
-**Autonomous Structural-Biology Verification Suite for *Streptococcus mutans* GtfB Inhibitors**  
+**Autonomous Structural-Biology Verification Suite for *Streptococcus mutans* glucosyltransferase inhibitors**  
 *Principal Investigator:* Dr. Roi Castrellon, DDS (DrNemo Oral Biophysics Research, Miami, FL, USA)  
 *Benchmark Version:* 2.0.0 (Empirical $28.0\text{ \AA}$ Dual-Scoring Vina + Vinardo + OpenMM)  
 *Status:* 100% Empirical Physics Validated (Zero Synthetic / Mock Scores)
@@ -51,7 +51,7 @@ Mean = -8.34 ± 0.47 kcal/mol  His3, Trp7, His8 Anchors        Zero Cleavage Sit
 ---
 
 ### Angle 1: RCSB 3AIC Co-Crystal Redocking Control (Assay Calibration)
-* **Target:** *Streptococcus mutans* Glucosyltransferase-SI (GtfB) catalytic $(\beta/\alpha)_8$ TIM-barrel domain (RCSB PDB ID: `3AIC`, 2.10 Å resolution).
+* **Target:** *Streptococcus mutans* Glucosyltransferase-SI (GTF-SI, gtfC gene product) catalytic $(\beta/\alpha)_8$ TIM-barrel domain (RCSB PDB ID: `3AIC`, 3.11 Å resolution).
 * **Native Co-Crystallized Ligand:** Acarbose pseudo-tetrasaccharide (`GLC 1 - GLC 2 - AC1 3`) residing in the glucan elongation cleft adjacent to catalytic triad residues **Asp477** (nucleophile), **Glu515** (general acid/base), and **Asp588** (stabilizer), plus $\pi$-stacking platform **Trp517**.
 * **Methodology:** Native coordinates were extracted directly from `3AIC.pdb`, hydrogenated at pH 6.0, and converted to PDBQT. AutoDock Vina was calibrated across the active cleft centroid $(x=192.072, y=44.370, z=197.309)$ with an uncompressed bounding box of $28.0 \times 28.0 \times 28.0\text{ \AA}$.
 * **Empirical Results:**
@@ -66,8 +66,8 @@ Mean = -8.34 ± 0.47 kcal/mol  His3, Trp7, His8 Anchors        Zero Cleavage Sit
 * **Target:** Human Salivary $\alpha$-Amylase (RCSB PDB ID: `1SMD`, 1.60 Å resolution). Active-site triad: **Asp197**, **Glu233**, **Asp300** at $(x=8.778, y=49.724, z=17.278)$ on an identical $28.0\text{ \AA}$ grid.
 * **Clinical Rationale:** Oral therapeutics targeting carbohydrate-processing bacterial enzymes must not inhibit host salivary amylase, which is vital for dietary starch hydrolysis and oral mucosal health.
 * **Empirical Discoveries:**
-  * **Initial Lead (`CPHWRPWHC`):** GtfB $\mathbf{-8.062\text{ kcal/mol}}$ vs Amylase $\mathbf{-7.902\text{ kcal/mol}}$ ($\Delta\Delta G = \mathbf{-0.16\text{ kcal/mol}}$). **FALSIFIED on Angle 2:** In the uncompressed $28\text{ \AA}$ box, `CPHWRPWHC` cross-reacts with human amylase and fails the $\le -0.80\text{ kcal/mol}$ selectivity threshold!
-  * **Pareto Champion (`CAHWRPWHC`, P2A Hinge Mutant):** GtfB $\mathbf{-8.191\text{ kcal/mol}}$ vs Amylase $\mathbf{-7.343\text{ kcal/mol}}$ ($\Delta\Delta G = \mathbf{-0.85\text{ kcal/mol}}$). **CORROBORATED:** Hinge relaxation preserves high GtfB affinity while sterically excluding the macrocycle from the narrower human amylase cleft!
+  * **Initial Lead (`CPHWRPWHC`):** GTF-SI $\mathbf{-8.062\text{ kcal/mol}}$ vs Amylase $\mathbf{-7.902\text{ kcal/mol}}$ ($\Delta\Delta G = \mathbf{-0.16\text{ kcal/mol}}$). **FALSIFIED on Angle 2:** In the uncompressed $28\text{ \AA}$ box, `CPHWRPWHC` cross-reacts with human amylase and fails the $\le -0.80\text{ kcal/mol}$ selectivity threshold!
+  * **Pareto Champion (`CAHWRPWHC`, P2A Hinge Mutant):** GTF-SI $\mathbf{-8.191\text{ kcal/mol}}$ vs Amylase $\mathbf{-7.343\text{ kcal/mol}}$ ($\Delta\Delta G = \mathbf{-0.85\text{ kcal/mol}}$). **CORROBORATED:** Hinge relaxation preserves high GTF-SI affinity while sterically excluding the macrocycle from the narrower human amylase cleft!
 
 ---
 

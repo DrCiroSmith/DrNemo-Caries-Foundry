@@ -87,7 +87,11 @@ def test_targets_catalog_integrity():
         assert target in data, f"Missing critical target: {target}"
         info = data[target]
         assert "name" in info and len(info["name"]) > 0
-        assert "sequence" in info and len(info["sequence"]) > 20
+        assert "sequence_source" in info, (
+            "each target must name where its sequence comes from; "
+            "placeholder sequence strings were removed in favour of the UniProt accession"
+        )
+        assert "uniprot" in info and len(info["uniprot"]) > 0
         assert "base_peptide" in info and len(info["base_peptide"]) > 0
 
 
@@ -163,7 +167,7 @@ def test_demo_dataset_integrity():
         assert "ATOM" in content
         assert "TER" in content
         assert "CONECT" in content
-        assert " A " in content, "Must contain Chain A (GtfB pocket)"
+        assert " A " in content, "Must contain Chain A (GTF-SI pocket)"
         assert " B " in content, "Must contain Chain B (docked cyclic peptide)"
 
     # 3. Falsification benchmark docked coordinates
@@ -173,7 +177,7 @@ def test_demo_dataset_integrity():
     assert "HEADER" in complex_content
     assert "ATOM" in complex_content
     assert "TER" in complex_content
-    assert " A " in complex_content, "Must contain Chain A (GtfB receptor)"
+    assert " A " in complex_content, "Must contain Chain A (GTF-SI receptor)"
     assert " B " in complex_content, "Must contain Chain B (docked cyclic lead)"
 
     native_docked = demo_dir / "results" / "3AIC_native_acarbose_docked.pdb"

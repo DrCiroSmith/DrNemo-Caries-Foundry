@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/hero_banner_dark.png">
-    <img src="assets/hero_banner_light.png" alt="DrNemo Caries Foundry - Targeted GtfB Macrocycle Inhibitor Design" width="100%">
+    <img src="assets/hero_banner_light.png" alt="DrNemo Caries Foundry - Targeted GTF-SI Macrocycle Inhibitor Design" width="100%">
   </picture>
 </p>
 
@@ -17,11 +17,11 @@
   <a href="https://openmm.org"><img src="https://img.shields.io/badge/ForceField-OpenMM_Amber14-blueviolet.svg" alt="OpenMM Amber14"></a>
 </p>
 
-An open-source computational falsification case study and deterministic screening pipeline evaluating cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-B (GtfB, UniProt P08987). Built on AutoDock Vina v1.2.7 / Vinardo empirical grid docking and OpenMM Amber14/GBn2 isolated-ligand steric minimization (200 steps), the platform demonstrates how automated negative controls (4.51 A co-crystal redocking drift, p = 0.5897 scrambled null permutation, and pH 5.2 histidine diprotonation inversion) systematically catch false-positive docking leads, establishing a rigorous NOT_CORROBORATED verdict across 260 total contenders in the vault. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
+An open-source computational falsification case study and deterministic screening pipeline evaluating cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-SI (GTF-SI, gtfC gene product, UniProt P13470). Built on AutoDock Vina v1.2.7 / Vinardo empirical grid docking and OpenMM Amber14/GBn2 isolated-ligand steric minimization (200 steps), the platform demonstrates how automated negative controls (4.51 A co-crystal redocking drift, p = 0.5897 scrambled null permutation, and pH 5.2 histidine diprotonation inversion) systematically catch false-positive docking leads, establishing a rigorous NOT_CORROBORATED verdict across 260 total contenders in the vault. All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
 
 ---
 
-## 1. Biological Target: *S. mutans* GtfB
+## 1. Biological Target: *S. mutans* GTF-SI (gtfC gene product)
 
 <p align="center">
   <picture>
@@ -30,9 +30,11 @@ An open-source computational falsification case study and deterministic screenin
   </picture>
 </p>
 
-Dental caries is driven by acidogenic biofilms. *Streptococcus mutans* secretes glucosyltransferase-B (GtfB), which synthesizes water-insoluble alpha-1,3-glucans (mutan) that cement bacteria to enamel and trap lactic acid against hydroxyapatite, driving demineralization.
+Dental caries is driven by acidogenic biofilms. *Streptococcus mutans* secretes a family of glucosyltransferases that convert dietary sucrose into extracellular glucans. Those glucans cement bacteria to enamel and trap lactic acid against hydroxyapatite, driving demineralization.
 
-The Foundry designs **arginine-rich cyclic disulfide macrocycles** that dock into the GtfB catalytic cleft (RCSB 3AIC: Asp477, Glu515, Asp588, Trp517), halting mutan matrix formation without killing oral commensals.
+**Target identity.** This project docks against **GTF-SI, the *gtfC* gene product (UniProt P13470)**, the only *S. mutans* glucosyltransferase with a published catalytic-domain crystal structure (RCSB 3AIC, 3.11 A, Ito et al. 2011). GTF-SI synthesizes a mixture of soluble and insoluble glucans. The predominantly water-insoluble alpha-1,3-glucan (mutan) is the product of GTF-I, the *gtfB* gene product (UniProt P08987), which is a different enzyme, has no structure in this repository, and was **not** tested here. Earlier versions of this repository labelled 3AIC as GtfB. That was wrong and has been corrected throughout.
+
+The Foundry designs **arginine-rich cyclic disulfide macrocycles** that dock into the GTF-SI catalytic cleft (RCSB 3AIC: Asp477, Glu515, Asp588, Trp517), aiming to disrupt glucan matrix formation without killing oral commensals.
 
 ---
 
@@ -59,13 +61,13 @@ The discovery engine executes a deterministic 4-stage Python screening pipeline 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/fig3_pocket_and_funnel_dark.png">
-    <img src="assets/fig3_pocket_and_funnel_light.png" alt="GtfB active site close-up and multi-gate attrition funnel" width="100%">
+    <img src="assets/fig3_pocket_and_funnel_light.png" alt="GTF-SI active site close-up and multi-gate attrition funnel" width="100%">
   </picture>
 </p>
 
 | Parameter | CRRRWWRRRRC | CPHWRPWHC (WT lead) | CPHWRAWHC (P6A) | **CAHWRPWHC (Reference Scaffold)** | Popperian outcome |
 |---|---:|---:|---:|---:|---|
-| **GtfB (3AIC) Vina DG** | -7.586 kcal/mol | -8.062 kcal/mol | -8.890 kcal/mol | **-8.191 kcal/mol** | High target affinity |
+| **GTF-SI (3AIC) Vina DG** | -7.586 kcal/mol | -8.062 kcal/mol | -8.890 kcal/mol | **-8.191 kcal/mol** | High target affinity |
 | **Amylase (1SMD) Vina DG** | -7.580 kcal/mol | -7.902 kcal/mol | -7.300 kcal/mol | **-7.343 kcal/mol** | Host off-target counter-screen |
 | **Host Selectivity DDG** | -0.006 kcal/mol | -0.16 kcal/mol | -1.59 kcal/mol | **-0.85 kcal/mol** | **WT cross-reactive; P2A clears <= -0.80 (within Vina noise)** |
 | **Oral protease sites** | 7 (degraded) | 0 (RP-shielded) | 1 (trypsin fail) | **0 Trypsin (AT RISK: Trp4/7 chymotryptic)** | Baseline falsified (enzyme lysis) |
@@ -75,7 +77,7 @@ The discovery engine executes a deterministic 4-stage Python screening pipeline 
 | **OpenMM Amber14/GBn2** | N/A | 200-step relaxed | 200-step relaxed | **200-step relaxed** | Isolated ligand steric minimization |
 | **Verdict** | FALSIFIED (multiple gates) | FALSIFIED (amylase) | FALSIFIED (trypsin site) | **IN SILICO HYPOTHESIS** | Non-corroborated reference scaffold (inconclusive within Vina noise) |
 
-P2A (Pro2 to Ala) hinge relaxation preserves GtfB binding while sterically excluding the inhibitor from human amylase (DDG = -0.85 kcal/mol). P6A (Pro6 to Ala) gives raw affinity -8.890 kcal/mol but breaks the proline steric shield, creating a tryptic cleavage site, falsified on Angle 5.
+P2A (Pro2 to Ala) hinge relaxation preserves GTF-SI binding while sterically excluding the inhibitor from human amylase (DDG = -0.85 kcal/mol). P6A (Pro6 to Ala) gives raw affinity -8.890 kcal/mol but breaks the proline steric shield, creating a tryptic cleavage site, falsified on Angle 5.
 
 ---
 

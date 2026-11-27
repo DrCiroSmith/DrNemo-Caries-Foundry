@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GtfB Deterministic Biophysical Screening and Falsification Pipeline.
+"""GTF-SI Deterministic Biophysical Screening and Falsification Pipeline.
 
 Deterministic 4-stage biophysical screening and falsification pipeline wiring
 cyclic peptide generation, solubility shielding, empirical AutoDock Vina + Vinardo grid docking,
@@ -301,7 +301,7 @@ def verify_vault():
         print("\n" + "-" * 70)
         print("PARETO REFERENCE SCAFFOLD (Non-Dominated Candidate):")
         print(f"  Sequence:         {champ['sequence']}")
-        print(f"  GtfB (3AIC):      {champ['vina_3aic_kcal']} kcal/mol")
+        print(f"  GTF-SI (3AIC):      {champ['vina_3aic_kcal']} kcal/mol")
         print(f"  Amylase (1SMD):   {champ['vina_1smd_kcal']} kcal/mol")
         print(f"  Selectivity ddG:  {champ['selectivity_ddg']} kcal/mol")
         print(f"  Disulfide S-S:    {champ['ss_bond_angstrom']} A")
@@ -381,7 +381,7 @@ def run_demo():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="GtfB Autonomous Biophysical Orchestrator")
+    parser = argparse.ArgumentParser(description="GTF-SI Autonomous Biophysical Orchestrator")
     parser.add_argument("--verify-vault", action="store_true", help="Run fast read-only audit of ContenderVault")
     parser.add_argument("--demo", action="store_true", help="Run demonstration pipeline")
     parser.add_argument("--dock-sequence", type=str, default=None, help="Live empirical Vina/Vinardo execution for a sequence")

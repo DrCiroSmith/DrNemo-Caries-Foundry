@@ -63,7 +63,7 @@ class FalsificationEngine:
     def get_angle1_control() -> Dict[str, Any]:
         """Returns the calibrated RCSB 3AIC co-crystal redocking control metrics."""
         return {
-            "target": "RCSB 3AIC (S. mutans GtfB catalytic domain)",
+            "target": "RCSB 3AIC (S. mutans GTF-SI catalytic domain)",
             "native_ligand": "Acarbose pseudo-tetrasaccharide (GLC-GLC-AC1)",
             "affinity_kcal_mol": CO_CRYSTAL_CONTROL_DELTA_G,
             "redocking_rmsd_angstrom": CO_CRYSTAL_REDOCKING_RMSD,

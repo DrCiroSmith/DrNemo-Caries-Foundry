@@ -1,7 +1,7 @@
 COMPND   MOL_ID: 1;
-COMPND   2 MOLECULE: 3AIC GtfB (chain A) + CPHWRPWHC macrocycle (chain B);
+COMPND   2 MOLECULE: 3AIC GTF-SI (chain A) + CPHWRPWHC macrocycle (chain B);
 COMPND   3 CHAIN: A (protein), B (ligand);
-REMARK   Docked complex: CPHWRPWHC into S. mutans GtfB RCSB 3AIC catalytic cleft (Vina -8.062 kcal/mol (initial WT lead, falsified on amylase))
+REMARK   Docked complex: CPHWRPWHC into S. mutans GTF-SI RCSB 3AIC catalytic cleft (Vina -8.062 kcal/mol (initial WT lead, falsified on amylase))
 ATOM      1  N  ALA A 246     177.606  93.584 223.248  1.00 92.02           N
 ATOM      2  CA ALA A 246     176.566  93.495 222.167  1.00 90.38           C
 ATOM      3  C  ALA A 246     177.083  94.148 220.890  1.00 89.76           C

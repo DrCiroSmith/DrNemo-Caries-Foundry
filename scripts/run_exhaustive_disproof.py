@@ -109,7 +109,7 @@ def evaluate_angle1_cocrystal_control() -> Dict[str, Any]:
     return {
         "angle": 1,
         "name": "RCSB 3AIC Co-Crystal Redocking Calibration",
-        "target": "RCSB 3AIC (S. mutans GtfB catalytic cleft)",
+        "target": "RCSB 3AIC (S. mutans GTF-SI catalytic cleft)",
         "ligand": "Acarbose pseudo-tetrasaccharide (GLC-GLC-AC1)",
         "vina_3aic_kcal": -7.915,
         "vinardo_3aic_kcal": -5.186,
@@ -504,7 +504,7 @@ def evaluate_angle7_explicit_protonation() -> Dict[str, Any]:
         "affinity_shift_upon_protonation_kcal": delta_3aic_protonation,
         "receptor_protonation_state": "Receptors 3AIC, 1SMD, and 1LZ1 were prepared at physiological pH 7.4; Angle 7 tests explicit diprotonation of the peptide ligand at plaque acidic pH 5.2 against the physiological receptor model.",
         "classification": "INCONCLUSIVE_WITHIN_NOISE",
-        "scientific_summary": f"Explicit diprotonation at pH 5.2 shifts ligand formal charge from +1 to +3 (receptors prepared at physiological pH 7.4). GtfB binding free energy is {score_a_3aic:.2f} kcal/mol vs {score_n_3aic:.2f} kcal/mol at pH 7.2 (Delta = {delta_3aic_protonation:+.2f} kcal/mol). Explicit diprotonation weakens 3AIC score by 0.49 kcal/mol and slightly inverts raw 1SMD ranking within Vina's +/-2.85 kcal/mol error."
+        "scientific_summary": f"Explicit diprotonation at pH 5.2 shifts ligand formal charge from +1 to +3 (receptors prepared at physiological pH 7.4). GTF-SI binding free energy is {score_a_3aic:.2f} kcal/mol vs {score_n_3aic:.2f} kcal/mol at pH 7.2 (Delta = {delta_3aic_protonation:+.2f} kcal/mol). Explicit diprotonation weakens 3AIC score by 0.49 kcal/mol and slightly inverts raw 1SMD ranking within Vina's +/-2.85 kcal/mol error."
     }
 
 

@@ -3,7 +3,7 @@
   "author": "Dr. Roi Castrellon, DDS",
   "affiliation": "DrNemo Oral Biophysics Research, Miami, FL, USA",
   "receptors": {
-    "target": "RCSB PDB 3AIC (S. mutans GtfB catalytic domain, 2.10 A)",
+    "target": "RCSB PDB 3AIC (S. mutans GTF-SI catalytic domain, 2.10 A)",
     "counter_screen": "RCSB PDB 1SMD (Human Salivary alpha-Amylase, 1.60 A)",
     "grid_dimensions_angstrom": [
       28.0,
@@ -37,7 +37,7 @@
     "pose_sha256": "d476318723b90a0c6d622e46383b0815d8a5c805ac4d2a1631c77e112f57178b"
   },
   "co_crystal_control": {
-    "target": "RCSB 3AIC (S. mutans GtfB catalytic domain)",
+    "target": "RCSB 3AIC (S. mutans GTF-SI catalytic domain)",
     "native_ligand": "Acarbose pseudo-tetrasaccharide (GLC-GLC-AC1)",
     "vina_3aic_kcal": -7.915,
     "vinardo_3aic_kcal": -5.186,

@@ -1,7 +1,7 @@
 # Clinical & Biophysical Synthesis Memo: S_mutans_GtfB_Insoluble_variant_CRRAGWPRRRC
 
 **Lead Sequence:** `CRRAGWPRRRC` (Cyclic 11-mer)  
-**Target:** *Streptococcus mutans* Glucosyltransferase-B (GtfB, UniProt P08987)  
+**Target:** *Streptococcus mutans* Glucosyltransferase-SI (GTF-SI, gtfC gene product, UniProt P13470)  
 **Generation:** 5 | **Structural Confidence (pLDDT):** 78.6 | **iPTM:** 0.69  
 **Composite Fitness Score:** 0.542  
 **DiffDock Catalytic Pocket RMSD:** 3.4 Å  
