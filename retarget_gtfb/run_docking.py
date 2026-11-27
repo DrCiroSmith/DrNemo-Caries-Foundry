@@ -134,7 +134,8 @@ def preflight() -> dict:
 # Ligand construction
 # --------------------------------------------------------------------------- #
 def build_local(seq: str, out_pdbqt: str, out_pdb: str | None,
-                target_center, conf_seed: int) -> int:
+                target_center, conf_seed: int,
+                build_report: dict | None = None) -> int:
     """
     Local copy of biophysics_engine.build_macrocycle_3d with the ETKDG seed
     parameterised. Nothing else is changed. Verified against the imported
@@ -145,6 +146,8 @@ def build_local(seq: str, out_pdbqt: str, out_pdb: str | None,
     from rdkit.Chem import AllChem
     from meeko import MoleculePreparation, PDBQTWriterLegacy
 
+    if build_report is None:
+        build_report = {}
     mol = Chem.MolFromSequence(seq)
     if mol is None:
         raise ValueError(f"Invalid peptide sequence: {seq}")
@@ -188,13 +191,37 @@ def build_local(seq: str, out_pdbqt: str, out_pdb: str | None,
     if embed_res != 0:
         embed_res = AllChem.EmbedMolecule(mol, useRandomCoords=True,
                                           maxAttempts=5000, randomSeed=conf_seed)
+    # The upstream builder computes embed_res twice and then never reads it, so a
+    # molecule that failed to embed proceeds to Meeko. Checked here instead.
+    if embed_res != 0:
+        raise RuntimeError(
+            f"ETKDG embedding failed for {seq} at conformer seed {conf_seed} "
+            f"(return {embed_res}); no conformer exists to minimise or dock")
+
+    # Upstream this reads: try MMFF, except -> try UFF, except -> pass. A sequence
+    # for which both fail is docked from an unminimised ETKDG conformer with nothing
+    # recorded, while the README claims MMFF94 minimisation. The fallback is kept,
+    # because a UFF-minimised conformer is still usable, but the outcome is recorded
+    # per ligand so that no score's provenance depends on an assumption about it.
+    # Whether this has ever fired on these peptides is not knowable from the
+    # repository: no run records it. This records it from now on.
+    mmff_typed = AllChem.MMFFGetMoleculeProperties(mol) is not None
+    minimisation = "none"
     try:
         AllChem.MMFFOptimizeMolecule(mol, maxIters=500)
-    except Exception:
+        minimisation = "mmff94"
+    except Exception as mmff_exc:
         try:
             AllChem.UFFOptimizeMolecule(mol, maxIters=500)
-        except Exception:
-            pass
+            minimisation = "uff_after_mmff_failed"
+        except Exception as uff_exc:
+            minimisation = "none"
+            print(f"  WARNING: neither MMFF nor UFF minimised {seq} at seed "
+                  f"{conf_seed}. MMFF: {mmff_exc}. UFF: {uff_exc}. The conformer "
+                  f"is raw ETKDG output and every score from it is affected.")
+    build_report["mmff_typed"] = mmff_typed
+    build_report["minimisation"] = minimisation
+    build_report["embed_return"] = embed_res
 
     if target_center is not None:
         conf = mol.GetConformer()
@@ -316,18 +343,34 @@ def ligand_for(seq: str, centre, conf_seed: int) -> tuple[Path, dict]:
     if pdbqt.exists() and meta_path.exists():
         return pdbqt, json.loads(meta_path.read_text())
 
+    build_report: dict = {}
     if conf_seed == 42:
         from biophysics_engine import build_macrocycle_3d
         heavy = build_macrocycle_3d(seq, str(pdbqt),
                                     str(LIGAND_DIR / f"{seq}_conf42.pdb"), tuple(centre))
         builder = "biophysics_engine.build_macrocycle_3d (imported unchanged)"
+        # Asymmetry stated rather than implied: the imported builder swallows a
+        # failed MMFF and a failed UFF and reports neither, so for seed 42 the
+        # minimisation outcome cannot be recorded without editing a file this
+        # package does not own. It is left unknown, not assumed to have worked.
+        build_report = {
+            "minimisation": "unrecorded",
+            "mmff_typed": None,
+            "embed_return": None,
+            "why_unrecorded": "the imported builder does not report either, and its "
+                              "MMFF and UFF failures are both silent",
+        }
     else:
         verify_builder_equivalence(centre)
-        heavy = build_local(seq, str(pdbqt), None, tuple(centre), conf_seed)
+        heavy = build_local(seq, str(pdbqt), None, tuple(centre), conf_seed,
+                            build_report=build_report)
         builder = "retarget_gtfb local copy, ETKDG seed parameterised only"
 
     meta = {"sequence": seq, "conformer_seed": conf_seed, "heavy_atoms": heavy,
             "builder": builder,
+            "minimisation": build_report.get("minimisation", "unrecorded"),
+            "mmff_typed": build_report.get("mmff_typed"),
+            "etkdg_embed_return": build_report.get("embed_return"),
             "pdbqt_sha256": hashlib.sha256(pdbqt.read_bytes()).hexdigest(),
             "rotatable_branches": torsion_count(pdbqt),
             "macrocycle_opened_by_meeko": has_glue_atoms(pdbqt),

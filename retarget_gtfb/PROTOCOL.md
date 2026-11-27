@@ -36,6 +36,7 @@ can be read directly.
 | 20:48 | `c2a2bd1` | this package's own analyser carried the same defect it had just reported in the manuscript: `analyze.py` read the type as `line[76:79]`, truncating `CG0` to `CG`, and excluded only hydrogens, so the two `G0` markers entered every r.m.s.d. as element G | the type is read as the last whitespace token in one function, `atom_type_of`, and glue is excluded there rather than at three call sites. **No pre-registered threshold moves.** Rule 1 is acarbose, which carries no glue (59 records, 44 heavy atoms, verified on the file); rule 10 selects by atom name `SG`; `heavy_atoms` comes from RDKit before Meeko writes the pdbqt, 84 for the lead, matching the corrected reader exactly. Only the derived `pose_rmsd_across_seeds_A` changes, so no docking needs rerunning |
 | 21:33 | `d8ccf7f` | 4.1b called seed 42 non-independent "on both sides of the calculation", counting the identical input conformer as evidence alongside the identical pose | **that half is withdrawn.** Every `ETKDGv3` path here embeds at seed 42, `build_macrocycle_3d` hardcoding it and the sweep parameterising it, so an identical conformer is expected by construction. The manuscript work reached this independently and is right. Added as a caveat the files cannot settle: a third path, the campaign script, embeds by the default method at 300 MMFF iterations, which should not match, so the identity shows both files came from the `ETKDGv3` path and nothing records which script wrote either. The docked pose remains the evidence, the campaign having docked unseeded. Also destaled: the manuscript now publishes the four-run 9.11 and 11.80 over 84 real heavy atoms, matching this package to the digit |
 | 21:52 | `396983f` | defect 2 was stated as a property of the function, that `biophysics_engine.py` contains no `--seed`, and pinned by a test asserting the string's absence. The manuscript branch has since given the function an optional `seed` parameter, so that sentence and that test were both about to fail for a reason that does not touch the finding | restated as a property of the call sites: no production call passes a seed, so every docking run the repository has produced was stochastic. The test now walks the call graph instead of matching a string, reads the seed's positional index from the function's own signature, excludes `tests/`, and reports a file that will not parse rather than treating it as clean. Verified against a simulated post-merge tree and against three controls, one of which exposed the parse-swallowing hole. No result moves; this is a claim and a test being narrowed to what the evidence is about |
+| 22:3x | `PENDING` | nothing recorded whether a docked conformer had been minimised, and five guards had not been shown to fail when their property was violated | defect 2b added: the production builder's MMFF and UFF failures are both silent and its embedding return is discarded, so no published number can say which happened, and the repository cannot settle it. Recorded from now on per ligand, with the seed-42 path marked `unrecorded` rather than assumed. Four guards added and the analyser loader narrowed so a broken `analyze.py` fails instead of skipping; a fixture-presence guard added so that the eighteen conditional skips in the suite cannot silently subtract evidence from a green run. All five mutation-verified: the embed raise removed, the silent `pass` restored, seed 42 claiming `mmff94`, the analyser catch broadened, and `data/poses` moved away each make the matching guard fail. No threshold moves |
 
 Six of these entries withdraw a claim of mine rather than refine one. That record is
 kept deliberately: a protocol whose amendment log contains only improvements is a
@@ -152,6 +153,36 @@ numbers independently of which protein was used.
    an optional `seed` parameter, which leaves this finding untouched because all
    twelve production call sites leave it unset. Two call sites in `tests/` do pass
    a seed, which is a test fixture and not evidence about the deposited poses.
+2b. **The production builder cannot say whether its conformers were minimised,
+   and neither can any published number.** `biophysics_engine.build_macrocycle_3d`
+   reads, on both `main` and the manuscript branch: try MMFF94, on any exception
+   try UFF, on any exception `pass`. A sequence for which both force fields fail
+   is therefore docked from raw ETKDG output while the README describes MMFF94
+   minimisation, and nothing anywhere records which of the three outcomes
+   occurred. The same function computes `embed_res` twice and then never reads
+   it, so a molecule that failed to embed is handed to Meeko as well.
+
+   **Whether either has ever fired is not knowable from this repository.** No
+   run, ledger row, pose file or report carries the outcome, so the question
+   cannot be answered by reading what exists, and this document does not assert
+   that it did or did not. Deciding it would need RDKit, which is not installed
+   in the environment that wrote this protocol: `pip` cannot reach the package
+   index there, so the check was not run rather than run and passed. It is
+   recorded from now on instead of argued about. `run_docking.build_local`
+   raises on a failed embedding, records `minimisation` as `mmff94`,
+   `uff_after_mmff_failed` or `none`, records whether MMFF could type the
+   molecule at all, prints a warning naming the sequence and both exceptions
+   when neither field ran, and writes all of it into each ligand's metadata. The
+   seed-42 ligand comes from the imported builder, which reports none of this, so
+   its metadata records `minimisation` as `unrecorded` with the reason, rather
+   than assuming success.
+
+   **This does not move any threshold.** A conformer minimised by UFF instead of
+   MMFF, or not at all, is a different starting point, not an invalid one, and
+   the pre-registered rules are stated over scores and distances rather than over
+   the force field. It is a provenance gap, and it is the kind this document
+   exists to close.
+
 3. **Every score rests on a single starting conformer, and two of Vina's own
    applicability limits are exceeded.** An earlier revision of this document
    asserted here that Meeko had left the macrocycle ring rigid, on the strength of

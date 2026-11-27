@@ -953,14 +953,50 @@ def test_the_glue_inclusive_selection_reproduces_the_superseded_figures():
         "4.1b must state the corrected heavy-atom values beside the reproduced ones")
 
 
+# Third-party modules whose absence is an environment fact, not a defect. Any
+# other import error, and every non-import error, is a broken analyser and must
+# fail rather than skip: a skip here would report the atom-selection guard as
+# satisfied while nothing had been executed.
+_ABSENT_DEPENDENCY_IS_ALLOWED = {"numpy", "scipy", "pandas", "rdkit", "meeko"}
+
+
 def _load_analyze():
     spec = importlib.util.spec_from_file_location("analyze_mod", HERE / "analyze.py")
     mod = importlib.util.module_from_spec(spec)
     try:
         spec.loader.exec_module(mod)
-    except Exception as exc:  # numpy absent, for instance
-        pytest.skip(f"analyze.py will not import here: {exc}")
+    except ImportError as exc:
+        missing = (getattr(exc, "name", "") or "").split(".")[0]
+        if missing in _ABSENT_DEPENDENCY_IS_ALLOWED:
+            pytest.skip(f"analyze.py needs {missing}, absent here")
+        raise
     return mod
+
+
+def test_the_evidence_fixtures_are_present_so_a_skip_is_loud():
+    '''A skip is invisible in a green run, so absence is asserted, not tolerated.
+
+    Eighteen tests in this file skip when a repository fixture is missing. In a
+    complete checkout none of them should, but a renamed or moved directory would
+    turn a block of evidence tests into skips and leave the run green. This test
+    names the fixtures the evidence rests on and fails if one is gone, so the
+    cause is reported once and loudly instead of silently subtracting checks.
+    '''
+    required = [
+        REPO_ROOT / "data" / "poses",
+        REPO_ROOT / "data" / "contenders_ledger.csv",
+        REPO_ROOT / "data" / "exhaustive_disproof_report.json",
+        REPO_ROOT / "biophysics_engine.py",
+        REPO_ROOT / "scripts" / "run_exhaustive_disproof.py",
+        HERE / "PROTOCOL.md",
+        HERE / "analyze.py",
+        HERE / "run_docking.py",
+    ]
+    missing = [str(path.relative_to(REPO_ROOT)) for path in required
+               if not path.exists()]
+    assert missing == [], (
+        "evidence fixtures are missing, so tests in this file are skipping rather "
+        f"than checking: {missing}")
 
 
 def test_the_shared_reader_excludes_glue_on_every_ligand_in_the_repository():
@@ -1100,3 +1136,96 @@ def test_the_conformer_half_of_the_seed_42_finding_stays_narrowed():
     if sweep.exists():
         assert "params.randomSeed = s" in sweep.read_text(), (
             "the sweep no longer parameterises the conformer seed the same way")
+
+
+def _build_local_ast():
+    """The AST of run_docking.build_local, for property assertions."""
+    import ast
+    tree = ast.parse((HERE / "run_docking.py").read_text())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "build_local":
+            return node
+    raise AssertionError("run_docking.build_local no longer exists")
+
+
+def test_a_failed_embedding_is_raised_and_not_discarded():
+    """Upstream assigns embed_res twice and never reads it, so this reads it.
+
+    A molecule that failed to embed has no conformer. Upstream it goes on to
+    Meeko regardless. The property asserted is not a phrase in the source but
+    that the value is loaded somewhere in the function after assignment, and
+    that the function can raise.
+    """
+    import ast
+    fn = _build_local_ast()
+    # A bare "is embed_res ever read" assertion would pass on the upstream code,
+    # because its retry is itself guarded by `if embed_res != 0`. The property is
+    # narrower: some `if` testing embed_res must raise, so a failed embedding
+    # cannot reach Meeko.
+    guarded_raise = False
+    for node in ast.walk(fn):
+        if not isinstance(node, ast.If):
+            continue
+        names = {n.id for n in ast.walk(node.test)
+                 if isinstance(n, ast.Name)}
+        if "embed_res" not in names:
+            continue
+        if any(isinstance(st, ast.Raise) for st in ast.walk(node)):
+            guarded_raise = True
+    assert guarded_raise, (
+        "no branch on embed_res raises, so a molecule that failed to embed is "
+        "still handed to Meeko, which is the upstream behaviour")
+
+
+def test_the_minimisation_outcome_is_recorded_rather_than_assumed():
+    """Both force fields may fail silently upstream; the outcome is now recorded.
+
+    The fallback itself is kept, because a UFF conformer is still usable. What
+    must not survive is a silent `pass`: a sequence that minimised with neither
+    field is docked from raw ETKDG output while the README claims MMFF94, and
+    no run in the repository records which happened.
+    """
+    import ast
+    fn = _build_local_ast()
+    src = ast.get_source_segment((HERE / "run_docking.py").read_text(), fn) or ""
+    assert "MMFFGetMoleculeProperties" in src, (
+        "whether MMFF could type the molecule at all is not recorded")
+    for handler in [n for n in ast.walk(fn) if isinstance(n, ast.ExceptHandler)]:
+        bodies = [type(st).__name__ for st in handler.body]
+        assert bodies != ["Pass"], (
+            "an exception handler in build_local still does nothing at all")
+    assert '"minimisation"' in src and '"mmff_typed"' in src, (
+        "the build report does not carry the minimisation outcome")
+
+
+def test_the_seed_42_path_records_its_minimisation_as_unknown():
+    """The imported builder reports nothing, so seed 42 must not claim success."""
+    src = (HERE / "run_docking.py").read_text()
+    i = src.index("def ligand_for(")
+    body = src[i:i + 3000]
+    assert '"minimisation": "unrecorded"' in body, (
+        "the seed 42 path must record its minimisation as unknown, because the "
+        "imported builder swallows both force-field failures")
+    assert "minimisation" in body and "build_report.get" in body, (
+        "the ligand metadata does not carry the minimisation outcome")
+
+
+def test_no_skip_in_this_file_can_hide_a_broken_analyser():
+    """A dependency may be absent; a broken analyze.py may not be tolerated."""
+    import ast
+    src = (HERE / "test_provenance.py").read_text()
+    tree = ast.parse(src)
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.FunctionDef) and node.name == "_load_analyze"):
+            continue
+        handlers = [n for n in ast.walk(node) if isinstance(n, ast.ExceptHandler)]
+        assert handlers, "_load_analyze no longer handles an import failure"
+        for h in handlers:
+            caught = ast.unparse(h.type) if h.type else "bare"
+            assert caught == "ImportError", (
+                f"_load_analyze catches {caught}; anything broader turns a broken "
+                "analyser into a skip and reports its guards as satisfied")
+        assert any(isinstance(n, ast.Raise) for n in ast.walk(node)), (
+            "_load_analyze never re-raises, so an unexpected failure is swallowed")
+        return
+    raise AssertionError("_load_analyze no longer exists")
