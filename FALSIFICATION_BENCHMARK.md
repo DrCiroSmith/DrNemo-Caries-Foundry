@@ -60,8 +60,19 @@ Mean = -8.34 ± 0.47 kcal/mol  His3, Trp7, His8 Anchors        Zero Cleavage Sit
 * **Empirical Results:**
   * **Binding Affinity ($\Delta G_{\text{Vina}}$):** $\mathbf{-7.915\text{ kcal/mol}}$ (Vinardo: $-5.186\text{ kcal/mol}$).
   * **Centroid Displacement:** $\mathbf{3.03\text{ \AA}}$ from experimental crystal coordinates.
-  * **Heavy-Atom Hungarian RMSD:** $\mathbf{4.51\text{ \AA}}$.
-* **Popperian Criterion:** RMSD $< 5.0\text{ \AA}$ and $\Delta G < -7.0\text{ kcal/mol}$. **PASSED.**
+  * **Heavy-Atom Symmetry-Corrected RMSD:** $\mathbf{4.507\text{ \AA}}$ (heavy atoms paired
+    optimally within each element, 44 atoms). Reproduce with
+    `python3 scripts/compute_redocking_rmsd.py`; the same script reports $9.313\text{ \AA}$
+    if atoms are paired in file order, which is what the earlier helper did.
+* **Accepted Criterion:** a redocking control is conventionally called successful at
+  RMSD $\le 2.0\text{ \AA}$ (some authors allow $2.5\text{ \AA}$). At
+  $4.507\text{ \AA}$ this control **FAILS**. The earlier version of this document set the
+  threshold at $5.0\text{ \AA}$ and recorded a pass; no redocking convention uses
+  $5.0\text{ \AA}$, and that threshold has been removed.
+* **What this means for every affinity in this repository:** the protocol localises the
+  ligand in the right cleft (centroid displacement $3.03\text{ \AA}$) but does not
+  reproduce the crystallographic binding mode. Vina scores from this box are therefore
+  usable as a coarse ranking signal and not as pose-level or affinity-level predictions.
 
 ---
 

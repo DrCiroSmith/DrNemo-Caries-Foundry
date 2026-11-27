@@ -87,7 +87,7 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 
 | Angle | Evaluation Angle | Quantitative Metric | Honest Classification |
 |---|---|---|---|
-| **1** | Co-Crystal Redocking Calibration (3AIC) | Hungarian RMSD 4.51 A, Vina -7.915 kcal/mol (exceeds 2.0-4.0 A standard; wide cleft & glycosidic torsions) | `INCONCLUSIVE_WITHIN_NOISE` |
+| **1** | Co-Crystal Redocking Calibration (3AIC) | Symmetry-corrected heavy-atom RMSD 4.507 A against the 2.0 A convention, Vina -7.915 kcal/mol. The protocol finds the cleft (centroid 3.03 A) but not the crystal pose. Recompute: `python3 scripts/compute_redocking_rmsd.py` | `CALIBRATION_FAILED` |
 | **2** | Multi-Seed Conformer & Docking (N=5) | Mean -8.10 +/- 0.37 kcal/mol, cleft centroid SD = 0.46 A | `PASSED_IN_SILICO` |
 | **3** | Pose Mode Clustering & Energy Gap | Mode 1-2 Delta E = +0.10 kcal/mol, shift 1.74 A | `INCONCLUSIVE_WITHIN_NOISE` |
 | **4** | Force-Field Error Margin on 1SMD Selectivity | DeltaDeltaG = -0.85 kcal/mol vs Vina SE ~2.85 kcal/mol | `INCONCLUSIVE_WITHIN_NOISE` |

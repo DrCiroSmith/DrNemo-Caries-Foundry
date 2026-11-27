@@ -106,6 +106,43 @@ def extract_heavy_atom_coords_from_pdbqt(pdbqt_path: str, model_idx: int = 1) ->
 # ANGLE 1: RCSB 3AIC Co-Crystal Redocking Calibration (Native Acarbose)
 # =========================================================================
 def evaluate_angle1_cocrystal_control() -> Dict[str, Any]:
+    """Redocking control, recomputed from the committed coordinates on every run.
+
+    The RMSD and centroid displacement used to be literals in this function. They
+    are now produced by scripts/compute_redocking_rmsd.py, which pairs heavy atoms
+    optimally within each element instead of in file order. Every value carries a
+    provenance field so a reader can tell a measurement from a cached constant.
+    """
+    rmsd: Optional[float] = None
+    centroid: Optional[float] = None
+    provenance = "computed_this_run"
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from compute_redocking_rmsd import (
+            REFERENCE,
+            REDOCKED,
+            read_atoms,
+            assignment_rmsd,
+        )
+
+        ref, eref = read_atoms(REFERENCE)
+        dock, edock = read_atoms(REDOCKED)
+        rmsd, _paired = assignment_rmsd(ref, eref, dock, edock)
+        centroid = float(np.linalg.norm(ref.mean(axis=0) - dock.mean(axis=0)))
+    except Exception as exc:  # missing coordinates on a partial checkout
+        rmsd, centroid = 4.507, 3.027
+        provenance = f"cached_constant (recomputation unavailable: {exc})"
+
+    passed = rmsd < 2.0
+    summary = (
+        f"Redocking the crystallographic acarbose of 3AIC into the uncompressed 28 A box "
+        f"places it in the correct cleft (centroid displacement {centroid:.2f} A) but does "
+        f"not reproduce the crystallographic binding mode: symmetry-corrected heavy-atom "
+        f"RMSD is {rmsd:.2f} A, against the 2.0 A convention for a successful redocking. "
+        f"The scoring function is therefore not calibrated for pose prediction on this "
+        f"ligand in this box, and absolute affinities from the same protocol carry that "
+        f"limitation. Reproduce with: python3 scripts/compute_redocking_rmsd.py"
+    )
     return {
         "angle": 1,
         "name": "RCSB 3AIC Co-Crystal Redocking Calibration",
@@ -113,10 +150,14 @@ def evaluate_angle1_cocrystal_control() -> Dict[str, Any]:
         "ligand": "Acarbose pseudo-tetrasaccharide (GLC-GLC-AC1)",
         "vina_3aic_kcal": -7.915,
         "vinardo_3aic_kcal": -5.186,
-        "hungarian_rmsd_angstrom": 4.51,
-        "centroid_displacement_angstrom": 3.03,
-        "classification": "INCONCLUSIVE_WITHIN_NOISE",
-        "scientific_summary": "Re-docking crystallographic acarbose into uncompressed 28 A grid reproduces the active binding groove (4.51 A Hungarian RMSD, -7.915 kcal/mol). Cleft localized, but 4.51 A RMSD exceeds 2.0-4.0 A rigid redocking standard due to wide 28 A cleft and glycosidic torsion degeneracy."
+        "assignment_rmsd_angstrom": round(rmsd, 3),
+        "hungarian_rmsd_angstrom": round(rmsd, 2),
+        "centroid_displacement_angstrom": round(centroid, 2),
+        "redocking_standard_angstrom": 2.0,
+        "passed": passed,
+        "classification": "PASSED_IN_SILICO" if passed else "CALIBRATION_FAILED",
+        "provenance": provenance,
+        "scientific_summary": summary,
     }
 
 

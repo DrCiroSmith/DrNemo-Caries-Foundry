@@ -45,7 +45,12 @@ TARGET_1SMD_CENTER = (8.778, 49.724, 17.278)
 
 # Calibrated Positive Control Constants (Angle 1)
 CO_CRYSTAL_CONTROL_DELTA_G = -7.915  # kcal/mol (AutoDock Vina v1.2.7)
-CO_CRYSTAL_REDOCKING_RMSD = 4.51     # Angstroms (Hungarian optimal matching)
+CO_CRYSTAL_REDOCKING_RMSD = 4.507   # Angstroms, heavy atoms paired optimally within
+                                    # each element. Verified against the committed
+                                    # coordinates by scripts/compute_redocking_rmsd.py,
+                                    # which is the only producer of this number.
+                                    # It exceeds the 2.0 A redocking convention, so the
+                                    # docking protocol fails its own positive control.
 CO_CRYSTAL_CENTROID_DIST = 3.03      # Angstroms
 
 

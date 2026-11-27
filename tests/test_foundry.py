@@ -236,7 +236,9 @@ def test_falsification_angle1_cocrystal_control():
     assert ctrl["passed_calibration"] is False
     assert ctrl["classification"] == "CALIBRATION_WARNING"
     assert ctrl["affinity_kcal_mol"] <= -7.0
-    assert ctrl["redocking_rmsd_angstrom"] == 4.51
+    # tied to the recomputed value, not to a hand-typed literal
+    assert ctrl["redocking_rmsd_angstrom"] == CO_CRYSTAL_REDOCKING_RMSD
+    assert ctrl["redocking_rmsd_angstrom"] > 2.0
     assert ctrl["centroid_displacement_angstrom"] < 3.5
 
 
@@ -715,3 +717,38 @@ def test_orchestrator_nodes_and_demo_execution():
     assert cah_record["falsification_status"] == STATUS_SURVIVED
     assert cah_record["pareto_rank"] == 1
 
+
+
+def test_redocking_control_is_reproducible_from_committed_coordinates():
+    """Angle 1's RMSD must be produced by code, not asserted as a literal.
+
+    scripts/compute_redocking_rmsd.py pairs heavy atoms optimally within each
+    element and must agree with the constant the documents quote. It must also
+    fail the 2.0 Angstrom redocking convention, which is the honest reading of
+    this control.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    from compute_redocking_rmsd import (
+        REFERENCE,
+        REDOCKED,
+        read_atoms,
+        assignment_rmsd,
+        ordered_rmsd,
+    )
+
+    assert REFERENCE.exists(), "crystallographic reference ligand must be committed"
+    assert REDOCKED.exists(), "redocked pose must be committed"
+
+    ref, eref = read_atoms(REFERENCE)
+    dock, edock = read_atoms(REDOCKED)
+    assert len(ref) == len(dock) == 44
+
+    rmsd, paired = assignment_rmsd(ref, eref, dock, edock)
+    assert paired == 44
+    assert abs(rmsd - CO_CRYSTAL_REDOCKING_RMSD) < 0.01, (
+        f"documented redocking RMSD {CO_CRYSTAL_REDOCKING_RMSD} A does not match "
+        f"the recomputed {rmsd:.3f} A"
+    )
+    assert rmsd > 2.0, "this control fails the 2.0 A convention; do not report it as a pass"
+    # file-order pairing is much worse, which is why the naive helper must not be used here
+    assert ordered_rmsd(ref, dock) > rmsd
