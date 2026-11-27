@@ -244,6 +244,50 @@ Fourth, every downstream number that reuses either neutral arm inherits the same
 
 This is a finding about the audit rather than about the peptide, and I report it for the same reason I report the rest. An audit that silently inherits a file it believes it produced can confirm anything.
 
+## 3.10b The status column does not say what it appears to say
+
+The ledger's `falsification_status` column is the project's summary judgement on each of its 260 candidates: FALSIFIED_ORAL_BARRIER 94, FALSIFIED_AMYLASE_CROSSREACTIVITY 70, SUBTHRESHOLD_AFFINITY 39, SCRAMBLED_NULL_CONTROL 39 and CORROBORATED 18. Four properties of that column are worth recording, because every downstream reading of the campaign rests on it, including the statement that eighteen candidates survived every gate.
+
+First, the label names a criterion that the rows it labels mostly pass. All 39 rows marked SUBTHRESHOLD_AFFINITY fail the Stephan charge-shift gate, which requires delta Q of at least +1.0 from pH 7.2 to pH 5.2, and 36 of the 39 clear the affinity gate the label is named after, which is a Vina score against GTF-SI below -7.5 kcal/mol. The three that fail it are the only rows the label describes correctly. The cause is the shape of the chain in `scripts/run_campaign.py`: a Stephan failure has no branch of its own, so it falls through to the final `else`, which is the affinity label.
+
+Second, one failure is reported under two labels. 42 designed rows fail the Stephan gate and no other gate. 36 of them are labelled SUBTHRESHOLD_AFFINITY and 6 are labelled FALSIFIED_ORAL_BARRIER. The same failure, in the same file, is recorded two ways.
+
+Third, the column was not produced by one classifier. Reimplementing the chain in `scripts/run_campaign.py` from the ledger's own gate columns reproduces 212 of the 221 designed rows. Reimplementing the chain in `scripts/continuous_hunter.py` reproduces 146. Every one of the 221 is reproduced by one or the other. The two chains differ in exactly one place: `continuous_hunter.py` routes a Stephan failure into FALSIFIED_ORAL_BARRIER, and `run_campaign.py` lets it fall through to SUBTHRESHOLD_AFFINITY. The column is therefore a merge of two definitions of the same five gates, and the 39 scrambled controls carry a status that neither chain emits, since the null arm does not pass through the classifier at all.
+
+Fourth, `pareto_rank` is not a dominance rank. It holds three values, 18 rows at 1, 168 at 2 and 74 at 3, and across all 260 rows a rank of 1 holds exactly when the row is CORROBORATED, so the column restates the status under a name that suggests a frontier. No writer in this repository produces that distribution: `run_campaign.py` writes 1 for a corroborated row and 2 for anything else, and `gtfb_orchestrator.py` writes 3 only for an evaluation error or a disulfide outside the 1.95 to 2.25 A window, yet all 35 designed rows at rank 3 have a disulfide inside that window and a soft failure its rules would rank 2. Section 3.5 reports that the lead is not on the front of the two declared objectives. Computing the dominance relation over those two axes puts the distance in numbers: of the 260 rows, 86 beat the lead strictly on both affinity and selectivity, 87 dominate it once a tie on one axis is allowed, and 130 beat it on affinity alone.
+
+None of this changes a docking score. It changes what the campaign's summary can be used for. The status column records which branch of which classifier a row reached rather than which criterion it failed, and the rank column records the status a second time.
+
+## 3.10c The same defect in the twelve-angle battery's labels
+
+The twelve-angle disproof battery carries its own label per angle, and the same
+separation holds there: in eight of the twelve angle functions the label is a
+literal string rather than a value read off the gate the angle declares. A
+literal is harmless where it states the angle's own finding, as AT_RISK does on
+the protease check. It is not harmless on a pass. Angle 12 computes two gate
+booleans, one for the Donnan charge ceiling and one for the Stephan charge
+shift, and then writes PASSED_IN_SILICO as a constant without consulting
+either, so that label would have read as a pass had both criteria failed. Both
+criteria are Henderson-Hasselbalch arithmetic on the sequence, computed with no
+structure and no docking, and the charge shift of +1.62 is +0.809 per
+histidine, so the second criterion is a threshold on histidine count and not
+independent of the first. Angle 11 writes the same constant on a run that
+minimises the isolated macrocycle's energy, integrates no dynamics and never
+loads the receptor.
+
+The two labels are withdrawn, with the reason stated in the same line in each
+place they are rendered. Angle 12 now reads COMPOSITION_ARITHMETIC_ONLY and its
+label depends on its own two booleans; Angle 11 reads
+MINIMISATION_ONLY_NO_DYNAMICS. Angle 9, an off-target screen against human
+lysozyme, was rendered as a pass on the project page and in the dashboard while
+the README called it inconclusive: its margin of -1.52 kcal/mol is 0.53 of the
+2.85 kcal/mol scoring error Angle 4 is judged against, so it is read as
+inconclusive everywhere now. The battery therefore records no pass. The
+recorded run in `data/exhaustive_disproof_report.json` is left exactly as it
+was, including the labels it was written with, because it is the evidence of
+what the pipeline emitted; the discrepancy between that file and what the code
+would now emit is the correction, not a defect.
+
 ## 3.11 Disagreements I have not resolved
 
 One quantity remains inconsistent between two records. The relaxed potential energy of the lead is recorded as -1235.93 kJ/mol in the primary results database and -1234.68 kJ/mol in the benchmark file, for what is described as the same calculation. I have not been able to determine which run produced which value, and I report the disagreement rather than choosing. Neither value supports a claim about stability at any temperature, and neither supports a claim about binding. Reading the function that produces it: it takes one coordinate file, which the callers pass as the ligand alone, builds an Amber14 system with GBn2 implicit solvent, and calls energy minimisation with a 200-iteration cap. No integrator is ever stepped and the receptor is never present. The number is therefore the relaxed potential energy of an isolated macrocycle in implicit solvent. It is not a thermal measurement, it is not molecular dynamics, and it is not a biophysical validation of a complex, because no complex was ever built. The repository's own notebooks state the first of these correctly; nothing in the project should describe it as the third.

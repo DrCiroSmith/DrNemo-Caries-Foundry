@@ -817,7 +817,7 @@ with tab1:
 with tab_popper:
     st.header("⚖️ Karl Popper Biophysical Falsification Suite")
     st.markdown("""
-    **Operation Karl Popper** systematically enforces a ruthless 12-angle biophysical falsification battery powered by **AutoDock Vina v1.2.7**, **RDKit MMFF94**, **OpenMM Amber14/GBn2**, and empirical oral chemistry gates. Every angle is classified honestly as `PASSED_IN_SILICO`, `INCONCLUSIVE_WITHIN_NOISE`, `AT_RISK`, or `FALSIFIED`.
+    **Operation Karl Popper** systematically enforces a ruthless 12-angle biophysical falsification battery powered by **AutoDock Vina v1.2.7**, **RDKit MMFF94**, **OpenMM Amber14/GBn2**, and empirical oral chemistry gates. Each angle carries a classification. Read them with care: several were written into the code as literal strings rather than computed from the gate each angle declares, so a label states which branch of the script a result reached and not always which criterion it met.
     """)
 
     # Top Metrics Bar: synced to data/exhaustive_disproof_report.json
@@ -866,11 +866,11 @@ with tab_popper:
         * **Angle 6 (Alanine Hotspot Scan):** no hotspot. Against the wild-type parent `CPHWRPWHC` (-8.062), the largest affinity loss is W7A at +0.257 kcal/mol, well under the +0.70 threshold (`NO_HOTSPOT_IDENTIFIED`).
         * **Angle 7 (Explicit pH 5.2):** Diprotonated His **-7.706 kcal/mol** in 3AIC / **-7.891 kcal/mol** in 1SMD (slight ranking inversion within Vina SE; `INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 8 (Protease Vulnerability):** Trypsin shielded by Pro6, but chymotrypsin/cathepsin G cleaves Trp4/Trp7 (`AT_RISK`).
-        * **Angle 9 (Human Lysozyme 1LZ1):** **-6.67 kcal/mol** (ΔΔG = **-1.52 kcal/mol** vs 3AIC; `PASSED_IN_SILICO`).
+        * **Angle 9 (Human Lysozyme 1LZ1):** **-6.67 kcal/mol** (ΔΔG = **-1.52 kcal/mol** vs 3AIC). That margin is 0.53 of the 2.85 kcal/mol scoring error Angle 4 is judged against, so it sits inside the same noise (`INCONCLUSIVE_WITHIN_NOISE`; published earlier as `PASSED_IN_SILICO`).
         * **Angle 10 (Conformational Control):** Linear AHWRPWH **-9.25 kcal/mol** vs cyclic **-8.19 kcal/mol** (Vina under-penalizes unfolded entropy; `INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 11 (OpenMM Relaxation):** not computed. rdkit, openmm and pdbfixer are absent here, so no relaxation was run and no drift figure exists (`NOT_COMPUTED`).
-        * **Angle 12 (Chitosan & Stephan Switch):** Net charge **+2.05 ≤ +4.0**, **ΔQ = +1.618** (`PASSED_IN_SILICO`).
-        * **Honest Verdict:** **1 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 1 Calibration Failed, 1 Score Reproducible but Pose Not, 1 No Hotspot Identified, 1 Not Computed.** Nothing was corroborated.
+        * **Angle 12 (Chitosan & Stephan Switch):** Net charge **+2.05 ≤ +4.0**, **ΔQ = +1.618**. Both are Henderson-Hasselbalch arithmetic on the sequence with no structure and no docking in them, and ΔQ is +0.809 per histidine, so the second criterion is a histidine count (`COMPOSITION_ARITHMETIC_ONLY`; published earlier as `PASSED_IN_SILICO`, written as a literal while the two gate booleans were computed and discarded).
+        * **Honest Verdict:** **no passes, 6 Inconclusive within Noise, 1 At Risk, 1 Calibration Failed, 1 Score Reproducible but Pose Not, 1 No Hotspot Identified, 1 Composition Arithmetic Only, 1 Not Computed.** Nothing was corroborated, and nothing passed: the two angles listed earlier as passes are withdrawn above.
         """)
 
     with col_naive:

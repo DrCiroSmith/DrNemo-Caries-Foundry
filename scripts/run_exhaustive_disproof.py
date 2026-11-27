@@ -1093,7 +1093,10 @@ def evaluate_angle11_openmm_drift() -> Dict[str, Any]:
         "minimized_potential_energy_kj_mol": round(minimized_energy, 2),
         "heavy_atom_drift_rmsd_angstrom": round(drift_rmsd, 2),
         "simulation_disclaimer": "This is an energy minimisation, not a simulation. No dynamics are integrated: minimizeEnergy() runs and step() is never called, so there is no trajectory, no residence time and no temperature. It measures the conformational strain of the isolated macrocycle, not binding free energy, and says nothing about whether the peptide stays in the cleft.",
-        "classification": "PASSED_IN_SILICO",
+        # The label was the literal "PASSED_IN_SILICO" on a run that integrates no dynamics
+        # and never loads the receptor, which is a statement this angle cannot support. It
+        # now names what was done instead of passing a test nothing here measured.
+        "classification": "MINIMISATION_ONLY_NO_DYNAMICS",
         "scientific_summary": f"OpenMM Amber14/GBn2 energy minimisation relaxed the isolated macrocycle to {minimized_energy:.1f} kJ/mol with a heavy-atom drift of {drift_rmsd:.2f} A over {len(heavy_indices)} heavy atoms, so the ring does not collapse under the force field. No dynamics were run: this is a minimisation, not molecular dynamics, and it is not evidence of stability in solvent or in the binding site."
     }
 
@@ -1121,7 +1124,13 @@ def evaluate_angle12_chitosan_and_stephan() -> Dict[str, Any]:
         "is_ph_switch_active": switch_ok,
         "histidine_count": LEAD_SEQUENCE.count("H"),
         "provenance": PROVENANCE_COMPUTED,
-        "classification": "PASSED_IN_SILICO",
+        # donnan_ok and switch_ok were computed above and then discarded: the label was
+        # the literal "PASSED_IN_SILICO" whatever they held, so it would have read as a
+        # pass had both criteria failed. The label now depends on them, and a pass is not
+        # on offer either way, because both criteria are Henderson-Hasselbalch arithmetic
+        # on the sequence rather than a measurement of binding, delivery or activity.
+        "classification": ("COMPOSITION_ARITHMETIC_ONLY" if (donnan_ok and switch_ok)
+                           else "FALSIFIED_ORAL_BARRIER"),
         "scientific_summary": f"The lead clears the Donnan partition ceiling (net charge {q_ph6:+.2f} against a +4.0 limit at pH 6.0) and its charge rises by Delta Q = {stephan['delta_q_stephan']:+.2f} between pH 7.2 and pH 5.2. Read the second criterion carefully: with one titratable pKa near 6.0, that shift is about +0.809 per histidine, so Delta Q >= 1.0 is arithmetically a threshold on histidine count, satisfied here by the two histidines and by nothing else. It is not independent of the charge criterion above it, and it is not evidence that the peptide does anything in acid. Both are composition arithmetic, not a measurement of binding or of delivery."
     }
 

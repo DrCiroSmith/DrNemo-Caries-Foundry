@@ -1837,10 +1837,10 @@
               <div class="matrix-row">
                 <div>
                   <div class="matrix-row-title">Angle 9: Salivary Lysozyme Screen (1LZ1)</div>
-                  <div class="matrix-row-desc">Off-target counter-docking against innate host defense enzyme</div>
+                  <div class="matrix-row-desc">Off-target counter-docking against innate host defense enzyme. The -1.52 kcal/mol margin is 0.53 of the 2.85 kcal/mol scoring error Angle 4 is judged against, so it is inside the same noise and cannot be read as a pass. Shown here earlier as PASSED</div>
                 </div>
                 <div class="matrix-row-stat">
-                  <span class="status-tag pass">PASSED</span>
+                  <span class="status-tag warn">INCONCLUSIVE</span>
                   <span class="matrix-row-metric">1LZ1 -6.67 | ΔΔG -1.52</span>
                 </div>
               </div>
@@ -1870,17 +1870,17 @@
               <div class="matrix-row">
                 <div>
                   <div class="matrix-row-title">Angle 12: Chitosan Donnan &amp; Stephan Switch</div>
-                  <div class="matrix-row-desc">Nanoparticle carrier partition and plaque histidine protonation</div>
+                  <div class="matrix-row-desc">Henderson-Hasselbalch arithmetic on the sequence, computed with no structure and no docking, so it cannot pass or fail a test of binding or delivery. ΔQ +1.62 is +0.809 per histidine, so that criterion is a histidine count and not independent of the charge one. Shown here earlier as PASSED, which the code wrote as a literal while discarding the two gate booleans it had computed</div>
                 </div>
                 <div class="matrix-row-stat">
-                  <span class="status-tag pass">PASSED</span>
+                  <span class="status-tag warn">ARITHMETIC ONLY</span>
                   <span class="matrix-row-metric">Q +2.05 ≤ +4.0 | ΔQ +1.62</span>
                 </div>
               </div>
             </div>
 
             <div class="verdict-note">
-              <strong>Popperian Comparative Verdict:</strong> Candidate <code>CAHWRPWHC</code> faced 12 computational disproof tests and did not survive them: 1 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 3 Negative, 1 Not Computed. Three results are load-bearing against the hypothesis. Redocking the crystallographic acarbose of 3AIC returns a symmetry-corrected RMSD of 4.51 &#8491; against the 2.0 &#8491; convention, so the scoring function is not calibrated for pose prediction in this box (Angle 1). Across 5 seeds the score reproduces to &#177;0.37 kcal/mol while the mean pairwise pose RMSD is 9.24 &#8491;, so nothing here supports a claim about which contacts are made (Angle 2). The alanine scan of the wild type reaches a largest affinity loss of +0.26 kcal/mol against this repository's own +0.70 kcal/mol threshold, so no residue is an energetic anchor, and three substitutions improve the score (Angle 6). A reproducible score over irreproducible poses, no hotspot, and a scrambled-sequence null the lead does not beat (p = 0.5897, Angle 5) are together what a shallow, non-specific scoring surface looks like. The amylase selectivity margin (Angle 4) is read against a &#177;2.85 kcal/mol error figure this repository assumes and never cites. Angle 11 was not run: openmm is not installed here, so there is no relaxation drift figure. Results are in silico hypotheses and the negative ones are the findings; nothing here is a corroborated inhibitor.
+              <strong>Popperian Comparative Verdict:</strong> Candidate <code>CAHWRPWHC</code> faced 12 computational disproof tests and did not survive them: no passes, 6 Inconclusive within Noise, 1 At Risk, 3 Negative, 1 Composition Arithmetic Only, 1 Not Computed. An earlier version of this note counted one pass while this table carried two tags reading PASSED, on Angles 9 and 12; both are withdrawn above and the count is corrected here. Three results are load-bearing against the hypothesis. Redocking the crystallographic acarbose of 3AIC returns a symmetry-corrected RMSD of 4.51 &#8491; against the 2.0 &#8491; convention, so the scoring function is not calibrated for pose prediction in this box (Angle 1). Across 5 seeds the score reproduces to &#177;0.37 kcal/mol while the mean pairwise pose RMSD is 9.24 &#8491;, so nothing here supports a claim about which contacts are made (Angle 2). The alanine scan of the wild type reaches a largest affinity loss of +0.26 kcal/mol against this repository's own +0.70 kcal/mol threshold, so no residue is an energetic anchor, and three substitutions improve the score (Angle 6). A reproducible score over irreproducible poses, no hotspot, and a scrambled-sequence null the lead does not beat (p = 0.5897, Angle 5) are together what a shallow, non-specific scoring surface looks like. The amylase selectivity margin (Angle 4) is read against a &#177;2.85 kcal/mol error figure this repository assumes and never cites. Angle 11 was not run: openmm is not installed here, so there is no relaxation drift figure. Results are in silico hypotheses and the negative ones are the findings; nothing here is a corroborated inhibitor.
             </div>
           </div>
 
