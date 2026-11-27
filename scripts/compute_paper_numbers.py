@@ -951,7 +951,107 @@ def main():
     if dup_groups:
         note("each script that writes these files docks only when the output path is "
              "absent or under a hundred bytes, so a file already at that path is adopted "
-             "with no check that it came from the protocol about to be reported")
+             "with no check that it came from the protocol about to be reported; that "
+             "defect cannot explain the duplicates below, because their paths differ and "
+             "the guard can only adopt content already at the path it is about to write")
+
+    # ---- where the duplicated bytes came from, and what provenance was kept
+    def git(*args):
+        """Text output, stripped. Never use for file content: stripping loses bytes."""
+        try:
+            return subprocess.run(("git",) + args, cwd=str(REPO), check=True,
+                                  capture_output=True, text=True, timeout=60).stdout.strip()
+        except Exception:
+            return None
+
+    def git_blob(sha, path):
+        """Raw bytes of a committed file. Must not decode or strip, or the md5 is wrong."""
+        try:
+            return subprocess.run(("git", "show", f"{sha}:{path}"), cwd=str(REPO),
+                                  check=True, capture_output=True, timeout=60).stdout
+        except Exception:
+            return None
+
+    TRIO = ("data/poses/contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt",
+            "data/poses/disproof_seed_42_CAHWRPWHC_3AIC_docked.pdbqt",
+            "data/poses/disproof_explicit_pH72_3AIC_docked.pdbqt")
+    PAIR = ("data/poses/contender_mutant_P2A_CAHWRPWHC_1smd.pdbqt",
+            "data/poses/disproof_explicit_pH72_1SMD_docked.pdbqt")
+    for group, label in ((TRIO, "GTF-SI trio"), (PAIR, "alpha-amylase pair")):
+        present = [f for f in group if (REPO / f).exists()]
+        if len(present) != len(group):
+            continue
+        sums = {hashlib.md5((REPO / f).read_bytes()).hexdigest() for f in present}
+        sizes = {(REPO / f).stat().st_size for f in present}
+        emit("R", f"{label}: whole-file md5 values / byte sizes among {len(present)} files",
+             f"{len(sums)} / {len(sizes)} distinct, {sorted(sizes)[0]} bytes", "this script")
+        if len(sums) == 1:
+            note(f"the {label} is identical in every byte, not only in coordinates, so the "
+                 f"score and chemistry records written above the coordinates are identical too")
+        for f in present:
+            adds = git("log", "--diff-filter=A", "--format=%h %ad",
+                       "--date=format:%Y-%m-%d %H:%M", "--", f)
+            if adds:
+                emit("R", f"{Path(f).name}: commit that added it",
+                     adds.splitlines()[-1], "git history")
+        camp = present[0]
+        hist = git("log", "--format=%h %ad", "--date=format:%Y-%m-%d %H:%M", "--", camp)
+        if hist:
+            for line in reversed(hist.splitlines()):
+                sha = line.split()[0]
+                blob = git_blob(sha, camp)
+                if blob is not None:
+                    d = hashlib.md5(blob).hexdigest()
+                    emit("R", f"{Path(camp).name} content at {line}", d[:12],
+                         "git history, this script")
+            live = hashlib.md5((REPO / camp).read_bytes()).hexdigest()
+            emit("R", f"{Path(camp).name} content now", live[:12], "this script")
+            revs = [l.split()[0] for l in hist.splitlines()]
+            states = [(r, hashlib.md5(b).hexdigest())
+                      for r in reversed(revs) for b in [git_blob(r, camp)] if b is not None]
+            matching = [r for r, d in states if d == live]
+            if states and matching:
+                emit("R", f"{Path(camp).name}: which of its {len(states)} committed states "
+                     f"matches the bytes the audit paths were created with",
+                     f"{matching[-1]} (and {len(matching)} of {len(states)})",
+                     "git history, this script")
+                if len(matching) < len(states):
+                    note(f"the {label} content post-dates the first commit of "
+                         f"{Path(camp).name}: that file held different bytes when it was "
+                         f"added and was replaced the same day, and the audit paths were "
+                         f"created four days later already holding the replaced bytes, so "
+                         f"no independent docking output was ever written to those paths")
+
+    # what provenance the artefacts actually record
+    PROV = ("timestamp", "seed", "exhaustiveness", "command line", "run identifier")
+    pose = REPO / "data" / "poses" / "disproof_seed_42_CAHWRPWHC_3AIC_docked.pdbqt"
+    if pose.exists():
+        text = pose.read_text().lower()
+        found = [w for w in ("seed", "exhaust", "command", "run_id", "vina --")
+                 if w in text] + (["timestamp"] if re.search(r"20[0-9]{2}-[0-9]{2}-[0-9]{2}", text) else [])
+        emit("R", "provenance fields recorded inside the duplicated pose file",
+             ", ".join(found) if found else "none of " + ", ".join(PROV),
+             "data/poses/disproof_seed_42_CAHWRPWHC_3AIC_docked.pdbqt")
+    rep_json = REPO / "data" / "exhaustive_disproof_report.json"
+    if rep_json.exists():
+        raw = rep_json.read_text()
+        has_ts = bool(re.search(r"20[0-9]{2}-[0-9]{2}-[0-9]{2}", raw))
+        emit("R", "audit report: timestamp present / command line present",
+             f"{has_ts} / {'command' in raw.lower()}", "data/exhaustive_disproof_report.json")
+        rj = json.loads(raw)
+        for a in rj.get("angles", []):
+            if a.get("angle") == 2:
+                emit("D", "audit report's own claim: seeds used / reported score SD",
+                     f"{a.get('n_seeds')} / {a.get('score_sd_kcal')}",
+                     "data/exhaustive_disproof_report.json")
+                if a.get("n_seeds") == 5:
+                    note("the audit report states that five independent seeds were used and "
+                         "lists the duplicated value among the five, and its reported "
+                         "dispersion is computed over those five; the file comparison above "
+                         "leaves four independent runs")
+    logs = sorted((REPO / "data" / "logs").glob("*.log")) if (REPO / "data" / "logs").is_dir() else []
+    emit("R", "log files in the repository / of those, empty",
+         f"{len(logs)} / {sum(1 for l in logs if l.stat().st_size == 0)}", "data/logs")
 
     ph_neutral = REPO / "data" / "poses" / "disproof_explicit_pH72_3AIC_docked.pdbqt"
     ph_acidic = REPO / "data" / "poses" / "disproof_explicit_pH52_3AIC_docked.pdbqt"
