@@ -480,6 +480,8 @@ def main() -> int:
         base_cont = scores_for("contender", seeds=NULL_SEEDS)
         ca_b = scores_for("null_b", seeds=NULL_SEEDS, receptor="8FJC_CA")
         base_b = {k: v for k, v in b_m["best"].items() if k in ca_b}
+        ca_a = scores_for("null_a", seeds=NULL_SEEDS, receptor="8FJC_CA")
+        base_a = {k: v for k, v in a_m["best"].items() if k in ca_a}
         shared_c = sorted(set(ca_cont) & set(base_cont))
         deltas = [ca_cont[k] - base_cont[k] for k in shared_c]
 
@@ -496,10 +498,15 @@ def main() -> int:
                     "exact_p_one_sided": pt["empirical_p_one_sided"]}
 
         with_ca, without_ca = standing(ca_cont, ca_b), standing(base_cont, base_b)
+        with_ca_a, without_ca_a = standing(ca_cont, ca_a), standing(base_cont, base_a)
         flipped = None
         if with_ca and without_ca:
             flipped = ((with_ca["exact_p_one_sided"] < 0.05)
                        != (without_ca["exact_p_one_sided"] < 0.05))
+        flipped_a = None
+        if with_ca_a and without_ca_a:
+            flipped_a = ((with_ca_a["exact_p_one_sided"] < 0.05)
+                         != (without_ca_a["exact_p_one_sided"] < 0.05))
 
         # Redocking, which is the check that decides whether any pose claim holds at all.
         ca_cal = []
@@ -528,6 +535,9 @@ def main() -> int:
             "lead_against_null_b_with_ca": with_ca,
             "lead_against_null_b_without_ca": without_ca,
             "verdict_flipped_by_the_ion": flipped,
+            "lead_against_null_a_with_ca": with_ca_a,
+            "lead_against_null_a_without_ca": without_ca_a,
+            "verdict_flipped_by_the_ion_null_a": flipped_a,
             "redocking_with_ca": {"per_seed": ca_cal,
                                   "rmsd_A": agg([d["rmsd_A"] for d in ca_cal]) if ca_cal else None,
                                   "passes_2A_standard": bool(ca_cal) and
