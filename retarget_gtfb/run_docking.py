@@ -733,7 +733,7 @@ def naming_self_check() -> int:
         print(f"\n{failed} naming checks failed. Not docking.")
         return 1
     print(f"\nAll {len(checks)} naming checks passed. "
-          f"Run test_provenance.py for the full set of 40 if pytest is available.")
+          f"Run test_provenance.py for the full set of 45 if pytest is available.")
     return 0
 
 

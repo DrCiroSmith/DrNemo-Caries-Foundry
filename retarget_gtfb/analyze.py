@@ -268,14 +268,53 @@ def minimum_detectable_effect(null: list[float], alpha: float = 0.05) -> dict:
         f"{sd:.3f} kcal/mol that boundary sits about {z_alpha * sd:.3f} kcal/mol better "
         f"than the null mean. A larger null sharpens the estimate of that boundary; it "
         f"does not move it. An advantage below roughly {z_alpha * sd:.2f} kcal/mol "
-        f"therefore cannot be made significant by this test at any sample size, and "
-        f"enlarging the null is not the remedy.")
+        f"therefore cannot be made significant by adding control sequences, however "
+        f"many are added. Averaging seeds per control is a different matter and does "
+        f"move the boundary: see seeds_needed.")
     out["verdict"] = (
         f"with n = {n} at alpha = {alpha}, the observation must score at or below "
         f"{threshold:.3f} kcal/mol, which is {float(arr.mean()) - threshold:.3f} kcal/mol "
         f"better than the null mean. An advantage smaller than that cannot be detected "
         f"by this test at this n, however real it is.")
     return out
+
+
+def seeds_needed(margin: float, null: list[float], alpha: float = 0.05,
+                 power: float = 0.80, n_controls: int = 39) -> dict:
+    """How much replication would be needed to bring a given margin inside the boundary.
+
+    Adding control sequences does not move the significance boundary, because the
+    boundary is a quantile of the controls' own spread. Averaging m docking seeds per
+    control does move it, by about sqrt(m). This exists so that "beyond reach" is
+    stated with its price rather than as a claim about principle, which overreaches.
+    """
+    if len(null) < 3 or margin is None or margin <= 0:
+        return {"reason": "needs a positive margin and at least three controls"}
+    sd = float(np.asarray(null, dtype=float).std(ddof=1))
+    if sd <= 0:
+        return {"reason": "controls have no spread"}
+    z_alpha, z_power = 1.6449, 0.8416
+    m_boundary = math.ceil((z_alpha * sd / margin) ** 2)
+    m_powered = math.ceil(((z_alpha + z_power) * sd / margin) ** 2)
+    per_run = n_controls + 1
+    return {
+        "margin_kcal": round(margin, 4),
+        "control_spread_kcal": round(sd, 4),
+        "alpha": alpha,
+        "power": power,
+        "seeds_per_control_to_reach_the_boundary": m_boundary,
+        "docking_runs_to_reach_the_boundary": m_boundary * per_run,
+        "seeds_per_control_for_the_stated_power": m_powered,
+        "docking_runs_for_the_stated_power": m_powered * per_run,
+        "reading": (
+            f"A margin of {margin:.3f} kcal/mol against a control spread of {sd:.3f} "
+            f"cannot be resolved by adding controls. Averaging seeds shrinks the spread "
+            f"by about sqrt(m), so reaching the one-sided {alpha:.0%} boundary needs "
+            f"about {m_boundary} seeds per control, roughly {m_boundary * per_run} "
+            f"docking runs, and {power:.0%} power needs about {m_powered} seeds, "
+            f"roughly {m_powered * per_run} runs. State it as beyond reach at this "
+            f"level of replication, with that cost, not as beyond reach in principle."),
+    }
 
 
 def effect_in_null_terms(observed: float, null: list[float]) -> dict:
@@ -436,6 +475,11 @@ def self_test() -> int:
 # question can always be answered here, from the two files he sends back and
 # nothing else.
 # --------------------------------------------------------------------------- #
+# The sequence the lead was derived from. The margin that matters scientifically is
+# the lead against this, not the lead against a scrambled null, because the scramble
+# answers a different question.
+PARENT_ID = "contender_g01_CPHWRPWHC"
+
 REQUIRED_PROVENANCE = ("run_id", "identity", "path_stem", "vina_command_string",
                        "dock_seed", "exhaustiveness", "box_centre", "box_size",
                        "vina_version_text", "receptor_md5", "ligand_md5",
@@ -747,6 +791,28 @@ def main() -> int:
         if obs is not None and len(null_by_stat["best"]) >= 3:
             entry["effect_in_null_terms"] = effect_in_null_terms(
                 obs, list(null_by_stat["best"].values()))
+            # What replication the margin at issue would need. The margin is derived
+            # here, never carried as a constant: it is the candidate's lead over the
+            # parent it was derived from, measured in this run. An earlier revision
+            # pre-registered a 0.15 kcal/mol figure that has no source in the
+            # repository at all, which is why this is computed rather than written in.
+            parent = cand_m["best"].get(PARENT_ID)
+            if parent is not None and ident != PARENT_ID:
+                margin = parent - obs  # positive when the candidate scores better
+                entry["margin_over_parent"] = {
+                    "parent_id": PARENT_ID,
+                    "parent_best_kcal": round(parent, 3),
+                    "candidate_best_kcal": round(obs, 3),
+                    "margin_kcal": round(margin, 4),
+                    "derived": "measured in this run, not a stored constant",
+                }
+                if margin > 0:
+                    entry["seeds_needed_for_the_margin"] = seeds_needed(
+                        margin, list(null_by_stat["best"].values()))
+                else:
+                    entry["seeds_needed_for_the_margin"] = {
+                        "reason": "the candidate does not beat its parent in this run, "
+                                  "so there is no positive margin to power for"}
         if obs is not None and "minimum_detectable_effect_kcal" in obs_mde:
             observed_effect = obs_mde["null_mean_kcal"] - obs
             entry["observed_effect_kcal"] = round(observed_effect, 3)

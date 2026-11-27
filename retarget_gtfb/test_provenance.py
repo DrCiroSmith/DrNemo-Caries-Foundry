@@ -455,3 +455,77 @@ def test_an_input_conformer_duplicate_is_told_apart_from_a_docked_one(tmp_path):
     docked = [names for h, names in res["detail"].items()
               if "REMARK VINA RESULT" in (tmp_path / names[0]).read_text()]
     assert len(docked) == 1 and len(docked[0]) == 2
+
+
+# --------------------------------------------------------------------------
+# The margin at issue, and what replication it would cost.
+#
+# These exist because an earlier revision of PROTOCOL.md pre-registered a
+# 0.15 kcal/mol "claimed advantage" that has no source anywhere in the
+# repository. It was my number, not his, and it was about to be gated
+# against. The sourced quantity is the lead's margin over the parent it was
+# derived from, and it is pinned here so it cannot drift back to a guess.
+# --------------------------------------------------------------------------
+
+def _null_from_ledger() -> list[float]:
+    """The 39 scrambled nulls from his own ledger, as every power test uses them."""
+    import csv
+    ledger = REPO_ROOT / "data" / "contenders_ledger.csv"
+    if not ledger.exists():
+        pytest.skip("contenders_ledger.csv is not present in this checkout")
+    rows = list(csv.DictReader(ledger.open()))
+    return [float(r["vina_3aic_kcal"]) for r in rows
+            if "scrambled" in r["contender_id"]]
+
+
+def test_the_margin_at_issue_is_sourced_from_the_ledger():
+    import csv
+    ledger = REPO_ROOT / "data" / "contenders_ledger.csv"
+    if not ledger.exists():
+        pytest.skip("contenders_ledger.csv is not present in this checkout")
+    rows = list(csv.DictReader(ledger.open()))
+    by_id = {r["contender_id"]: r for r in rows}
+    lead = float(by_id["contender_mutant_P2A_CAHWRPWHC"]["vina_3aic_kcal"])
+    parent = float(by_id["contender_g01_CPHWRPWHC"]["vina_3aic_kcal"])
+    assert lead == -8.191
+    assert parent == -8.062
+    assert round(parent - lead, 4) == 0.129, (
+        "the margin the protocol gates against must be this subtraction and nothing "
+        "else; 0.15 kcal/mol appears nowhere in the repository")
+
+
+def test_no_unsourced_margin_is_pre_registered():
+    """0.15 may appear in PROTOCOL.md only inside the note withdrawing it."""
+    text = (HERE / "PROTOCOL.md").read_text()
+    for line in text.splitlines():
+        if "0.15 " in line or "0.15 kcal" in line:
+            assert "no source" in line or "withdraw" in line.lower(), (
+                f"PROTOCOL.md still asserts 0.15 kcal/mol outside the withdrawal "
+                f"note: {line.strip()[:120]}")
+
+
+def test_seeds_needed_scales_as_the_square_root_of_the_margin():
+    null = _null_from_ledger()
+    a = an.seeds_needed(0.129, null)
+    b = an.seeds_needed(0.258, null)
+    assert a["seeds_per_control_to_reach_the_boundary"] == 36
+    assert a["seeds_per_control_for_the_stated_power"] == 82
+    assert a["docking_runs_to_reach_the_boundary"] == 36 * 40
+    # halving the required resolution quarters the seeds, to rounding
+    assert b["seeds_per_control_to_reach_the_boundary"] == 9
+
+
+def test_seeds_needed_refuses_a_non_positive_margin():
+    null = _null_from_ledger()
+    assert "reason" in an.seeds_needed(0.0, null)
+    assert "reason" in an.seeds_needed(-0.1, null)
+
+
+def test_the_boundary_claim_is_about_controls_not_all_sample_sizes():
+    """The protocol must not claim the effect is unreachable in principle."""
+    text = (HERE / "PROTOCOL.md").read_text()
+    assert "however\n   many control sequences are added" in text or \
+           "however many control sequences are added" in text
+    offenders = [l for l in text.splitlines()
+                 if "at any sample size" in l and "overreach" not in l]
+    assert not offenders, f"overreaching wording survives: {offenders[:2]}"

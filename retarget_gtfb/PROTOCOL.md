@@ -102,8 +102,8 @@ numbers independently of which protein was used.
    at `TORSDOF 35`, above the 0 to 32 range over which Vina's affinity normalisation
    was fitted, while the nine-mers at `TORSDOF 15` are inside it, so those two
    groups are not scored on the same footing. Neither point is large enough on its
-   own to account for the 0.15 kcal/mol lead-against-null difference the campaign
-   reports; section 4 gives the measurement that settles what is.
+   own to account for the 0.129 kcal/mol margin the lead holds over the parent it was
+   derived from; section 4 gives the measurement that settles what is.
 4. **Two mutually inconsistent linear controls exist.** The cyclization benefit is
    reported twice from two different molecules.
    `demo_data/results/falsification_benchmark.json` gives the linear control as
@@ -319,8 +319,18 @@ claim in the existing campaign cannot be adjudicated without it.
    p < 0.05 the candidate must beat every null member, which means scoring at or
    below the best of them. On the ledger's own numbers that threshold is
    -9.378 kcal/mol, which is **1.035 kcal/mol better than the null mean** of
-   -8.343 kcal/mol. The difference the campaign reports is 0.15 kcal/mol, roughly
-   one seventh of the floor. **This is what gates the wording of the conclusion.**
+   -8.343 kcal/mol. The margin actually at issue is 0.129 kcal/mol, which is the
+   lead CAHWRPWHC at -8.191 against the parent CPHWRPWHC it was derived from at
+   -8.062, both read from `data/contenders_ledger.csv`. The floor is **8.02 times**
+   that margin. **This is what gates the wording of the conclusion.**
+
+   The margin is computed from the ledger at run time rather than carried here as a
+   constant, because an earlier revision of this section asserted a claimed advantage
+   of 0.15 kcal/mol and that figure has no source anywhere in the repository. It
+   appears in no document, no result file and no script, and the only stated threshold
+   in the project is the +0.70 kcal/mol alanine hotspot gate, which measures something
+   else. The number was mine and it should not have been pre-registered as his.
+   Withdrawn, and replaced by a quantity with a file behind it.
    Without it, a p value above 0.05 reads as "no effect" when what it means is "no
    power", and those are different claims. Reported for every null test, both
    pairings, both summary statistics.
@@ -334,14 +344,31 @@ claim in the existing campaign cannot be adjudicated without it.
    standard deviation of 0.470 kcal/mol, so the 5 percent boundary sits about
    **0.773 kcal/mol** better than the null mean and stays there however many
    permutations are drawn. A larger null estimates that boundary more precisely; it
-   does not move it. The claimed 0.15 kcal/mol is **0.32 standard deviations** from
-   the null mean, and in the existing data it falls on the wrong side: the lead's
+   does not move it. The 0.129 kcal/mol margin is **0.275 standard deviations** from
+   the null mean, and against the null the lead falls on the wrong side entirely: its
    -8.191 kcal/mol is 0.152 kcal/mol **worse** than the null mean of -8.343, with
    59 percent of null members scoring at least as well. So the honest statement is
    not that the effect is small and the sample too small to see it. It is that an
-   advantage of this size is not distinguishable from sequence-order noise under this
-   design at any sample size, and that the remedy is a different measurement, not
-   more of the same one. `analyze.py` prints this as
+   advantage of this size is not distinguishable from sequence-order noise **however
+   many control sequences are added**.
+
+   That phrasing is deliberately narrower than "at any sample size", which overreaches
+   and a reviewer would catch. Adding controls does not move the boundary, but
+   averaging *m* docking seeds per control shrinks the measured spread by about the
+   square root of *m*, so measurement effort does move it. Quantified at the 0.129
+   margin and the null's spread of 0.4697 kcal/mol: reaching the one-sided 5 percent
+   boundary needs **36 seeds per control**, about 1,440 docking runs across 39
+   controls and one candidate, and 80 percent power needs **82 seeds**, about 3,280
+   runs. So the honest claim is that the effect is beyond reach at this level of
+   replication, with the cost of buying it stated, rather than beyond reach in
+   principle.
+
+   Whether that cost is worth paying is a separate question and the answer is
+   probably no: 0.129 kcal/mol is **4.5 percent** of the 2.85 kcal/mol standard error
+   Trott and Olson report over their own benchmark set, and even the 1.035 kcal/mol
+   needed to beat every control is **36.3 percent** of it. Resolving a margin of that
+   size would be a claim about the scoring function rather than about the peptide,
+   which is why this stays a method result. `analyze.py` prints this as
    `power_by_best.asymptotic_requirement_kcal` and
    `effect_in_null_terms.advantage_in_null_sd` on every null test, so the sentence in
    the paper is read off the output rather than reasoned about afresh.
@@ -351,7 +378,7 @@ claim in the existing campaign cannot be adjudicated without it.
    (Pearson r = -0.282, r-squared = 0.08). The existing null is built from
    permutations of the wild type at 86 heavy atoms while the lead it is compared
    against has 84, so the published comparison carries a 2-atom size difference worth
-   about **-0.047 kcal/mol**, roughly a third of the 0.15 kcal/mol it reports. Null B
+   about **-0.047 kcal/mol**, roughly 36 percent of the 0.129 kcal/mol margin. Null B
    fixes the pairing; the slope is reported so that the residual size term can be
    subtracted rather than assumed away. Where a subset spans fewer than five heavy
    atoms the slope is withheld rather than printed, because a slope fitted over a
@@ -390,7 +417,7 @@ after it arrives.
 | 9 | **Off-target selectivity.** Delta delta G against 1SMD and 1LZ1. | Must exceed about 1 kcal/mol to be discussed at all | Vina's own standard error on its reference set is around 2.85 kcal/mol. Differences well inside that are not selectivity. |
 | 10 | **Geometry integrity.** Cys1 SG to CysN SG distance in every built ligand. | 2.00 to 2.15 A | Outside that range the disulfide is not a disulfide and the molecule docked was not the molecule intended. |
 | 11 | **Provenance integrity.** No pose content under more than one run, no path holding more than one content, no reused run identifier. | Zero of each | Any one of them means two results cannot be told apart, so no number in the set can be attributed. This gate runs before any other is read and the analysis exits non-zero when it fails. It is the gate the existing campaign has already failed: two docked results under five filenames, one of them the lead's headline -8.191. |
-| 12 | **Power.** Minimum detectable effect from the null's own size and spread, against the difference being claimed. | The claimed difference must exceed the minimum detectable effect before any verdict is read | Where the claimed difference is below the floor, the correct word is uninformative, not negative. A test that could not have found an effect of the claimed size has not ruled one out. On the existing 39-member null the floor is 1.035 kcal/mol against a claimed 0.15, so this gate decides how the result is written up whichever way the p value falls. A second, harder floor is reported beside it: the 5 percent boundary of the null's own spread, 0.773 kcal/mol at a null standard deviation of 0.470, which no sample size moves. A claimed difference below that boundary is to be reported as outside this design's resolution rather than as a small effect awaiting more data. |
+| 12 | **Power.** Minimum detectable effect from the null's own size and spread, against the difference being claimed. | The claimed difference must exceed the minimum detectable effect before any verdict is read | Where the claimed difference is below the floor, the correct word is uninformative, not negative. A test that could not have found an effect of the claimed size has not ruled one out. On the existing 39-member null the floor is 1.035 kcal/mol against a sourced margin of 0.129, so this gate decides how the result is written up whichever way the p value falls. A second, harder floor is reported beside it: the 5 percent boundary of the null's own spread, 0.773 kcal/mol at a null standard deviation of 0.470, which no sample size moves. A claimed difference below that boundary is to be reported as beyond reach however many control sequences are added, with the seed count that would be needed stated beside it, rather than as a small effect awaiting more data or as beyond reach in principle. The margin is computed from the ledger, never carried as a constant. |
 
 ### What a positive result would and would not establish
 
