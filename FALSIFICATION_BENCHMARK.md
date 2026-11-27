@@ -39,7 +39,7 @@ RCSB 3AIC Acarbose Redocking                  RCSB 1SMD Salivary Amylase
     ▼                               ▼                               ▼
 [ Angle 3: Scrambled Null ]   [ Angle 4: Ala-Scanning ]       [ Angle 5: Protease ]
 N=39 Permutations + Linear    7-Residue Hotspot Scan          Trypsin & Gingipain
-Mean = -8.34 ± 0.47 kcal/mol  His3, Trp7, His8 Anchors        Zero Cleavage Sites
+Mean = -8.34 ± 0.47 kcal/mol  No hotspot ≥ +0.70 kcal/mol     Zero Cleavage Sites
     │                                                               │
     └───────────────────────────────┬───────────────────────────────┘
                                     ▼
@@ -95,14 +95,22 @@ Mean = -8.34 ± 0.47 kcal/mol  His3, Trp7, His8 Anchors        Zero Cleavage Sit
 ---
 
 ### Angle 4: In-Silico Alanine-Scanning Mutagenesis (Hotspot Mapping)
-Systematic single-alanine substitutions were evaluated across the scaffold:
+Systematic single-alanine substitutions of the wild type `CPHWRPWHC` ($-8.062\text{ kcal/mol}$), of which
+the lead is the `P2A` mutant. Every $\Delta\Delta G$ below is measured against that parent, and every
+affinity is read from `data/foundry_contenders.sqlite`.
+
+**Verdict: `NO_HOTSPOT_IDENTIFIED`.** No substitution reaches the $+0.70\text{ kcal/mol}$ hotspot
+threshold. The largest affinity loss in the whole scan is `W7A` at $+0.257\text{ kcal/mol}$. No residue
+in this scaffold is an energetic anchor on this evidence. Reproduce with
+`python3 scripts/run_exhaustive_disproof.py`.
+
 * `P2A` (`CAHWRPWHC`): $\mathbf{-8.191\text{ kcal/mol}}$ (Hinge relaxation; enhances selectivity to $\Delta\Delta G = -0.85\text{ kcal/mol}$).
-* `H3A` (`CPAWRPWHC`): $\mathbf{-7.869\text{ kcal/mol}}$ ($\Delta\Delta G = +0.193\text{ kcal/mol}$, within Vina noise $\pm 2.85\text{ kcal/mol}$, not a solitary hotspot).
+* `H3A` (`CPAWRPWHC`): $\mathbf{-7.869\text{ kcal/mol}}$ ($\Delta\Delta G = +0.193\text{ kcal/mol}$, well under the $+0.70$ hotspot threshold, and inside an assumed scoring error that carries no citation here).
 * `W4A` (`CPHARPWHC`): $\mathbf{-8.269\text{ kcal/mol}}$ ($\pi$-stacking platform).
 * `R5A` (`CPHWAPWHC`): $\mathbf{-8.531\text{ kcal/mol}}$ (electrostatic salt-bridge).
 * `P6A` (`CPHWRAWHC`): $\mathbf{-8.890\text{ kcal/mol}}$ on 3AIC, $-7.302\text{ kcal/mol}$ on 1SMD ($\Delta\Delta G = -1.59$). **FALSIFIED on Angle 5:** Mutating Pro6 breaks the proline turn, exposing Arg5 to rapid tryptic cleavage!
-* `W7A` (`CPHWRPAHC`): $\mathbf{-7.805\text{ kcal/mol}}$ ($\Delta\Delta G = +0.257\text{ kcal/mol}$, within Vina noise, not a solitary hotspot).
-* `H8A` (`CPHWRPWAC`): $\mathbf{-7.978\text{ kcal/mol}}$ ($\Delta\Delta G = +0.084\text{ kcal/mol}$, within Vina noise, not a solitary hotspot).
+* `W7A` (`CPHWRPAHC`): $\mathbf{-7.805\text{ kcal/mol}}$ ($\Delta\Delta G = +0.257\text{ kcal/mol}$, well under the $+0.70$ hotspot threshold, not an anchor).
+* `H8A` (`CPHWRPWAC`): $\mathbf{-7.978\text{ kcal/mol}}$ ($\Delta\Delta G = +0.084\text{ kcal/mol}$, well under the $+0.70$ hotspot threshold, not an anchor).
 
 ---
 

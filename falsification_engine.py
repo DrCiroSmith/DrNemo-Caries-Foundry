@@ -197,7 +197,7 @@ class FalsificationEngine:
                 "naive_passed": False,
                 "naive_selectivity": naive_selectivity,
                 "classification": "INCONCLUSIVE_WITHIN_NOISE",
-                "force_field_reality_check": "Vina standard error ~2.85 kcal/mol; DeltaDeltaG = -0.85 kcal/mol is within force-field uncertainty",
+                "force_field_reality_check": "DeltaDeltaG = -0.848 kcal/mol, inside an assumed 2.85 kcal/mol scoring error. That error figure carries no citation in this repository and nothing here measures it, so it is an assumption, not a published value",
                 "criterion": "DeltaDeltaG (3AIC - 1SMD) <= -0.80 kcal/mol"
             },
             "gate3_scrambled_null_permutation": {

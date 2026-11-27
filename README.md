@@ -90,9 +90,9 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 | **1** | Co-Crystal Redocking Calibration (3AIC) | Symmetry-corrected heavy-atom RMSD 4.507 A against the 2.0 A convention, Vina -7.915 kcal/mol. The protocol finds the cleft (centroid 3.03 A) but not the crystal pose. Recompute: `python3 scripts/compute_redocking_rmsd.py` | `CALIBRATION_FAILED` |
 | **2** | Multi-Seed Conformer & Docking (N=5) | Mean -8.10 +/- 0.37 kcal/mol, cleft centroid SD = 0.46 A | `PASSED_IN_SILICO` |
 | **3** | Pose Mode Clustering & Energy Gap | Mode 1-2 Delta E = +0.10 kcal/mol, shift 1.74 A | `INCONCLUSIVE_WITHIN_NOISE` |
-| **4** | Force-Field Error Margin on 1SMD Selectivity | DeltaDeltaG = -0.85 kcal/mol vs Vina SE ~2.85 kcal/mol | `INCONCLUSIVE_WITHIN_NOISE` |
+| **4** | Force-Field Error Margin on 1SMD Selectivity | DeltaDeltaG = -0.848 kcal/mol against an assumed 2.85 kcal/mol scoring error, which carries no citation in this repository | `INCONCLUSIVE_WITHIN_NOISE` |
 | **5** | Charge-Matched Scrambled Null (N=39) | Lead -8.191 vs Null -8.343 +/- 0.470 (Z = +0.32, p = 0.5897) | `INCONCLUSIVE_WITHIN_NOISE` |
-| **6** | In-Silico Alanine-Scanning Mutagenesis | Single-site Ala shifts (+0.08 to +0.39 kcal/mol) within Vina noise; P6A exposes Arg5 to trypsin | `PASSED_IN_SILICO` |
+| **6** | In-Silico Alanine-Scanning Mutagenesis | No residue reaches the +0.70 kcal/mol hotspot threshold; largest loss is W7A at +0.257 kcal/mol; P6A opens a trypsin site | `NO_HOTSPOT_IDENTIFIED` |
 | **7** | Explicit pH 5.2 Histidine Diprotonation | Formal charge +1 -> +3; 3AIC -7.71 vs 1SMD -7.89 kcal/mol (Delta = +0.48, slight 1SMD inversion within noise) | `INCONCLUSIVE_WITHIN_NOISE` |
 | **8** | Broad Oral Protease & Peptidase Check | Trypsin shielded (Arg5-Pro6); Trp4/Trp7 vulnerable to chymotrypsin | `AT_RISK` |
 | **9** | Additional Host Screen (RCSB 1LZ1 Lysozyme) | Human lysozyme DG = -6.67 kcal/mol (DeltaDeltaG = -1.52) | `PASSED_IN_SILICO` |
@@ -115,7 +115,7 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 
 - **Panel A, Pareto Frontier:** Vina 3AIC vs selectivity DDG across contenders; CAHWRPWHC is the non-dominated candidate.
 - **Panel B, Scrambled Null Histogram (N=39):** charge-matched sequence permutations evaluate against the empirical null distribution (Z = +0.32, p = 0.5897, failing to reject H0).
-- **Panel C, Alanine Hotspot Scan:** His3, Trp7, His8 are candidate contact residues (single-site shifts +0.08 to +0.39 kcal/mol, within Vina noise); Pro2/Pro6 are conformational gates. P6A flagged for Arg5 trypsin lysis.
+- **Panel C, Alanine Hotspot Scan:** no hotspot. The scan is parented on the wild type `CPHWRPWHC` (-8.062 kcal/mol); the three substitutions that lose any affinity at all (H3A +0.193, H8A +0.084, W7A +0.257 kcal/mol) are far inside any plausible scoring error, so none is an energetic anchor. P6A gains affinity (-0.828 kcal/mol) but opens a trypsin site at Arg5. The panel in this figure predates the correction and still labels His3, Trp7 and His8 as anchors; it needs regenerating.
 - **Panel D, Stephan Acid-Switch:** DQ = +1.62 activates the inhibitor in the cariogenic acidic niche (pH approximately 5.2). CRRRWWRRRRC shows flat charge, no acid activation.
 
 ---

@@ -35,6 +35,93 @@ try:
 except ImportError:
     HAS_DEPS = False
 
+LEAD_SEQUENCE = "CAHWRPWHC"
+# The alanine scan is parented on the wild type, of which the lead is the P2A mutant.
+WILD_TYPE_SEQUENCE = "CPHWRPWHC"
+
+# Provenance vocabulary for every angle dict in this module.
+#   computed_this_run  : the number was recomputed from committed data during this run
+#   vault_query        : the number was read from data/foundry_contenders.sqlite this run
+#   cached_constant    : a literal carried over from an earlier run, not recomputed here
+#   unsourced_constant : a literal with no citation and no producer in this repository
+#   not_computed       : the inputs do not exist in this repository, so there is no result
+PROVENANCE_COMPUTED = "computed_this_run"
+PROVENANCE_VAULT = "vault_query"
+PROVENANCE_CACHED = "cached_constant"
+PROVENANCE_UNSOURCED = "unsourced_constant"
+PROVENANCE_NOT_COMPUTED = "not_computed"
+
+
+def _query_vault_affinity(sequence: str) -> Optional[Dict[str, float]]:
+    """Read one sequence's docking scores from the vault, or None if it is not there."""
+    import sqlite3
+
+    db = REPO_ROOT / "data" / "foundry_contenders.sqlite"
+    if not db.exists():
+        return None
+    try:
+        conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        try:
+            row = conn.execute(
+                "SELECT vina_3aic_kcal, vina_1smd_kcal FROM contenders WHERE sequence = ?",
+                (sequence,),
+            ).fetchone()
+        finally:
+            conn.close()
+    except Exception:
+        return None
+    if not row or row[0] is None:
+        return None
+    return {
+        "vina_3aic": float(row[0]),
+        "vina_1smd": float(row[1]) if row[1] is not None else None,
+    }
+
+
+def _query_vault_scores(sequence: str = LEAD_SEQUENCE) -> Optional[Dict[str, Any]]:
+    """Read the lead's docking scores and the scrambled null distribution from the vault.
+
+    Returns None when the database is absent or the rows are missing, so that a caller
+    can fall back to a dated constant and say so rather than invent a number.
+    """
+    import sqlite3
+    import statistics
+
+    db = REPO_ROOT / "data" / "foundry_contenders.sqlite"
+    if not db.exists():
+        return None
+    try:
+        conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        try:
+            lead = conn.execute(
+                "SELECT vina_3aic_kcal, vina_1smd_kcal FROM contenders WHERE sequence = ?",
+                (sequence,),
+            ).fetchone()
+            nulls = [
+                row[0]
+                for row in conn.execute(
+                    "SELECT vina_3aic_kcal FROM contenders "
+                    "WHERE falsification_status = 'SCRAMBLED_NULL_CONTROL' "
+                    "AND vina_3aic_kcal IS NOT NULL"
+                ).fetchall()
+            ]
+        finally:
+            conn.close()
+    except Exception:
+        return None
+    if not lead or lead[0] is None or len(nulls) < 3:
+        return None
+    return {
+        "lead_vina_3aic": float(lead[0]),
+        "lead_vina_1smd": float(lead[1]) if lead[1] is not None else None,
+        "null_scores": nulls,
+        "null_n": len(nulls),
+        "null_mean": statistics.mean(nulls),
+        "null_sd": statistics.stdev(nulls),
+        "null_at_least_as_good": sum(1 for s in nulls if s <= float(lead[0])),
+    }
+
+
 from solubility_shield import (
     is_viable,
     calc_net_charge_at_ph,
@@ -351,9 +438,25 @@ def evaluate_angle3_pose_clustering() -> Dict[str, Any]:
 # ANGLE 4: Force-Field Error Margin Reality Check on 1SMD Selectivity
 # =========================================================================
 def evaluate_angle4_forcefield_error_margin() -> Dict[str, Any]:
-    vina_3aic = -8.191
-    vina_1smd = -7.343
+    # Docking scores come from the vault, which is the only place in this repository
+    # that holds a Vina result. The force-field standard error does not: see below.
+    vault = _query_vault_scores()
+    if vault and vault["lead_vina_1smd"] is not None:
+        vina_3aic = round(vault["lead_vina_3aic"], 3)
+        vina_1smd = round(vault["lead_vina_1smd"], 3)
+        score_provenance = PROVENANCE_VAULT
+    else:
+        vina_3aic, vina_1smd = -8.191, -7.343
+        score_provenance = PROVENANCE_CACHED
+
     selectivity_ddg = round(vina_3aic - vina_1smd, 3)
+
+    # UNSOURCED. This figure is widely quoted for the Vina scoring function but no
+    # citation is recorded in this repository and nothing here measures it. It is kept
+    # only so the comparison below is explicit about what it assumes, and the angle
+    # reports it as an assumption, not as a published value. Replace it with a figure
+    # taken from a paper you have read, or compute an error margin on a benchmark set
+    # of your own, before quoting this angle anywhere.
     vina_standard_error_kcal = 2.85
 
     return {
@@ -362,62 +465,173 @@ def evaluate_angle4_forcefield_error_margin() -> Dict[str, Any]:
         "vina_3aic_kcal": vina_3aic,
         "vina_1smd_kcal": vina_1smd,
         "measured_selectivity_ddg_kcal": selectivity_ddg,
-        "vina_forcefield_standard_error_kcal": vina_standard_error_kcal,
-        "ratio_delta_to_error": round(abs(selectivity_ddg) / vina_standard_error_kcal, 2),
+        "assumed_forcefield_error_kcal": vina_standard_error_kcal,
+        "assumed_forcefield_error_provenance": PROVENANCE_UNSOURCED,
+        "ratio_delta_to_assumed_error": round(abs(selectivity_ddg) / vina_standard_error_kcal, 2),
+        "score_provenance": score_provenance,
+        "provenance": score_provenance,
         "classification": "INCONCLUSIVE_WITHIN_NOISE",
-        "scientific_summary": f"The measured DeltaDeltaG of -0.85 kcal/mol (-8.191 vs -7.343) is smaller than AutoDock Vina's published standard error of ~2.85 kcal/mol (11.9 kJ/mol). While meeting the -0.80 kcal/mol computational cutoff, this selectivity is strictly inconclusive within force-field noise and requires wet-lab enzymatic falsification."
+        "scientific_summary": (
+            f"The measured DeltaDeltaG between the GTF-SI and the alpha-amylase receptor is "
+            f"{selectivity_ddg} kcal/mol ({vina_3aic} vs {vina_1smd}). Judged against an assumed "
+            f"scoring-function error of {vina_standard_error_kcal} kcal/mol it is well inside noise, "
+            f"so no selectivity can be claimed. That error figure is an assumption: it carries no "
+            f"citation in this repository and nothing here measures it, so the comparison is only as "
+            f"good as the assumption. Enzymatic selectivity has to be measured in vitro."
+        ),
     }
 
 
-# =========================================================================
-# ANGLE 5: Scrambled Null Hypothesis Re-Classification
-# =========================================================================
 def evaluate_angle5_scrambled_null_test() -> Dict[str, Any]:
-    lead_score = -8.191
-    null_mean = -8.343
-    null_std = 0.470
-    z_score = round((lead_score - null_mean) / null_std, 2)  # +0.32
-    # Two-tailed p-value for Z = +0.32
-    p_value = 0.5897
+    # The lead score and the whole null distribution are read from the vault and the
+    # statistics recomputed here, so this angle has a producer.
+    vault = _query_vault_scores()
+    if vault:
+        lead_score = round(vault["lead_vina_3aic"], 3)
+        n_isomers = vault["null_n"]
+        null_mean = round(vault["null_mean"], 3)
+        null_std = round(vault["null_sd"], 3)
+        better_or_equal = vault["null_at_least_as_good"]
+        provenance = PROVENANCE_VAULT
+    else:
+        lead_score, n_isomers, null_mean, null_std = -8.191, 39, -8.343, 0.470
+        better_or_equal = 23
+        provenance = PROVENANCE_CACHED
+
+    z_score = round((lead_score - null_mean) / null_std, 2)
+    # One-sided empirical rank p: the fraction of charge-matched scrambles that dock at
+    # least as well as the lead. This is NOT a two-tailed normal p-value on the Z score,
+    # which an earlier version of this function labelled it as; with N=39 the rank
+    # statistic is the defensible one, since the null scores are not assumed Gaussian.
+    p_value = round(better_or_equal / n_isomers, 4)
     is_h0_rejected = p_value < 0.05
 
     return {
         "angle": 5,
         "name": "Charge-Matched Scrambled Sequence Null Permutation Battery",
-        "n_isomers": 39,
+        "n_isomers": n_isomers,
         "lead_affinity_kcal": lead_score,
         "null_distribution_mean_kcal": null_mean,
         "null_distribution_std_kcal": null_std,
         "z_score": z_score,
+        "scrambles_at_least_as_good_as_lead": better_or_equal,
         "p_value": p_value,
+        "p_value_kind": "one_sided_empirical_rank",
         "is_null_hypothesis_rejected": is_h0_rejected,
+        "provenance": provenance,
         "classification": "INCONCLUSIVE_WITHIN_NOISE",
-        "scientific_summary": f"Static docking of CAHWRPWHC (-8.191 kcal/mol) vs N=39 scrambled isomers (-8.343 +/- 0.470 kcal/mol) yields Z = +0.32, p = 0.5897, failing to reject H0. Rigid-receptor docking under-penalizes aqueous conformational entropy; sequence specificity cannot be claimed on static docking alone."
+        "scientific_summary": (
+            f"{LEAD_SEQUENCE} docks at {lead_score} kcal/mol against GTF-SI. Its N={n_isomers} "
+            f"charge-matched scrambled isomers average {null_mean} +/- {null_std} kcal/mol, and "
+            f"{better_or_equal} of {n_isomers} of them dock at least as well as the lead "
+            f"(one-sided empirical rank p = {p_value}, Z = {z_score:+.2f}). H0 is not rejected: on "
+            f"this evidence the lead's sequence carries no detectable specificity, and the docking "
+            f"score is consistent with amino-acid composition alone. Reproduce with: "
+            f"sqlite3 data/foundry_contenders.sqlite"
+        ),
     }
 
 
-# =========================================================================
-# ANGLE 6: In-Silico Alanine-Scanning Mutagenesis
-# =========================================================================
 def evaluate_angle6_alanine_scan() -> Dict[str, Any]:
-    ala_map = {
-        "P2A": {"sequence": "CAHWRPWHC", "vina_kcal": -8.191, "delta_ddg": 0.000, "is_hotspot": False, "role": "Hinge relaxation"},
-        "H3A": {"sequence": "CAPWRPWHC", "vina_kcal": -7.869, "delta_ddg": 0.322, "is_hotspot": False, "role": "Catalytic triad anchor (within noise)"},
-        "W4A": {"sequence": "CAHARPWHC", "vina_kcal": -8.214, "delta_ddg": -0.023, "is_hotspot": False, "role": "Aromatic core"},
-        "R5A": {"sequence": "CAHWAPWHC", "vina_kcal": -8.105, "delta_ddg": 0.086, "is_hotspot": False, "role": "Salt-bridge partner (within noise)"},
-        "P6A": {"sequence": "CAHWRAWHC", "vina_kcal": -8.890, "delta_ddg": -0.699, "is_hotspot": False, "role": "Affinity trap / tryptic fail"},
-        "W7A": {"sequence": "CAHWRPARC", "vina_kcal": -7.805, "delta_ddg": 0.386, "is_hotspot": False, "role": "Aromatic stacking anchor (within noise)"},
-        "H8A": {"sequence": "CAHWRPWAC", "vina_kcal": -7.978, "delta_ddg": 0.213, "is_hotspot": False, "role": "Catalytic anchor (within noise)"}
-    }
-    hotspots = [k for k, v in ala_map.items() if v["delta_ddg"] >= 0.70]
+    """Alanine scan of the wild type, read from the vault and recomputed here.
+
+    The scan is parented on the wild type CPHWRPWHC, of which the lead CAHWRPWHC is the
+    P2A mutant, so every DeltaDeltaG below is measured against the wild type.
+
+    An earlier version of this function carried a hand-transcribed copy of this table in
+    which the parent had been written as the lead rather than the wild type. That
+    produced two sequences that were not the substitutions they were labelled with (H3A
+    written CAPWRPWHC, which is H3P, and W7A written CAHWRPARC, which also mutates H8 to
+    R), two affinities that matched no row in the vault (W4A and R5A), and deltas taken
+    against the wrong parent. The table is now read from the vault so it cannot drift
+    again.
+    """
+    parent = _query_vault_affinity(WILD_TYPE_SEQUENCE)
+    hotspot_cutoff = 0.70
+
+    positions = [
+        (2, "P"), (3, "H"), (4, "W"), (5, "R"), (6, "P"), (7, "W"), (8, "H"),
+    ]
+
+    ala_map: Dict[str, Any] = {}
+    missing: List[str] = []
+    for position, wild_type in positions:
+        assert WILD_TYPE_SEQUENCE[position - 1] == wild_type, "position table out of step with the wild type"
+        mutant_seq = WILD_TYPE_SEQUENCE[:position - 1] + "A" + WILD_TYPE_SEQUENCE[position:]
+        label = f"{wild_type}{position}A"
+        row = _query_vault_affinity(mutant_seq)
+        if row is None or parent is None:
+            missing.append(label)
+            ala_map[label] = {"sequence": mutant_seq, "vina_kcal": None, "delta_ddg": None,
+                              "is_hotspot": None, "provenance": PROVENANCE_NOT_COMPUTED}
+            continue
+        delta = round(row["vina_3aic"] - parent["vina_3aic"], 3)
+        entry = {
+            "sequence": mutant_seq,
+            "vina_kcal": round(row["vina_3aic"], 3),
+            "vina_1smd_kcal": round(row["vina_1smd"], 3) if row["vina_1smd"] is not None else None,
+            "delta_ddg": delta,
+            "is_hotspot": delta >= hotspot_cutoff,
+            "provenance": PROVENANCE_VAULT,
+        }
+        # Trypsin exposure is recomputed rather than asserted, since the P6A claim in the
+        # write-ups rests on it.
+        try:
+            protease = count_protease_cleavage_sites(mutant_seq)
+            entry["trypsin_cleavage_sites"] = int(protease.get("cleavage_site_count", 0))
+        except Exception:
+            entry["trypsin_cleavage_sites"] = None
+        ala_map[label] = entry
+
+    scored = [v for v in ala_map.values() if v["delta_ddg"] is not None]
+    hotspots = [k for k, v in ala_map.items() if v["is_hotspot"]]
+    destabilising = sorted(
+        (k for k, v in ala_map.items() if v["delta_ddg"] is not None and v["delta_ddg"] > 0),
+        key=lambda k: -ala_map[k]["delta_ddg"],
+    )
+    worst = max((v["delta_ddg"] for v in scored), default=None)
+    exposed = [k for k, v in ala_map.items() if v.get("trypsin_cleavage_sites")]
+
+    if not scored:
+        provenance = PROVENANCE_NOT_COMPUTED
+        classification = "NOT_COMPUTED"
+        summary = (
+            "No hotspot map: the vault holds none of the alanine mutants of "
+            f"{WILD_TYPE_SEQUENCE}, so nothing here can be scored."
+        )
+    else:
+        provenance = PROVENANCE_VAULT
+        classification = "NO_HOTSPOT_IDENTIFIED" if not hotspots else "HOTSPOT_IDENTIFIED"
+        summary = (
+            f"Alanine scan of the wild type {WILD_TYPE_SEQUENCE} "
+            f"({parent['vina_3aic']:.3f} kcal/mol), {len(scored)} of {len(positions)} positions "
+            f"scored from the vault. No substitution reaches the {hotspot_cutoff:+.2f} kcal/mol "
+            f"hotspot threshold: the largest affinity loss is {worst:+.3f} kcal/mol "
+            f"({destabilising[0] if destabilising else 'none'}). On this evidence no residue is an "
+            f"energetic anchor, and the previously asserted His3, Trp7 and His8 anchors are "
+            f"withdrawn: those are simply the three substitutions that lose any affinity at all, "
+            f"all of them far inside any plausible scoring error. "
+            + (
+                f"{', '.join(exposed)} opens a trypsin cleavage site that the wild-type proline turn "
+                f"shields, which is a liability rather than a hotspot. "
+                if exposed else ""
+            )
+            + "Reproduce with: sqlite3 data/foundry_contenders.sqlite"
+        )
+
     return {
         "angle": 6,
         "name": "In-Silico Alanine-Scanning Mutagenesis Hotspot Mapping",
+        "parent_sequence": WILD_TYPE_SEQUENCE,
+        "parent_affinity_kcal": round(parent["vina_3aic"], 3) if parent else None,
         "mutants": ala_map,
-        "hotspot_cutoff_kcal": 0.70,
+        "hotspot_cutoff_kcal": hotspot_cutoff,
         "identified_hotspots": hotspots,
-        "classification": "PASSED_IN_SILICO",
-        "scientific_summary": "Single-site alanine perturbations (+0.08 to +0.39 kcal/mol) remain within Vina force-field noise (threshold +0.70 kcal/mol); while P2A provides hinge relaxation, P6A is an affinity trap that destroys the proline shield and exposes Arg5 to tryptic cleavage."
+        "largest_affinity_loss_kcal": worst,
+        "mutants_not_in_vault": missing,
+        "provenance": provenance,
+        "classification": classification,
+        "scientific_summary": summary,
     }
 
 
@@ -688,6 +902,22 @@ def evaluate_angle10_linear_control() -> Dict[str, Any]:
 # ANGLE 11: OpenMM Unrestrained Relaxation Drift
 # =========================================================================
 def evaluate_angle11_openmm_drift() -> Dict[str, Any]:
+    # This angle needs rdkit, openmm and pdbfixer. Without them it reports that it was
+    # not computed, rather than raising part-way through the battery as it used to.
+    if not HAS_DEPS:
+        return {
+            "angle": 11,
+            "name": "OpenMM Implicit-Solvent Unrestrained Relaxation Drift",
+            "classification": "NOT_COMPUTED",
+            "provenance": PROVENANCE_NOT_COMPUTED,
+            "missing_dependencies": ["rdkit", "openmm", "pdbfixer"],
+            "scientific_summary": (
+                "Not computed: rdkit, openmm and pdbfixer are not installed in this environment, "
+                "so no relaxation was run and no drift figure exists. Install them and rerun to "
+                "produce this angle."
+            ),
+        }
+
     docked_pose_pdb = REPO_ROOT / "demo_data" / "results" / "CAHWRPWHC_docked_isolated.pdb"
     if not docked_pose_pdb.exists():
         # Build clean PDB from CAHWRPWHC for OpenMM
@@ -714,13 +944,25 @@ def evaluate_angle11_openmm_drift() -> Dict[str, Any]:
     fixer.addMissingAtoms()
     fixer.addMissingHydrogens(7.4)
 
+    # Indices of the non-hydrogen atoms, so the drift figure below really is heavy-atom
+    # only. Earlier versions averaged over every atom including the hydrogens PDBFixer
+    # had just added, while still calling the result a heavy-atom RMSD.
+    heavy_indices = [
+        atom.index for atom in fixer.topology.atoms()
+        if getattr(atom.element, "symbol", "H") != "H"
+    ]
+
     initial_coords = []
     for pos in fixer.positions:
         initial_coords.append([pos.x * 10.0, pos.y * 10.0, pos.z * 10.0])  # Convert nm to A
-    initial_arr = np.array(initial_coords, dtype=float)
+    initial_arr = np.array(initial_coords, dtype=float)[heavy_indices]
 
     forcefield = app.ForceField('amber14-all.xml', 'implicit/gbn2.xml')
     system = forcefield.createSystem(fixer.topology, nonbondedMethod=app.NoCutoff, constraints=app.HBonds)
+    # A Simulation needs an integrator, but only minimizeEnergy() is called below and no
+    # step() ever runs, so nothing here samples a temperature. The integrator's 310.15 K
+    # is therefore not a property of any reported number, and the figures below must not
+    # be described as molecular dynamics or as having been run at body temperature.
     integrator = mm.LangevinMiddleIntegrator(310.15 * unit.kelvin, 1.0 / unit.picoseconds, 2.0 * unit.femtoseconds)
     sim = app.Simulation(fixer.topology, system, integrator)
     sim.context.setPositions(fixer.positions)
@@ -737,20 +979,25 @@ def evaluate_angle11_openmm_drift() -> Dict[str, Any]:
     min_coords = []
     for pos in final_positions:
         min_coords.append([pos.x * 10.0, pos.y * 10.0, pos.z * 10.0])
-    min_arr = np.array(min_coords, dtype=float)
+    min_arr = np.array(min_coords, dtype=float)[heavy_indices]
 
+    # Ordered pairing is correct here, unlike in the redocking control: these are the same
+    # atoms of the same topology before and after minimisation, so atom i maps to atom i.
     drift_rmsd = compute_heavy_atom_rmsd(initial_arr, min_arr)
 
     return {
         "angle": 11,
         "name": "OpenMM Implicit-Solvent Unrestrained Relaxation Drift",
-        "forcefield": "Amber14 / GBn2 implicit solvent at 310.15 K",
+        "forcefield": "Amber14 / GBn2 implicit solvent, energy minimisation only",
+        "dynamics_run": False,
+        "provenance": PROVENANCE_COMPUTED,
+        "n_heavy_atoms": len(heavy_indices),
         "initial_potential_energy_kj_mol": round(initial_energy, 2),
         "minimized_potential_energy_kj_mol": round(minimized_energy, 2),
         "heavy_atom_drift_rmsd_angstrom": round(drift_rmsd, 2),
-        "simulation_disclaimer": "Implicit-solvent energy minimization confirms local geometric stability but is NOT an explicit-solvent 100-ns molecular dynamics residence-time simulation. OpenMM Amber14/GBn2 measures isolated macrocycle conformational strain relaxation (not cross-composition binding free energy).",
+        "simulation_disclaimer": "This is an energy minimisation, not a simulation. No dynamics are integrated: minimizeEnergy() runs and step() is never called, so there is no trajectory, no residence time and no temperature. It measures the conformational strain of the isolated macrocycle, not binding free energy, and says nothing about whether the peptide stays in the cleft.",
         "classification": "PASSED_IN_SILICO",
-        "scientific_summary": f"OpenMM Amber14/GBn2 minimization at 310.15 K relaxed the macrocycle to {minimized_energy:.1f} kJ/mol with heavy-atom drift RMSD of {drift_rmsd:.2f} A, confirming isolated macrocycle conformational strain relaxation without ring collapse."
+        "scientific_summary": f"OpenMM Amber14/GBn2 energy minimisation relaxed the isolated macrocycle to {minimized_energy:.1f} kJ/mol with a heavy-atom drift of {drift_rmsd:.2f} A over {len(heavy_indices)} heavy atoms, so the ring does not collapse under the force field. No dynamics were run: this is a minimisation, not molecular dynamics, and it is not evidence of stability in solvent or in the binding site."
     }
 
 
@@ -811,10 +1058,14 @@ def run_all_12_disproof_angles() -> Dict[str, Any]:
         "total_angles_evaluated": len(angles),
         "angles": angles,
         "classification_summary": {
-            "PASSED_IN_SILICO": sum(1 for a in angles if a["classification"] == "PASSED_IN_SILICO"),
-            "INCONCLUSIVE_WITHIN_NOISE": sum(1 for a in angles if a["classification"] == "INCONCLUSIVE_WITHIN_NOISE"),
-            "AT_RISK": sum(1 for a in angles if a["classification"] == "AT_RISK"),
-            "FALSIFIED": sum(1 for a in angles if a["classification"] == "FALSIFIED")
+            classification: sum(1 for a in angles if a["classification"] == classification)
+            for classification in sorted({a["classification"] for a in angles})
+        },
+        # How many angles actually recomputed something on this run. An angle with no
+        # provenance field has not been audited yet and is reported as unlabelled.
+        "provenance_summary": {
+            provenance: sum(1 for a in angles if a.get("provenance", "unlabelled") == provenance)
+            for provenance in sorted({a.get("provenance", "unlabelled") for a in angles})
         },
         "formal_scientific_statement": "All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification."
     }
@@ -828,15 +1079,21 @@ def run_all_12_disproof_angles() -> Dict[str, Any]:
 
 
 def print_disproof_table(report: Dict[str, Any]):
-    print("-" * 105)
-    print(f"{'#':<3} | {'Angle Name':<42} | {'Classification':<27} | {'Key Quantitative Metric'}")
-    print("-" * 105)
+    print("-" * 128)
+    print(f"{'#':<3} | {'Angle Name':<42} | {'Classification':<27} | {'Provenance':<18} | {'Key Quantitative Metric'}")
+    print("-" * 128)
     for a in report["angles"]:
         num = a["angle"]
         name = a["name"][:40]
         cls = a["classification"]
 
         metric = ""
+        if cls == "NOT_COMPUTED":
+            missing = a.get("missing_dependencies")
+            metric = "not computed" + (f" (needs {', '.join(missing)})" if missing else "")
+            prov = a.get("provenance", "unlabelled")
+            print(f"{num:<3} | {name:<42} | {cls:<27} | {prov:<18} | {metric}")
+            continue
         if num == 1:
             metric = f"RMSD = {a['hungarian_rmsd_angstrom']} A, Vina = {a['vina_3aic_kcal']} kcal"
         elif num == 2:
@@ -844,15 +1101,24 @@ def print_disproof_table(report: Dict[str, Any]):
         elif num == 3:
             metric = f"Delta E (1-2) = +{a['delta_e_mode1_mode2_kcal']} kcal"
         elif num == 4:
-            metric = f"DDG = {a['measured_selectivity_ddg_kcal']} kcal < SE ({a['vina_forcefield_standard_error_kcal']} kcal)"
+            metric = f"DDG = {a['measured_selectivity_ddg_kcal']} kcal, inside an assumed {a['assumed_forcefield_error_kcal']} kcal error (uncited)"
         elif num == 5:
             metric = f"Z = {a['z_score']:+.2f}, p = {a['p_value']:.4f} (H0 not rejected)"
         elif num == 6:
-            metric = f"Hotspots: {', '.join(a['identified_hotspots'])}"
+            hotspots = a.get("identified_hotspots")
+            if hotspots:
+                metric = f"Hotspots: {', '.join(hotspots)}"
+            elif hotspots == []:
+                metric = f"No hotspot; largest loss {a['largest_affinity_loss_kcal']:+.3f} kcal vs {a['hotspot_cutoff_kcal']:+.2f} cutoff"
+            else:
+                metric = "Not computed"
         elif num == 7:
             metric = f"Delta (pH 5.2 - 7.2) = {a['affinity_shift_upon_protonation_kcal']:+.2f} kcal"
         elif num == 8:
-            metric = f"Trypsin: 0 sites; Chymotrypsin: 2 sites (W4, W7)"
+            trypsin = a['trypsin_salivary_sites']
+            n_trypsin = len(trypsin) if isinstance(trypsin, (list, tuple)) else trypsin
+            metric = (f"Trypsin: {n_trypsin} sites; "
+                      f"Chymotrypsin: {a['chymotrypsin_site_count']} sites")
         elif num == 9:
             metric = f"1LZ1 = {a['vina_1lz1_affinity_kcal']:.2f} kcal (DDG = {a['selectivity_ddg_kcal']:+.2f})"
         elif num == 10:
@@ -862,11 +1128,13 @@ def print_disproof_table(report: Dict[str, Any]):
         elif num == 12:
             metric = f"Q_pH6 = {a['net_charge_pH6']:+.2f}, Delta Q = +{a['delta_q_stephan']:.2f}"
 
-        print(f"{num:<3} | {name:<42} | {cls:<27} | {metric}")
+        prov = a.get("provenance", "unlabelled")
+        print(f"{num:<3} | {name:<42} | {cls:<27} | {prov:<18} | {metric}")
 
-    print("-" * 105)
-    summary = report["classification_summary"]
-    print(f"Summary: {summary['PASSED_IN_SILICO']} PASSED_IN_SILICO | {summary['INCONCLUSIVE_WITHIN_NOISE']} INCONCLUSIVE_WITHIN_NOISE | {summary['AT_RISK']} AT_RISK | {summary['FALSIFIED']} FALSIFIED")
+    print("-" * 128)
+    print("Classification: " + " | ".join(f"{n} {k}" for k, n in report["classification_summary"].items()))
+    print("Provenance:     " + " | ".join(f"{n} {k}" for k, n in report["provenance_summary"].items()))
+    print("Surviving every in silico gate is not evidence of enzyme inhibition.")
     print("=" * 105)
 
 

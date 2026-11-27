@@ -825,7 +825,7 @@ with tab_popper:
     with col_p1:
         st.metric(label="Lead 3AIC Vina ΔG (CAHWRPWHC)", value="-8.191 kcal/mol", delta="Passed in Silico")
     with col_p2:
-        st.metric(label="Amylase 1SMD ΔΔG (CAHWRPWHC)", value="-0.848 kcal/mol", delta="Inconclusive (< ±2.85 SE)")
+        st.metric(label="Amylase 1SMD ΔΔG (CAHWRPWHC)", value="-0.848 kcal/mol", delta="Inconclusive (assumed ±2.85, uncited)")
     with col_p3:
         st.metric(label="Scrambled Permutation Z", value="+0.32σ", delta="p = 0.5897 (H0 Not Rejected)")
     with col_p4:
@@ -863,7 +863,7 @@ with tab_popper:
         * **Angle 3 (Pose Mode Clustering):** Mode 1-2 gap **+0.10 kcal/mol**, centroid shift **1.74 Å** (`INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 4 (1SMD Selectivity Reality Check):** ΔΔG = **-0.85 kcal/mol** vs Vina SE ~2.85 kcal/mol (`INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 5 (Null Permutation, N=39):** Z = **+0.32σ**, p = **0.5897** (null mean -8.343 ± 0.470 kcal/mol; static docking fails to reject H0; `INCONCLUSIVE_WITHIN_NOISE`).
-        * **Angle 6 (Alanine Hotspot Scan):** His3 acid-switch (-7.869), His8 anchor (-7.978), Trp7 hydrophobic packing (-7.805) (`PASSED_IN_SILICO`).
+        * **Angle 6 (Alanine Hotspot Scan):** no hotspot. Against the wild-type parent `CPHWRPWHC` (-8.062), the largest affinity loss is W7A at +0.257 kcal/mol, well under the +0.70 threshold (`NO_HOTSPOT_IDENTIFIED`).
         * **Angle 7 (Explicit pH 5.2):** Diprotonated His **-7.706 kcal/mol** in 3AIC / **-7.891 kcal/mol** in 1SMD (slight ranking inversion within Vina SE; `INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 8 (Protease Vulnerability):** Trypsin shielded by Pro6, but chymotrypsin/cathepsin G cleaves Trp4/Trp7 (`AT_RISK`).
         * **Angle 9 (Human Lysozyme 1LZ1):** **-6.67 kcal/mol** (ΔΔG = **-1.52 kcal/mol** vs 3AIC; `PASSED_IN_SILICO`).

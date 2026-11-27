@@ -321,7 +321,7 @@ plt.show()"""
 ### Data Analysis Key Findings
 - **Pareto Champion Corroboration:** `CAHWRPWHC` achieved top-ranked multi-objective optimization with 3AIC Vina affinity of $-8.191\text{ kcal/mol}$, 1SMD affinity of $-7.343\text{ kcal/mol}$ ($\Delta\Delta G = -0.85\text{ kcal/mol}$), intact disulfide distance ($2.06\text{ \AA}$), zero protease cleavage sites, and Stephan charge shift of $+1.62$.
 - **Statistical Null Distribution:** Empirical scrambled sequence null permutations ($N=39$) established an empirical mean of $-8.343 \pm 0.470\text{ kcal/mol}$ ($Z = +0.32$, $p = 0.5897$ vs Pareto champion -8.191 kcal/mol). Rigid-receptor static docking under-penalizes unfolded entropy in water, underscoring why multi-angle biological filtering (Donnan, Protease, Stephan switch, 1SMD counter-screen) is mandatory.
-- **Alanine Mutagenesis Drop-off:** Computational alanine scanning revealed key residues contributing to catalytic cleft anchoring within the catalytic triad cleft (`Asp477`, `Glu515`, `Asp588`), identifying `His3`, `Trp7`, and `His8` as primary energetic anchors.
+- **Alanine Mutagenesis Drop-off:** computational alanine scanning of the wild type `CPHWRPWHC` found **no energetic anchor**. The largest affinity loss across all seven positions is `W7A` at `+0.257 kcal/mol`, well under the `+0.70 kcal/mol` hotspot threshold, so no residue can be called a primary anchor on this evidence.
 - **OpenMM Force-Field Stability:** Amber14/GBn2 all-atom implicit solvent minimization at oral body temperature ($310.15\text{ K}$) confirmed conformational stability ($-1234.68\text{ kJ/mol}$).
 
 ### Insights or Next Steps

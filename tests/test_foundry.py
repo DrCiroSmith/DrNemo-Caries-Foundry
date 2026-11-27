@@ -12,6 +12,8 @@ import pytest
 from pathlib import Path
 import sys
 import csv
+import sqlite3
+import importlib.util
 
 # Ensure repo root is on sys.path
 REPO_ROOT = Path(__file__).parent.parent
@@ -752,3 +754,126 @@ def test_redocking_control_is_reproducible_from_committed_coordinates():
     assert rmsd > 2.0, "this control fails the 2.0 A convention; do not report it as a pass"
     # file-order pairing is much worse, which is why the naive helper must not be used here
     assert ordered_rmsd(ref, dock) > rmsd
+
+
+def _load_disproof_module():
+    """Import scripts/run_exhaustive_disproof.py without executing the battery."""
+    spec = importlib.util.spec_from_file_location(
+        "disproof_module", str(REPO_ROOT / "scripts" / "run_exhaustive_disproof.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_alanine_scan_matches_the_vault_and_claims_no_hotspot():
+    """Angle 6's table must come from the vault, parented on the wild type.
+
+    An earlier version carried a hand-transcribed copy in which two sequences were
+    not the substitutions they were labelled with, two affinities matched no row in
+    the database, and the deltas were taken against the lead instead of the wild
+    type. Reading the vault is what stops that happening again.
+    """
+    disproof = _load_disproof_module()
+    angle = disproof.evaluate_angle6_alanine_scan()
+
+    assert angle["parent_sequence"] == "CPHWRPWHC"
+    assert angle["provenance"] == disproof.PROVENANCE_VAULT
+    assert angle["mutants_not_in_vault"] == []
+
+    conn = sqlite3.connect(str(REPO_ROOT / "data" / "foundry_contenders.sqlite"))
+    try:
+        parent = conn.execute(
+            "SELECT vina_3aic_kcal FROM contenders WHERE sequence = 'CPHWRPWHC'"
+        ).fetchone()[0]
+        assert round(parent, 3) == angle["parent_affinity_kcal"]
+
+        for label, entry in angle["mutants"].items():
+            position = int(label[1:-1])
+            wild_type, substituted = label[0], label[-1]
+            assert substituted == "A", f"{label} is not an alanine substitution"
+            assert angle["parent_sequence"][position - 1] == wild_type
+            expected = (
+                angle["parent_sequence"][: position - 1]
+                + "A"
+                + angle["parent_sequence"][position:]
+            )
+            assert entry["sequence"] == expected, (
+                f"{label} is written {entry['sequence']} but the alanine substitution "
+                f"of {angle['parent_sequence']} at position {position} is {expected}"
+            )
+
+            row = conn.execute(
+                "SELECT vina_3aic_kcal FROM contenders WHERE sequence = ?",
+                (entry["sequence"],),
+            ).fetchone()
+            assert row is not None, f"{label} {entry['sequence']} is not in the vault"
+            assert entry["vina_kcal"] == round(row[0], 3)
+            assert entry["delta_ddg"] == round(row[0] - parent, 3)
+    finally:
+        conn.close()
+
+    # No residue clears the threshold, so no anchor may be claimed anywhere.
+    assert angle["identified_hotspots"] == []
+    assert angle["classification"] == "NO_HOTSPOT_IDENTIFIED"
+    assert angle["largest_affinity_loss_kcal"] < angle["hotspot_cutoff_kcal"]
+    assert "energetic anchor" in angle["scientific_summary"]
+
+
+def test_angles_report_where_their_numbers_came_from():
+    """Angles 4, 5 and 6 must read the vault, and 5's p-value must be the rank statistic."""
+    disproof = _load_disproof_module()
+
+    angle4 = disproof.evaluate_angle4_forcefield_error_margin()
+    angle5 = disproof.evaluate_angle5_scrambled_null_test()
+    angle6 = disproof.evaluate_angle6_alanine_scan()
+    for angle in (angle4, angle5, angle6):
+        assert angle["provenance"] == disproof.PROVENANCE_VAULT, (
+            f"angle {angle['angle']} did not read the vault on this run"
+        )
+
+    # The scoring error in angle 4 has no citation anywhere in this repository and must
+    # not be presented as a published measurement.
+    assert angle4["assumed_forcefield_error_provenance"] == disproof.PROVENANCE_UNSOURCED
+    assert "assum" in angle4["scientific_summary"].lower()
+
+    # p is the empirical rank, recomputed from the null rows, not a normal-theory p.
+    assert angle5["p_value_kind"] == "one_sided_empirical_rank"
+    assert angle5["p_value"] == round(
+        angle5["scrambles_at_least_as_good_as_lead"] / angle5["n_isomers"], 4
+    )
+    assert not angle5["is_null_hypothesis_rejected"]
+
+
+def test_an_angle_that_cannot_recompute_reports_not_computed(monkeypatch):
+    """An angle whose inputs are absent must say so instead of printing a verdict."""
+    disproof = _load_disproof_module()
+
+    assert disproof._query_vault_affinity("WWWWWWWWW") is None, (
+        "a sequence absent from the vault must not resolve to an affinity"
+    )
+
+    monkeypatch.setattr(disproof, "_query_vault_affinity", lambda sequence: None)
+    angle = disproof.evaluate_angle6_alanine_scan()
+    assert angle["classification"] == "NOT_COMPUTED"
+    assert angle["provenance"] == disproof.PROVENANCE_NOT_COMPUTED
+    assert angle["identified_hotspots"] == []
+    assert "nothing here can be scored" in angle["scientific_summary"]
+
+
+def test_openmm_angle_never_claims_dynamics_or_a_temperature():
+    """Angle 11 only minimises energy, so it must not be described as a simulation."""
+    disproof = _load_disproof_module()
+    angle = disproof.evaluate_angle11_openmm_drift()
+
+    if angle["classification"] == "NOT_COMPUTED":
+        assert angle["provenance"] == disproof.PROVENANCE_NOT_COMPUTED
+        assert angle["missing_dependencies"]
+    else:
+        assert angle["dynamics_run"] is False
+        assert "310.15" not in angle["forcefield"]
+
+    text = json.dumps(angle).lower()
+    assert "310.15 k" not in text, "no reported number here is produced at a temperature"
+    for forbidden in ("molecular dynamics at", "ns molecular dynamics", "dynamics simulation of"):
+        assert forbidden not in text
