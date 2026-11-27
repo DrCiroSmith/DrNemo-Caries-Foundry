@@ -81,25 +81,45 @@ def die(msg: str) -> None:
 # --------------------------------------------------------------------------- #
 # Preflight
 # --------------------------------------------------------------------------- #
-def preflight() -> dict:
-    env = {"python": sys.version.split()[0], "platform": platform.platform()}
+def preflight(require_tools: bool = True) -> dict:
+    """Validate the environment and the receptor, and return the run's context.
 
+    require_tools must stay True for anything that docks. It is relaxed only for
+    --dry-run, so that the plan can be read on a machine that has no Vina, which
+    is the machine where someone would want to read it before installing one. The
+    receptor and box checks below are NOT relaxed: the plan is built from
+    out/boxes.json, so a plan printed without them would describe runs that cannot
+    happen. Everything skipped is recorded in env["unverified"] and printed, so a
+    clean dry run is never mistaken for a green light to dock.
+    """
+    env = {"python": sys.version.split()[0], "platform": platform.platform()}
+    unverified = []
+
+    missing_tools = []
     for exe in ("vina", "vina_split", "obabel"):
         path = shutil.which(exe)
         if not path:
-            die(f"{exe} is not on PATH. The campaign cannot run without it.")
+            if require_tools:
+                die(f"{exe} is not on PATH. The campaign cannot run without it.")
+            missing_tools.append(exe)
         env[f"{exe}_path"] = path
+    if missing_tools:
+        unverified.append(f"{', '.join(missing_tools)} not on PATH")
 
-    res = subprocess.run(["vina", "--version"], capture_output=True, text=True)
-    version_text = (res.stdout + res.stderr).strip()
-    env["vina_version_text"] = version_text
     required = CONFIG["docking"]["required_version_substring"]
-    if required not in version_text:
-        die(f"this package expects AutoDock Vina {required} and found:\n  {version_text}\n"
-            f"Scores are not comparable across Vina versions, so the run is refusing to "
-            f"start rather than produce numbers that cannot be compared with the old ones. "
-            f"Install {required}, or change required_version_substring in config.json "
-            f"deliberately and note it in the write-up.")
+    if env.get("vina_path"):
+        res = subprocess.run(["vina", "--version"], capture_output=True, text=True)
+        version_text = (res.stdout + res.stderr).strip()
+        env["vina_version_text"] = version_text
+        if required not in version_text:
+            die(f"this package expects AutoDock Vina {required} and found:\n  {version_text}\n"
+                f"Scores are not comparable across Vina versions, so the run is refusing to "
+                f"start rather than produce numbers that cannot be compared with the old ones. "
+                f"Install {required}, or change required_version_substring in config.json "
+                f"deliberately and note it in the write-up.")
+    else:
+        env["vina_version_text"] = ""
+        unverified.append(f"Vina version never checked against {required}")
 
     try:
         import rdkit, meeko, numpy  # noqa: F401
@@ -107,8 +127,10 @@ def preflight() -> dict:
         env["meeko"] = getattr(meeko, "__version__", "unknown")
         env["numpy"] = numpy.__version__
     except ImportError as exc:
-        die(f"a required python package is missing: {exc}. "
-            f"Activate the project virtualenv first.")
+        if require_tools:
+            die(f"a required python package is missing: {exc}. "
+                f"Activate the project virtualenv first.")
+        unverified.append(f"python packages incomplete ({exc})")
 
     stamp = OUT / "receptor_validation.json"
     boxes_path = OUT / "boxes.json"
@@ -127,6 +149,7 @@ def preflight() -> dict:
 
     env["receptor_sha256"] = validation["sha256"]
     env["receptor_title"] = validation["title"]
+    env["unverified"] = unverified
     return {"env": env, "boxes": boxes, "validation": validation}
 
 
@@ -828,8 +851,8 @@ def main() -> int:
     tiers = [int(t) for t in args.tiers.split(",") if t.strip()]
 
     print("Preflight")
-    pre = preflight()
-    print(f"  vina: {pre['env']['vina_version_text']}")
+    pre = preflight(require_tools=not args.dry_run)
+    print(f"  vina: {pre['env']['vina_version_text'] or 'NOT CHECKED (dry run)'}")
     print(f"  receptor: {pre['env']['receptor_title']}")
     print(f"  receptor sha256: {pre['env']['receptor_sha256'][:16]}")
 
@@ -865,6 +888,12 @@ def main() -> int:
             print("  " + job_key(j))
         if len(todo) > 20:
             print(f"  ... and {len(todo) - 20} more")
+        if pre["env"]["unverified"]:
+            print("\n  This was a dry run, so the following were NOT verified:")
+            for item in pre["env"]["unverified"]:
+                print(f"    - {item}")
+            print("  The plan above is the work this package would request. It is not "
+                  "evidence that the run can start.")
         return 0
     if not todo:
         print("Nothing to do. out/results.jsonl is already complete for these tiers.")

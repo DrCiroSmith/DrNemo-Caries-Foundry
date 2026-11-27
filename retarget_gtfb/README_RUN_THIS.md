@@ -108,7 +108,9 @@ hour and a half. It is the one stress test that could change the answer rather t
 merely qualify it, because it changes the receptor rather than the search.
 
 Other switches: `--cpu 16` if you have more cores, `--dry-run` to list the jobs
-without running anything.
+without running anything. The dry run works before Vina is installed, and it
+prints every check it had to skip. A clean dry run means the plan is readable,
+not that the run can start.
 
 ## Why you cannot end up with one result under three names
 

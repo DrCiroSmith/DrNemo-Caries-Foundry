@@ -1310,3 +1310,224 @@ def test_the_force_field_return_code_is_read_not_discarded():
     assert "minimisation_iteration_cap" in (HERE / "run_docking.py").read_text(), (
         "the cap itself is not recorded beside the outcome")
 
+
+def test_the_analysis_runs_end_to_end_on_a_synthetic_result_set(tmp_path):
+    """Run analyze.py as a whole on rows built by the real job planner.
+
+    Every function in analyze.py had a unit test and main() had none, so the glue
+    that will read the user's out/results.jsonl after hours of docking had never
+    executed once. This builds a result set the way run_docking.py builds one, by
+    calling its own build_jobs, path_stem, identity and job_key rather than
+    inventing the schema, attaches real pose geometry from data/poses, and runs
+    the analyser as a subprocess exactly as RUN_ME.sh does.
+
+    It asserts only that the pipeline completes and reports its sections. The
+    verdicts on synthetic input mean nothing, and the redocking gate is expected
+    to fail here because the stand-in native ligand is a peptide pose rather than
+    acarbose. A gate that failed on nonsense is the right direction.
+
+    Building this found nothing wrong with the package and one thing wrong with
+    the harness: the first synthetic rows omitted finished_utc, because it is set
+    by mutating prov after the literal rather than inside it, and the analyser
+    correctly reported every row as lacking a provenance field. That was a defect
+    in the test, not in the code, which is why the field is read from
+    run_docking.py here instead of being listed by hand.
+    """
+    import hashlib, json, shutil, subprocess, sys, time, importlib.util
+
+    poses = REPO_ROOT / "data" / "poses"
+    root = tmp_path / "repo"
+    (root / "data").mkdir(parents=True)
+    shutil.copytree(HERE, root / "retarget_gtfb")
+    shutil.copy(REPO_ROOT / "biophysics_engine.py", root / "biophysics_engine.py")
+    shutil.copy(REPO_ROOT / "data" / "contenders_ledger.csv",
+                root / "data" / "contenders_ledger.csv")
+    pkg = root / "retarget_gtfb"
+    shutil.rmtree(pkg / "out", ignore_errors=True)
+    out = pkg / "out"
+    out.mkdir()
+
+    pool = sorted(poses.glob("*.pdbqt"))[:40]
+    assert pool, "data/poses holds no pose files to build a synthetic run from"
+    stand_in = out / "receptor.pdbqt"
+    stand_in.write_bytes(pool[0].read_bytes())
+    native = out / "native_ligand.pdbqt"
+    native.write_bytes(pool[0].read_bytes())
+    sha = hashlib.sha256(stand_in.read_bytes()).hexdigest()
+    (out / "receptor_validation.json").write_text(json.dumps(
+        {"sha256": sha, "title": "SYNTHETIC, NOT A RECEPTOR"}))
+    (out / "boxes.json").write_text(json.dumps({
+        "source_sha256": sha, "centre": [1.0, 2.0, 3.0],
+        "receptor_pdbqt": str(stand_in), "native_ligand_pdbqt": str(native),
+        "boxes": {"wide_28": {"size": [28, 28, 28]},
+                  "tight_auto": {"size": [18, 18, 18]}}}))
+
+    spec = importlib.util.spec_from_file_location("rd_dry", pkg / "run_docking.py")
+    rd = importlib.util.module_from_spec(spec)
+    sys.modules["rd_dry"] = rd
+    try:
+        spec.loader.exec_module(rd)
+    except ImportError as exc:
+        missing = (getattr(exc, "name", "") or "").split(".")[0]
+        if missing in _ABSENT_DEPENDENCY_IS_ALLOWED:
+            pytest.skip(f"run_docking needs {missing}, absent here")
+        raise
+
+    # The provenance fields the analyser requires, read from the analyser, and the
+    # time fields read from the writer, so neither list is maintained by hand here.
+    required = set(_load_analyze().REQUIRED_PROVENANCE)
+
+    jobs = rd.dedupe_jobs(rd.build_jobs(json.loads((out / "boxes.json").read_text()), [1]))
+    assert jobs, "the real job planner produced no tier 1 jobs"
+    rd.POSE_DIR.mkdir(parents=True, exist_ok=True)
+    rows = []
+    for i, j in enumerate(jobs):
+        tag = f"{i:08x}"
+        stem = rd.path_stem(j, tag)
+        pose = rd.POSE_DIR / f"{stem}.pdbqt"
+        pose.write_bytes(pool[i % len(pool)].read_bytes())
+        base = -8.0 - 0.05 * i
+        modes = [{"mode": m + 1, "affinity_kcal": round(base + 0.37 * m, 3)}
+                 for m in range(9)]
+        stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        digest = hashlib.sha256(pose.read_bytes()).hexdigest()
+        rows.append({
+            "key": rd.job_key(j), "identity": rd.identity(j), "path_stem": stem,
+            "ligand_tag": tag, **j, "ok": True, "run_id": f"dry-{i}",
+            "ligand_meta": {"heavy_atoms": 84, "minimisation": "mmff94_converged"},
+            "recorded_utc": stamp, "started_utc": stamp, "finished_utc": stamp,
+            "vina_command_string": f"vina --seed {j['dock_seed']}",
+            "vina_version_text": "AutoDock Vina 1.2.7 (synthetic)",
+            "exhaustiveness": j["exhaustiveness"], "dock_seed": j["dock_seed"],
+            "box_centre": list(j["centre"]), "box_size": list(j["size"]),
+            "receptor_md5": hashlib.md5(stand_in.read_bytes()).hexdigest(),
+            "ligand_md5": hashlib.md5(pose.read_bytes()).hexdigest(),
+            "seconds": 1.0, "vina_kcal": modes[0]["affinity_kcal"],
+            "vina_modes": modes, "n_modes": len(modes),
+            "mode_gap_kcal": round(modes[1]["affinity_kcal"] - modes[0]["affinity_kcal"], 3),
+            "vinardo_kcal": round(modes[0]["affinity_kcal"] - 0.6, 3),
+            "vinardo_scoring_context": "fixed_box", "ss_bond_angstrom": 2.05,
+            "pose_pdbqt": str(pose), "pose_sha256": digest,
+        })
+
+    for field in sorted(required):
+        assert field in rows[0], (
+            f"the synthetic row omits {field}, which the analyser requires; fix the "
+            "row rather than the requirement")
+
+    (out / "results.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in rows))
+
+    proc = subprocess.run([sys.executable, "analyze.py"], cwd=pkg,
+                          capture_output=True, text=True, timeout=900)
+    assert proc.returncode == 0, (
+        f"analyze.py exited {proc.returncode} on a well-formed result set.\n"
+        f"stdout tail:\n{proc.stdout[-2000:]}\nstderr tail:\n{proc.stderr[-2000:]}")
+    report_path = out / "analysis.json"
+    assert report_path.exists(), "analyze.py exited 0 and wrote no analysis.json"
+    report = json.loads(report_path.read_text())
+    for section in ("provenance_audit", "redocking_calibration", "null_tests",
+                    "seed_sensitivity", "noise_floor", "rows_usable", "caveats"):
+        assert section in report, f"the report has no {section} section"
+    assert report["rows_usable"] == len(rows)
+    audit = report["provenance_audit"]
+    assert audit["records_missing_provenance_fields"] == 0, (
+        "well-formed rows were reported as lacking provenance: "
+        f"{audit.get('records_missing_provenance_detail')}")
+
+
+def test_only_the_dry_run_may_relax_the_tool_checks():
+    """require_tools defaults to True and is relaxed at exactly one call site.
+
+    Relaxing the Vina, version and package checks is safe for --dry-run and
+    nowhere else. A later edit that passed require_tools=False unconditionally,
+    or flipped the default, would let a real campaign start with no Vina version
+    check, and every score it produced would be incomparable with the published
+    ones for a reason no row would record. So this reads the default off the
+    FunctionDef and the argument off the call, rather than trusting either.
+    """
+    import ast
+
+    tree = ast.parse((HERE / "run_docking.py").read_text())
+
+    default = None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "preflight":
+            names = [a.arg for a in node.args.args]
+            assert "require_tools" in names, (
+                "preflight no longer takes require_tools; this guard is stale and the "
+                "dry run's promise is unpinned")
+            offset = len(names) - len(node.args.defaults)
+            default = node.args.defaults[names.index("require_tools") - offset]
+    assert default is not None, "preflight was not found in run_docking.py"
+    assert isinstance(default, ast.Constant) and default.value is True, (
+        "require_tools must default to True so that anything which docks checks "
+        f"its tools; the default is now {ast.dump(default)}")
+
+    calls = [n for n in ast.walk(tree)
+             if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+             and n.func.id == "preflight"]
+    assert len(calls) == 1, f"expected one preflight call site, found {len(calls)}"
+    kw = {k.arg: k.value for k in calls[0].keywords}
+    assert "require_tools" in kw, (
+        "the preflight call no longer says which checks it wants; if it relies on "
+        "the default it cannot dry-run, and if it omits the keyword the reader "
+        "cannot see which mode a real run uses")
+    v = kw["require_tools"]
+    assert isinstance(v, ast.UnaryOp) and isinstance(v.op, ast.Not), (
+        "require_tools must be passed as the negation of the dry-run flag, not as a "
+        f"literal; it is {ast.dump(v)}")
+    inner = ast.dump(v.operand)
+    assert "dry_run" in inner, (
+        f"require_tools is negating something other than the dry-run flag: {inner}")
+
+
+def test_the_dry_run_prints_the_plan_and_names_what_it_skipped(tmp_path):
+    """--dry-run is advertised as listing the work, so run it and read the output.
+
+    It was advertised in README_RUN_THIS.md as a way to list the jobs, and it
+    could not run at all without Vina on PATH, because preflight died before the
+    branch was reached. That is the one machine where a person would want to read
+    the plan first. Fixing it created a second risk, that a clean dry run reads as
+    a green light, so the output must also name every check it skipped.
+    """
+    import json, shutil, subprocess, sys, hashlib
+
+    pkg = tmp_path / "retarget_gtfb"
+    shutil.copytree(HERE, pkg)
+    shutil.rmtree(pkg / "out", ignore_errors=True)
+    out = pkg / "out"
+    out.mkdir()
+    stand_in = out / "receptor.pdbqt"
+    stand_in.write_text("REMARK synthetic stand-in, not a receptor\n")
+    native = out / "native_ligand.pdbqt"
+    native.write_text("REMARK synthetic stand-in, not a ligand\n")
+    sha = hashlib.sha256(stand_in.read_bytes()).hexdigest()
+    (out / "receptor_validation.json").write_text(json.dumps(
+        {"sha256": sha, "title": "SYNTHETIC, NOT A RECEPTOR"}))
+    (out / "boxes.json").write_text(json.dumps({
+        "source_sha256": sha, "centre": [1.0, 2.0, 3.0],
+        "receptor_pdbqt": str(stand_in), "native_ligand_pdbqt": str(native),
+        "boxes": {"wide_28": {"size": [28, 28, 28]},
+                  "tight_auto": {"size": [18, 18, 18]}}}))
+
+    proc = subprocess.run([sys.executable, "run_docking.py", "--dry-run", "--tiers", "1"],
+                          cwd=pkg, capture_output=True, text=True, timeout=300)
+    assert proc.returncode == 0, (
+        f"--dry-run exited {proc.returncode}; it is advertised as listing the work "
+        f"and stopping.\nstdout:\n{proc.stdout[-3000:]}\nstderr:\n{proc.stderr[-3000:]}")
+    assert "docking runs in tiers" in proc.stdout, (
+        f"--dry-run printed no plan:\n{proc.stdout[-3000:]}")
+
+    if shutil.which("vina") is None:
+        assert "NOT be" in proc.stdout or "NOT verified" in proc.stdout, (
+            "Vina is absent here, so the dry run skipped the tool and version checks "
+            "and must say so; a silent clean dry run reads as a green light to dock."
+            f"\n{proc.stdout[-3000:]}")
+        assert "vina" in proc.stdout.lower()
+        assert "not evidence that the run can start" in proc.stdout.lower(), (
+            f"the dry run did not say what it is not evidence of:\n{proc.stdout[-3000:]}")
+    else:
+        assert "NOT CHECKED" not in proc.stdout, (
+            "Vina is on PATH here, so nothing should have been skipped")
+
