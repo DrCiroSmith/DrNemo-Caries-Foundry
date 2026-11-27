@@ -571,3 +571,67 @@ def test_the_price_of_the_replication_is_stated_with_the_gate():
     rule12 = [l for l in text.splitlines() if l.startswith("| 12 |")][0]
     for token in ("36 seeds per control", "1,440", "82 seeds", "3,280"):
         assert token in rule12, f"rule 12 states the gate without its price: {token}"
+
+
+# --------------------------------------------------------------------------
+# The repository's N=5 seed sweep contains at most four independent runs.
+#
+# Seed 42's docked pose and its input conformer are both byte-identical to
+# the campaign's own artefacts, so any dispersion over all five is computed
+# over a set with one non-independent member. Pinned because the choice of
+# four versus five flips the sign of the between-sequence variance estimate.
+# --------------------------------------------------------------------------
+
+def _mode_coord_digest(path: Path) -> str:
+    coords = [l[30:54] for l in path.read_text(errors="replace").splitlines()
+              if l.startswith(("ATOM", "HETATM"))]
+    return hashlib.sha256("".join(coords).encode()).hexdigest()
+
+
+def test_seed_42_is_not_an_independent_replicate():
+    poses = REPO_ROOT / "data" / "poses"
+    if not poses.exists():
+        pytest.skip("data/poses is not present in this checkout")
+    campaign = poses / "contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt"
+    seed42 = poses / "disproof_seed_42_CAHWRPWHC_3AIC_docked.pdbqt"
+    others = [poses / f"disproof_seed_{s}_CAHWRPWHC_3AIC_docked.pdbqt"
+              for s in (101, 202, 303, 404)]
+    for f in [campaign, seed42, *others]:
+        if not f.exists():
+            pytest.skip(f"{f.name} is not present in this checkout")
+    assert _mode_coord_digest(seed42) == _mode_coord_digest(campaign), (
+        "seed 42's pose must be identical to the campaign pose; if this ever fails, "
+        "the four-versus-five replicate argument has to be re-derived")
+    digests = {f.name: _mode_coord_digest(f) for f in others}
+    assert len(set(digests.values())) == 4, "the other four seeds must be distinct"
+    assert _mode_coord_digest(campaign) not in digests.values()
+    # and the input conformer duplicates in the same pattern
+    lig_campaign = poses / "contender_mutant_P2A_CAHWRPWHC.pdbqt"
+    lig_seed42 = poses / "disproof_seed_42_CAHWRPWHC.pdbqt"
+    if lig_campaign.exists() and lig_seed42.exists():
+        assert lig_campaign.read_bytes() == lig_seed42.read_bytes(), (
+            "seed 42 reused the campaign's input conformer as well as its pose")
+
+
+def test_the_disproof_sweep_is_seeded_even_though_the_engine_is_not():
+    """Defect 2 is scoped to the production pipeline, and must stay scoped."""
+    sweep = REPO_ROOT / "scripts" / "run_exhaustive_disproof.py"
+    engine = REPO_ROOT / "biophysics_engine.py"
+    if not (sweep.exists() and engine.exists()):
+        pytest.skip("the campaign scripts are not present in this checkout")
+    sweep_text = sweep.read_text()
+    assert "seeds = [42, 101, 202, 303, 404]" in sweep_text
+    assert "--seed" in sweep_text, "the sweep passes an explicit seed to Vina"
+    assert "randomSeed" in sweep_text, "and seeds the conformer builder too"
+    assert "--seed" not in engine.read_text(), (
+        "if the production engine gains a seed, defect 2 must be revisited")
+    protocol = (HERE / "PROTOCOL.md").read_text()
+    assert "scoped to" in protocol and "run_docking_vina_and_vinardo" in protocol, (
+        "the protocol must say which code path the unseeded finding applies to")
+
+
+def test_what_a_larger_null_buys_is_quantified_not_asserted():
+    protocol = (HERE / "PROTOCOL.md").read_text()
+    assert "A larger null buys 25 percent and then nothing" in protocol
+    for token in ("2.203 standard deviations", "j = 0 at", "0.0250, 0.0450, 0.0490"):
+        assert token in protocol, f"the n-dependence is not quantified: {token}"

@@ -266,8 +266,9 @@ def minimum_detectable_effect(null: list[float], alpha: float = 0.05) -> dict:
         f"At any n this test asks whether the candidate falls in the most extreme "
         f"{alpha:.0%} of its own permutation distribution. With a null spread of "
         f"{sd:.3f} kcal/mol that boundary sits about {z_alpha * sd:.3f} kcal/mol better "
-        f"than the null mean. A larger null sharpens the estimate of that boundary; it "
-        f"does not move it. An advantage below roughly {z_alpha * sd:.2f} kcal/mol "
+        f"than the null mean. A larger null sharpens the estimate of that boundary and "
+        f"relaxes what is attainable, from beating every control down to that quantile, "
+        f"but no further. An advantage below roughly {z_alpha * sd:.2f} kcal/mol "
         f"therefore cannot be made significant by adding control sequences, however "
         f"many are added. Averaging seeds per control is a different matter and does "
         f"move the boundary: see seeds_needed.")

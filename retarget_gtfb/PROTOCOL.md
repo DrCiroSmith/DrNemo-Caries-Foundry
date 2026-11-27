@@ -28,6 +28,8 @@ can be read directly.
 | 19:45 | `904f2d4` | section 4.1 counted eight duplicate filenames as five distinct results, and no power gate existed | count corrected to three duplicated contents over eight filenames, only two of them docked results; decision rule 12 and section 4.2 measurement 1 added, stating the detectable effect before any run |
 | 19:50 | `03d03fd` | the origin of the duplicated results was recorded as undeterminable, and a guess attributed it to the resume guard | the repository's version history settles it as one result under three names; the **cause** is recorded as unexplained and is not attributed to anyone; the resume-guard guess is **withdrawn**, since the guard cannot write one file's bytes under another file's name |
 | 20:00 | `28f8d07` | the gate was stated against a claimed advantage of 0.15 kcal/mol, and the conclusion read "outside this design's resolution at any sample size" | that 0.15 figure is **withdrawn**: it has no source anywhere in the repository and was mine, not the campaign's. Replaced by the ledger-derived 0.129 kcal/mol lead-against-parent margin, computed at run time rather than stored. The conclusion is narrowed to "however many control sequences are added", with the seed count that would move the boundary stated beside it |
+| 20:06 | `cd51c2c` | the document had no amendment log, and effect sizes were given without naming which comparison they measured | section 0 added, logging every amendment; section 0.1 added, fixing contrast A (lead against parent, +0.129) and contrast B (lead against the null, 0.152 the wrong way); rule 12 names both and states the seed price |
+| 20:25 | `PENDING` | the unseeded finding could be read as covering the N=5 seed sweep, and "a larger null does not move the boundary" was true of the quantile but silent on what a larger null does relax | section 4.1b added: the sweep is explicitly seeded, defect 2 is scoped to the production engine, and seed 42 is shown non-independent on both its pose and its input conformer, so at most four of the five runs are independent. The n-dependence is quantified: the requirement relaxes from 2.203 to 1.645 null standard deviations, 1.035 to 0.773 kcal/mol, and no further |
 
 Three of those seven entries withdraw a claim of mine rather than refine one. That
 record is kept deliberately: a protocol whose amendment log contains only improvements
@@ -293,9 +295,45 @@ appear under more than one name, and they are not equivalent:
 | `77827776` | 2 | A docked result at 1SMD, nine modes, mode 1 at -7.343 kcal/mol. |
 | `56e034b2` | 3 | The input ligand conformer, with no `MODEL` records and no `REMARK VINA RESULT` lines. Not a docking result. |
 
-So **two docked results appear under five filenames.** The third group is benign: one
-builder at one ETKDG seed gives one file, and three names for it is untidy rather
-than wrong. An earlier revision of this section counted all eight filenames as
+So **two docked results appear under five filenames.** The third group is benign as
+duplication, since one builder at one ETKDG seed gives one file, but it is not
+inconsequential, for the reason in 4.1b.
+
+### 4.1b The repository's N=5 seed sweep contains at most four independent runs
+
+`scripts/run_exhaustive_disproof.py` angle 2 is titled "Multi-Seed Conformer and
+Docking Reproducibility (N=5 seeds)" and its summary states "Across N=5 independent
+conformer and docking seeds". The sweep is genuinely seeded, which matters and is
+stated plainly here because defect 2 above is about a different code path: at line
+127 it declares `seeds = [42, 101, 202, 303, 404]`, sets `params.randomSeed = s` on
+ETKDGv3, and passes `--seed str(s)` to Vina on its own command line. Defect 2's
+unseeded finding is scoped to `biophysics_engine.run_docking_vina_and_vinardo`, the
+production pipeline, which has no `--seed` anywhere. The sweep's figures are not
+affected by it.
+
+Seed 42 is affected by something else. Both of its artefacts are byte-identical to the
+campaign's own:
+
+| Seed | Docked pose, coordinates over all 9 modes | Input conformer |
+|---|---|---|
+| 42 | identical to `contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt` | identical to `contender_mutant_P2A_CAHWRPWHC.pdbqt` |
+| 101, 202, 303, 404 | mutually distinct | distinct |
+
+Verified by hashing the coordinate columns of every `MODEL` record: seed 42 and the
+campaign pose both digest to the same value, and the other four do not match each
+other or it. The input conformers duplicate in the same pattern, which is the
+`56e034b2` group above.
+
+So seed 42 reused the campaign's conformer and reproduced its pose to the last
+decimal, on both sides of the calculation. Either its file is the campaign artefact
+relabelled, or it was a run whose output no longer exists; the files cannot tell which,
+and in neither case is it an independent replicate. The repository's claim of five
+independent conformer and docking seeds is therefore **not supported**: at most four
+are independent, and any dispersion computed over all five is computed over a set
+containing one non-independent member.
+
+This is why the `56e034b2` group is not merely untidy. It is the evidence that the
+seed sweep's first member is not what the sweep says it is. An earlier revision of this section counted all eight filenames as
 covering five distinct results, which was wrong arithmetic on my part, and it also
 treated the benign group as part of the defect. Corrected here, and reconciled with
 the independent repository-wide count made in the manuscript work.
@@ -404,7 +442,16 @@ claim in the existing campaign cannot be adjudicated without it.
    standard deviation of 0.470 kcal/mol, so the 5 percent boundary sits about
    **0.773 kcal/mol** better than the null mean and stays there however many
    permutations are drawn. A larger null estimates that boundary more precisely; it
-   does not move it. The 0.129 kcal/mol margin is **0.275 standard deviations** from
+   does not move it, though it does relax what is *attainable* and that is worth
+   quantifying rather than waving at. At n = 39 the candidate must beat every control,
+   which on this null means 2.203 standard deviations better than the mean, or
+   1.035 kcal/mol. As n grows the required rank relaxes: the largest number of controls
+   the candidate may lose to is the largest j with (j+1)/(n+1) < 0.05, so j = 0 at
+   n = 39, 8 at n = 199 and 48 at n = 999, and the required quantile rises toward 0.05
+   from below (0.0250, 0.0450, 0.0490). The requirement therefore falls from
+   2.203 standard deviations toward 1.645 and stops there, which in kcal/mol is 1.035
+   falling to 0.773. **A larger null buys 25 percent and then nothing.** The
+   0.129 kcal/mol margin is **0.275 standard deviations** from
    the null mean, and against the null the lead falls on the wrong side entirely: its
    -8.191 kcal/mol is 0.152 kcal/mol **worse** than the null mean of -8.343, with
    59 percent of null members scoring at least as well. So the honest statement is
