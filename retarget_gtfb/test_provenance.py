@@ -614,6 +614,54 @@ def test_seed_42_is_not_an_independent_replicate():
             "seed 42 reused the campaign's input conformer as well as its pose")
 
 
+
+def _production_call_sites_passing_a_seed():
+    """Every non-test call of the docking entry point that could pass a seed.
+
+    The seed's positional index is read from the function's own signature rather
+    than hardcoded, so reordering its parameters cannot make this pass by
+    accident. A call counts as possibly seeded if it names `seed`, reaches the
+    seed's position positionally, or forwards `**kwargs`. Files under tests/ are
+    excluded: a test fixture that seeds the engine deliberately is not evidence
+    about what produced the deposited poses.
+    """
+    import ast
+    target = "run_docking_vina_and_vinardo"
+    engine = REPO_ROOT / "biophysics_engine.py"
+    seed_index = None
+    engine_tree = ast.parse(engine.read_text(), filename=str(engine))
+    for node in ast.walk(engine_tree):
+        if isinstance(node, ast.FunctionDef) and node.name == target:
+            names = [a.arg for a in node.args.args]
+            if "seed" in names:
+                seed_index = names.index("seed") + 1
+    found = []
+    for path in sorted(REPO_ROOT.rglob("*.py")):
+        rel = path.relative_to(REPO_ROOT)
+        if rel.parts and rel.parts[0] in ("tests", ".git"):
+            continue
+        try:
+            tree = ast.parse(path.read_text(), filename=str(path))
+        except SyntaxError as exc:
+            # Never swallow this. A file that will not parse is a file whose call
+            # sites were not examined, and reporting it as clean is how a seeded
+            # call site would hide. Found by a negative control whose injected
+            # call was itself invalid syntax, which this clause silently passed.
+            found.append(f"{rel}: WOULD NOT PARSE ({exc.msg} at line {exc.lineno})")
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            name = getattr(node.func, "attr", None) or getattr(node.func, "id", None)
+            if name != target:
+                continue
+            kw = {k.arg for k in node.keywords if k.arg}
+            forwards = any(k.arg is None for k in node.keywords)
+            positional = seed_index is not None and len(node.args) >= seed_index
+            if "seed" in kw or forwards or positional:
+                found.append(f"{rel}:{node.lineno}")
+    return found
+
 def test_the_disproof_sweep_is_seeded_even_though_the_engine_is_not():
     """Defect 2 is scoped to the production pipeline, and must stay scoped."""
     sweep = REPO_ROOT / "scripts" / "run_exhaustive_disproof.py"
@@ -624,8 +672,17 @@ def test_the_disproof_sweep_is_seeded_even_though_the_engine_is_not():
     assert "seeds = [42, 101, 202, 303, 404]" in sweep_text
     assert "--seed" in sweep_text, "the sweep passes an explicit seed to Vina"
     assert "randomSeed" in sweep_text, "and seeds the conformer builder too"
-    assert "--seed" not in engine.read_text(), (
-        "if the production engine gains a seed, defect 2 must be revisited")
+    # The claim is NOT that the string "--seed" is absent from the engine. The
+    # engine may gain an optional seed parameter without touching defect 2, and
+    # on the manuscript branch it already has. The falsifiable claim is that no
+    # production call site passes one, so every docking run the repository has
+    # actually produced was stochastic. Asserted over the call graph, because a
+    # string test would fail on a change that does not affect the finding and
+    # would pass on a call site that does.
+    seeded = _production_call_sites_passing_a_seed()
+    assert seeded == [], (
+        "a production call site now seeds Vina, so defect 2 must be revisited: "
+        f"{seeded}")
     protocol = (HERE / "PROTOCOL.md").read_text()
     assert "scoped to" in protocol and "run_docking_vina_and_vinardo" in protocol, (
         "the protocol must say which code path the unseeded finding applies to")

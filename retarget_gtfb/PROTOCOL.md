@@ -35,6 +35,7 @@ can be read directly.
 | 20:40 | `0b4db3e` | 4.1b guessed that its r.m.s.d. figures differed from the manuscript's "most likely in mode choice or superposition" | that **guess is withdrawn**. Sweeping the plausible selections reproduces the manuscript's 9.24 and 12.19 exactly on one of them: mode 1, hydrogens removed, the two `G0` glue markers kept. Those figures therefore count two pseudo-atoms as heavy atoms; the correct values are 9.04 and 11.80. Reported to the manuscript work and pinned by a test that recomputes both of its figures from the pose files |
 | 20:48 | `c2a2bd1` | this package's own analyser carried the same defect it had just reported in the manuscript: `analyze.py` read the type as `line[76:79]`, truncating `CG0` to `CG`, and excluded only hydrogens, so the two `G0` markers entered every r.m.s.d. as element G | the type is read as the last whitespace token in one function, `atom_type_of`, and glue is excluded there rather than at three call sites. **No pre-registered threshold moves.** Rule 1 is acarbose, which carries no glue (59 records, 44 heavy atoms, verified on the file); rule 10 selects by atom name `SG`; `heavy_atoms` comes from RDKit before Meeko writes the pdbqt, 84 for the lead, matching the corrected reader exactly. Only the derived `pose_rmsd_across_seeds_A` changes, so no docking needs rerunning |
 | 21:33 | `d8ccf7f` | 4.1b called seed 42 non-independent "on both sides of the calculation", counting the identical input conformer as evidence alongside the identical pose | **that half is withdrawn.** Every `ETKDGv3` path here embeds at seed 42, `build_macrocycle_3d` hardcoding it and the sweep parameterising it, so an identical conformer is expected by construction. The manuscript work reached this independently and is right. Added as a caveat the files cannot settle: a third path, the campaign script, embeds by the default method at 300 MMFF iterations, which should not match, so the identity shows both files came from the `ETKDGv3` path and nothing records which script wrote either. The docked pose remains the evidence, the campaign having docked unseeded. Also destaled: the manuscript now publishes the four-run 9.11 and 11.80 over 84 real heavy atoms, matching this package to the digit |
+| 21:52 | `PENDING` | defect 2 was stated as a property of the function, that `biophysics_engine.py` contains no `--seed`, and pinned by a test asserting the string's absence. The manuscript branch has since given the function an optional `seed` parameter, so that sentence and that test were both about to fail for a reason that does not touch the finding | restated as a property of the call sites: no production call passes a seed, so every docking run the repository has produced was stochastic. The test now walks the call graph instead of matching a string, reads the seed's positional index from the function's own signature, excludes `tests/`, and reports a file that will not parse rather than treating it as clean. Verified against a simulated post-merge tree and against three controls, one of which exposed the parse-swallowing hole. No result moves; this is a claim and a test being narrowed to what the evidence is about |
 
 Six of these entries withdraw a claim of mine rather than refine one. That record is
 kept deliberately: a protocol whose amendment log contains only improvements is a
@@ -143,10 +144,14 @@ numbers independently of which protein was used.
    exact one-sided empirical p of 0.6000, against the 0.5897 the repository reports
    from a normal approximation. The conclusion (no signal) is unchanged. The stated
    test is not the test that was performed.
-2. **Vina is called with no seed.** `biophysics_engine.run_docking_vina_and_vinardo`
-   builds its command line without `--seed`, so the search is stochastic and the
-   pipeline the README describes as deterministic is not. The spread this hides has
-   never been measured.
+2. **Vina is called with no seed.** No production call of
+   `biophysics_engine.run_docking_vina_and_vinardo` passes one, so the search is
+   stochastic and the pipeline the README describes as deterministic is not. The
+   spread this hides has never been measured. Stated as a property of the call
+   sites, not of the function: the manuscript branch has since given the function
+   an optional `seed` parameter, which leaves this finding untouched because all
+   twelve production call sites leave it unset. Two call sites in `tests/` do pass
+   a seed, which is a test fixture and not evidence about the deposited poses.
 3. **Every score rests on a single starting conformer, and two of Vina's own
    applicability limits are exceeded.** An earlier revision of this document
    asserted here that Meeko had left the macrocycle ring rigid, on the strength of
@@ -319,8 +324,8 @@ stated plainly here because defect 2 above is about a different code path: at li
 127 it declares `seeds = [42, 101, 202, 303, 404]`, sets `params.randomSeed = s` on
 ETKDGv3, and passes `--seed str(s)` to Vina on its own command line. Defect 2's
 unseeded finding is scoped to `biophysics_engine.run_docking_vina_and_vinardo`, the
-production pipeline, which has no `--seed` anywhere. The sweep's figures are not
-affected by it.
+production pipeline, none of whose twelve production call sites passes a seed. The
+sweep's figures are not affected by it.
 
 Seed 42 is affected by something else. Both of its artefacts are byte-identical to the
 campaign's own:
@@ -354,8 +359,8 @@ that both files came from the `ETKDGv3` path rather than from the campaign scrip
 nothing in either file records which script wrote it.
 
 **The docked pose match is the evidence.** The campaign's docking ran through
-`biophysics_engine.run_docking_vina_and_vinardo`, which passes no `--seed`, so Vina
-drew its own seed. A nine-mode byte-identical match between an unseeded run and a
+`biophysics_engine.run_docking_vina_and_vinardo` from a call site that passes no
+seed, so Vina drew its own. A nine-mode byte-identical match between an unseeded run and a
 seed-42 run is not something determinism produces. Two readings remain and the files
 distinguish neither: the file is one result standing under three names, or the whole
 group came from a single seeded run of the disproof script and was relabelled, in
