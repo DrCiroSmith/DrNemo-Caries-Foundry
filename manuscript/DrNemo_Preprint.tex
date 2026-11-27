@@ -28,6 +28,25 @@
 
 \maketitle
 
+% This document is kept as the earlier version of the work. Its figures moved to
+% manuscript/superseded/ when they were withdrawn, and the include paths
+% below point there, so the document still compiles exactly as it did.
+\begin{center}
+\fbox{\parbox{0.92\textwidth}{\textbf{Superseded.} This manuscript states the
+result as it was understood before the audit recorded in \texttt{README.md}
+section 5 and in \texttt{paper/negative\_result\_GTF-SI.md}. Several of its
+central claims are not supported by the committed data: the target is
+glucosyltransferase-SI and not GtfB, the lead does not separate from its
+scrambled controls, no position in the alanine scan reaches the project's own
+hotspot gate, the lead is not on the non-dominated front of its own leaderboard,
+and the acid-switch figure rests on a result file whose origin is not
+established. It is retained unaltered as a record of the earlier claims. The
+current statement of the result is
+\texttt{paper/negative\_result\_GTF-SI.md}.}}
+\end{center}
+
+\vspace{1em}
+
 \begin{abstract}
 \noindent\textbf{Background:} \textit{Streptococcus mutans} glucosyltransferase-SI (GTF-SI, gtfC gene product; EC 2.4.1.5) synthesizes water-insoluble $\alpha$-(1,3)-glucan polymers that construct the protective extracellular matrix of cariogenic biofilms. Conventional cationic antimicrobial peptides frequently fail in clinical translation due to rapid salivary mucosal entrapment, uncontrolled proteolysis, and off-target inhibition of human salivary $\alpha$-amylase. \\
 \textbf{Methods:} This study establishes an automated biophysical engine utilizing uncompressed $28.0 \times 28.0 \times 28.0\text{ \AA}$ search grids centered on the catalytic triad (\texttt{Asp477}, \texttt{Glu515}, \texttt{Asp588} of RCSB PDB: \texttt{3AIC}) with dual AutoDock Vina and Vinardo scoring. Macrocyclic geometries were parameterized with MMFF94 force-field distance geometry and relaxed via all-atom OpenMM Amber14/GBn2 implicit solvent energy minimization at oral body temperature ($310.15\text{ K}$). Biological filtering integrated Donnan equilibrium mucosal charge partitioning and Stephan-curve electrostatic protonation shifts ($\Delta Q_{\text{Stephan}}$ from pH 7.2 to 5.2). \\
@@ -100,14 +119,14 @@ Conformational hinge relaxation via the \texttt{P2A} mutation yielded \texttt{CA
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig1_pareto_frontier.png}
+\includegraphics[width=0.82\textwidth]{superseded/fig1_pareto_frontier.png}
 \caption{\textbf{Host Counter-Screening Pareto Frontier.} Dual-objective scatter of binding affinity against cariogenic GTF-SI (PDB: \texttt{3AIC}, y-axis) versus human salivary $\alpha$-amylase (PDB: \texttt{1SMD}, x-axis). Green dashed line demarcates the selectivity threshold ($\Delta\Delta G \le -0.80\text{ kcal/mol}$). Candidate \texttt{CAHWRPWHC} clears the computational threshold, though force-field error margins require empirical enzymatic testing.}
 \label{fig:pareto}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig4_stephan_acid_switch.png}
+\includegraphics[width=0.82\textwidth]{superseded/fig4_stephan_acid_switch.png}
 \caption{\textbf{Stephan-Curve Electrostatic Switch and Donnan Equilibrium.} Correlation of Stephan charge surge ($\Delta Q_{\text{Stephan}} = Q_{\text{pH } 5.2} - Q_{\text{pH } 7.2}$) against GTF-SI target affinity. Points are color-coded by net charge at saliva baseline ($\text{pH } 6.0$). Candidates satisfying the Donnan ceiling ($Q \le +4.0$) and showing active charge surge ($\Delta Q \ge +1.0$) selectively target acidogenic biofilms without mucosal entrapment.}
 \label{fig:stephan}
 \end{figure}
@@ -143,14 +162,14 @@ To implement rigorous falsificationism, candidate \texttt{CAHWRPWHC} was challen
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig2_scrambled_null_histogram.png}
+\includegraphics[width=0.82\textwidth]{superseded/fig2_scrambled_null_histogram.png}
 \caption{\textbf{Karl Popper Statistical Null Distribution ($N=39$).} Empirical frequency distribution of binding energies for charge-matched scrambled cyclic nonapeptide permutations docked into the \texttt{3AIC} catalytic pocket. Red dashed line marks \texttt{CPHWRPWHC} and green solid line marks candidate \texttt{CAHWRPWHC}. Static rigid-receptor docking fails to reject the null hypothesis ($p=0.5897$), emphasizing the necessity of multi-parameter physical triage.}
 \label{fig:null}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig3_alanine_hotspot_scan.png}
+\includegraphics[width=0.82\textwidth]{superseded/fig3_alanine_hotspot_scan.png}
 \caption{\textbf{In Silico Alanine Scanning Hotspot Mutagenesis.} Energetic contributions per nonapeptide residue (\texttt{P2A} through \texttt{H8A}). Bars indicate binding free energy, identifying \texttt{His3}, \texttt{Trp7}, and \texttt{His8} as key anchoring residues engaging the \texttt{3AIC} catalytic triad, while \texttt{P2A} provides hinge relaxation.}
 \label{fig:ala}
 \end{figure}

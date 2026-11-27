@@ -150,17 +150,38 @@ def test_exactly_one_nominal_seed_run_carries_the_campaign_geometry():
         f"published text names seed 42 and now names the wrong one")
 
 
-def test_the_excluded_runs_own_input_conformer_is_distinct():
-    """Its input was built with its own seed. Only the docked file is shared.
+def test_the_excluded_runs_input_conformer_is_the_campaigns():
+    """Seed 42 rebuilds the campaign's conformer, and the other four do not.
 
-    Worth pinning because the easy version of this story, that seed 42 was
-    never a real run at all, is not what the artefacts show, and the page says
-    so.
+    This pins the fact in both directions, because the one-directional version
+    misleads. The five seeds' conformers are pairwise distinct, which is what an
+    earlier version of this test checked, and that reads as though the seed 42
+    arm had a build of its own. It did not: the builder fixes RDKit's embedding
+    seed at 42, so asking for seed 42 reproduces the campaign's input exactly.
+    The input therefore says nothing either way, and the docked pose is what
+    rules the arm out as a replicate.
     """
-    inputs = {seed: _coordinate_digest(POSES / f"disproof_seed_{seed}_CAHWRPWHC.pdbqt")
-              for seed in (42, 101, 202, 303, 404)}
-    assert len(set(inputs.values())) == 5, (
-        f"the five input conformers are not all distinct: {inputs}")
+    seeds = {seed: _coordinate_digest(POSES / f"disproof_seed_{seed}_CAHWRPWHC.pdbqt")
+             for seed in (42, 101, 202, 303, 404)}
+    campaign = _coordinate_digest(POSES / "contender_mutant_P2A_CAHWRPWHC.pdbqt")
+
+    assert seeds[42] == campaign, (
+        f"seed 42's input conformer {seeds[42]} no longer matches the campaign's "
+        f"{campaign}; the page explains the match by the fixed embedding seed")
+    for seed in (101, 202, 303, 404):
+        assert seeds[seed] != campaign, (
+            f"seed {seed} rebuilt the campaign's conformer, so it is not an "
+            f"independent build either")
+    assert len(set(seeds.values())) == 5, (
+        f"the five input conformers are no longer pairwise distinct: {seeds}")
+
+
+def test_the_embedding_seed_is_fixed_at_42_in_the_builder():
+    """The reason the page gives for the match has to be in the code."""
+    source = (REPO / "scripts" / "run_exhaustive_disproof.py").read_text()
+    assert "randomSeed = 42" in source or "randomSeed=42" in source, (
+        "the builder no longer fixes RDKit's embedding seed at 42, so the page's "
+        "explanation for seed 42 reproducing the campaign conformer is stale")
 
 
 def test_four_runs_remain_independent():

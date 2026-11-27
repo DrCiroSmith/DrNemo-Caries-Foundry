@@ -109,17 +109,92 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 
 ## 5. Validation Figures
 
+Three figures are drawn directly from `data/contenders_ledger.csv` by
+`scripts/render_figures_svg.py`. Each one carries a provenance block in its own
+source naming the file it was drawn from, that file's digest, the rows plotted
+and every value marked on it, and `tests/test_figures.py` recomputes those
+values from the ledger and fails if the committed figure and the data disagree.
+Regenerate with `python3 scripts/render_figures_svg.py`, check without writing
+with `--check`.
+
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/fig4_falsification_plate_dark.png">
-    <img src="assets/fig4_falsification_plate_light.png" alt="4-panel biophysical validation: Pareto frontier, scrambled null histogram, alanine scan, Stephan pH titration" width="100%">
-  </picture>
+  <img src="manuscript/figures/fig_null_vs_lead.svg" alt="Histogram of 39 scrambled control scores with the lead, parent and null mean marked in place" width="100%">
 </p>
 
-- **Panel A, Pareto Frontier:** Vina 3AIC vs selectivity DeltaDeltaG across contenders. CAHWRPWHC is **not** the non-dominated candidate, and earlier versions of this caption said it was. On the committed database it is dominated by 87 of the 260 rows, and by 9 of the 17 other rows that survived every gate; the front over all candidates holds three members and the front over survivors holds six, and the lead is on neither. Among survivors it ranks 10th of 18 on affinity, last on selectivity and 17th of 18 on ligand efficiency. The `pareto_rank` column is not a dominance rank: it is assigned from the falsification status, and it agrees with that status on all 260 rows. The figure still draws the old claim and needs regenerating. Recompute: `python3 scripts/compute_pareto_front.py`.
-- **Panel B, Scrambled Null Histogram (N=39):** charge-matched sequence permutations evaluate against the empirical null distribution (Z = +0.32, p = 0.5897, failing to reject H0).
-- **Panel C, Alanine Hotspot Scan:** no hotspot. The scan is parented on the wild type `CPHWRPWHC` (-8.062 kcal/mol); the three substitutions that lose any affinity at all (H3A +0.193, H8A +0.084, W7A +0.257 kcal/mol) are far inside any plausible scoring error, so none is an energetic anchor. P6A gains affinity (-0.828 kcal/mol) but opens a trypsin site at Arg5. The panel in this figure predates the correction and still labels His3, Trp7 and His8 as anchors; it needs regenerating.
-- **Panel D, Stephan Acid-Switch:** DQ = +1.62 activates the inhibitor in the cariogenic acidic niche (pH approximately 5.2). CRRRWWRRRRC shows flat charge, no acid activation.
+**The lead sits inside its own null distribution.** The 39 charge-matched
+scrambles average -8.343 kcal/mol with a sample SD of 0.470, and 23 of the 39
+score at least as well as the lead's -8.191. The one-sided permutation p is
+(23 + 1) / (39 + 1) = 0.600, and for the parent it is 0.675. Earlier versions
+of this section gave p = 0.5897, which is 23/39, the raw proportion rather than
+a p value; the conclusion is the same either way, and neither number is close to
+significance. The controls are permutations of the parent `CPHWRPWHC`, not of
+the lead, so this is a null matched to the wrong molecule, and the figure should
+be read as a test the lead was never given rather than as a test it passed.
+Binning is the larger of the Freedman-Diaconis and Sturges counts, which is what
+numpy's auto rule uses; the count of controls at least as good as the lead does
+not depend on it.
+
+<p align="center">
+  <img src="manuscript/figures/fig_alanine_scan.svg" alt="Alanine scan deltas for seven positions against the plus 0.70 hotspot gate, none reaching it" width="100%">
+</p>
+
+**No position is an energetic anchor.** The scan is parented on the wild type
+`CPHWRPWHC` at -8.062 kcal/mol. Three substitutions lose any affinity at all
+(W7A +0.257, H3A +0.193, H8A +0.084 kcal/mol) and none approaches the project's
+own +0.70 hotspot gate, which is the only documented threshold in the pipeline.
+The shaded band is the spread of four repeat runs of a single ligand, and every
+bar falls inside it, so the scan does not separate a position from run-to-run
+noise. P2A, the substitution that produced the lead, is marked: it gains 0.129
+kcal/mol, which is 0.27 of the null's SD. Earlier captions named His3, Trp7 and
+His8 as anchors, which the numbers do not support.
+
+<p align="center">
+  <img src="manuscript/figures/fig_affinity_vs_selectivity.svg" alt="Affinity against selectivity for all 260 candidates, with the lead off the non-dominated front" width="100%">
+</p>
+
+**The lead is not on the frontier of its own leaderboard.** Of the 260 rows, 86
+beat the lead strictly on both affinity and selectivity, 87 dominate it once a
+tie on one axis is allowed, and 130 beat it on affinity alone. Three rows are
+dominated by nothing in the set (`CSNCPYPRGWC`, `CQNCPYPNGWC`, `CQNMPYPNGWC`,
+all eleven-mers) and the lead is not among them. The `pareto_rank` column is not
+a dominance rank: the code writes 1 for a `CORROBORATED` row and 2 otherwise, so
+it restates the falsification status, and the figure computes the dominance
+relation instead of reading that column. Points are deliberately not coloured by
+falsification status, because that status does not mean what its labels say; see
+section 4.
+
+### Figures I am not drawing
+
+Nothing is deleted. The four figures that stood here moved to
+`manuscript/superseded/`, which is where the earlier preprint now reads them
+from, so the record of what was claimed survives and `manuscript/figures/` holds
+only figures that are generated from the committed data and tested against it.
+
+- `fig4_stephan_acid_switch.png` is withdrawn rather than redrawn. That
+  comparison needs a neutral arm and an acidic arm, and both neutral arms are
+  result files whose coordinates are byte-identical to another result's:
+  `disproof_explicit_pH72_3AIC_docked.pdbqt` at -8.191 kcal/mol matches the
+  campaign's pose for the lead, and `disproof_explicit_pH72_1SMD_docked.pdbqt`
+  at -7.343 kcal/mol matches the campaign's alpha-amylase pose. Nothing records
+  what produced them, so I cannot attest that the neutral arm is an independent
+  calculation, and a difference taken across it is not a measurement. Angle 7 of
+  the disproof battery, which does carry its own run, moves the GTF-SI score
+  from -8.191 to -7.706 kcal/mol on explicit diprotonation, which is the
+  opposite direction to acid activation and too small to resolve.
+- The four-panel composite plate is withdrawn for the same reason it needed
+  three caveats: panel A drew a frontier claim the ledger contradicts, panel C
+  labelled three positions as anchors that do not reach the project's own gate,
+  and panel D was the acid switch. `scripts/render_assets.py` no longer rebuilds
+  it and says why. The rendered plate stays in `assets/`, uncited.
+- `fig1_pareto_frontier.png`, `fig2_scrambled_null_histogram.png` and
+  `fig3_alanine_hotspot_scan.png` are replaced by the three SVGs above. The SOP
+  notebook that drew the originals now writes to `notebooks/output/` instead of
+  `manuscript/figures/`, so the manuscript figure set has exactly one source.
+- `manuscript/DrNemo_Preprint.tex` and its compiled PDF are the earlier
+  statement of the result and are kept unaltered apart from a banner at the top
+  saying so and the figure paths that follow the move. Its central claims are
+  the ones this audit contradicts. The current statement is
+  `paper/negative_result_GTF-SI.md`.
 
 ---
 
@@ -152,8 +227,10 @@ DrNemo-Caries-Foundry/
 │   ├── index.html                       # Live 3Dmol.js studio with Light/Dark mode
 │   └── vendor/                          # Vendored 3Dmol-min.js
 ├── manuscript/
-│   ├── DrNemo_Preprint.tex              # Full LaTeX manuscript
-│   └── DrNemo_Preprint.pdf              # Compiled publication preprint
+│   ├── DrNemo_Preprint.tex              # Earlier preprint, superseded, see section 5
+│   ├── DrNemo_Preprint.pdf              # Compiled earlier preprint
+│   ├── figures/                         # Generated from the ledger by render_figures_svg.py
+│   └── superseded/                      # Withdrawn figures, kept as a record
 ├── notebooks/                           # Educational SOP Jupyter notebooks (SOP_00..05)
 ├── scripts/
 │   ├── audit_cleanliness.py             # OpSec and integrity audit

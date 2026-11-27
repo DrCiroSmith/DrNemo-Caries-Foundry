@@ -79,9 +79,15 @@ plt.rcParams['figure.titlesize'] = 13
 plt.rcParams['figure.dpi'] = 120
 
 # Create figures output dir
-figs_dir = Path("../manuscript/figures")
-if not figs_dir.exists():
-    figs_dir = Path("manuscript/figures")
+# This notebook writes to notebooks/output/, not to manuscript/figures/. The
+# manuscript figure set has one source, scripts/render_figures_svg.py, which is
+# generated from the committed ledger and checked against it by
+# tests/test_figures.py. A second writer into the same directory is how a
+# figure drawn from one state of the data ends up beside a caption written
+# against another.
+figs_dir = Path("../notebooks/output")
+if not Path("../notebooks").exists():
+    figs_dir = Path("notebooks/output")
 figs_dir.mkdir(parents=True, exist_ok=True)
 
 # Connect to Contender Vault
@@ -140,51 +146,28 @@ Cariogenic microcolonies create localized acidogenesis ($\text{pH} < 5.5$). We m
     cells.append(make_cell("markdown", s3_md))
 
     # Section 3 Code
-    s3_code = """fig, ax = plt.subplots(figsize=(8, 5))
+    # The acid-switch panel is withdrawn rather than redrawn. Its neutral arm
+    # is a result file of unestablished origin, so the cell that plotted it is
+    # replaced by the reason, which is the part a reader needs.
+    s3_withdrawn = r"""### This panel is withdrawn
 
-scatter = ax.scatter(
-    df['delta_q_stephan'],
-    df['vina_3aic_kcal'],
-    c=df['q_ph60'],
-    cmap='coolwarm',
-    s=df['heavy_atoms'] * 1.8,
-    alpha=0.85,
-    edgecolors='black',
-    linewidth=0.8
-)
-cbar = plt.colorbar(scatter, ax=ax)
-cbar.set_label('Net Charge at pH 6.0 (Donnan Partitioning)', rotation=270, labelpad=15)
+The Stephan acid-switch figure that stood here is not drawn, and
+`manuscript/figures/fig4_stephan_acid_switch.png` has been removed.
 
-# Falsification boundary zones
-ax.axvline(1.0, color='orange', linestyle='--', linewidth=1.5, label='Stephan Switch Threshold (+1.0 e)')
-ax.axhline(-7.5, color='crimson', linestyle='--', linewidth=1.5, label='Affinity Threshold (-7.5 kcal)')
+The comparison needs a neutral arm and an acidic arm. Both neutral arms are
+result files whose coordinates are byte-identical to another result's:
+`disproof_explicit_pH72_3AIC_docked.pdbqt` at -8.191 kcal/mol is identical to
+the campaign's pose for the lead, and `disproof_explicit_pH72_1SMD_docked.pdbqt`
+at -7.343 kcal/mol is identical to the campaign's alpha-amylase pose. Nothing in
+this repository records what produced those files, so I cannot attest that the
+neutral arm is an independent calculation, and a difference taken across it is
+not a measurement.
 
-# Annotate the lead CAHWRPWHC (not non-dominated; see scripts/compute_pareto_front.py)
-champ = df[df['sequence'] == 'CAHWRPWHC']
-if not champ.empty:
-    r = champ.iloc[0]
-    ax.annotate(
-        f"Lead: {r['sequence']}\\n(Vina: {r['vina_3aic_kcal']:.2f} kcal, ΔQ: +{r['delta_q_stephan']:.2f})",
-        xy=(r['delta_q_stephan'], r['vina_3aic_kcal']),
-        xytext=(r['delta_q_stephan'] + 0.15, r['vina_3aic_kcal'] - 0.8),
-        arrowprops=dict(facecolor='black', shrink=0.05, width=1, headwidth=6),
-        fontweight='bold',
-        fontsize=9,
-        bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.6)
-    )
-
-ax.set_title('Stephan-Switch Activation vs Target Affinity')
-ax.set_xlabel('Stephan Charge Shift ΔQ (pH 5.2 - pH 7.2)')
-ax.set_ylabel('GTF-SI 3AIC Affinity (kcal/mol)')
-ax.legend(loc='upper right', frameon=True)
-plt.tight_layout()
-
-# Save 300-DPI Figure for Manuscript
-fig_path = figs_dir / "fig4_stephan_acid_switch.png"
-plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-print(f"Saved 300-DPI figure: {fig_path}")
-plt.show()"""
-    cells.append(make_cell("code", s3_code))
+Angle 7 of the disproof battery, which does carry its own run, moves the GTF-SI
+score from -8.191 to -7.706 kcal/mol on explicit diprotonation. That is the
+opposite direction to acid activation, and it is small enough to be unresolved
+against the scoring error this repository quotes."""
+    cells.append(make_cell("markdown", s3_withdrawn))
 
     # Section 4 Markdown
     s4_md = r"""## 4. Host Counter-Screening: GTF-SI vs Human Salivary Amylase Selectivity (Pareto Frontier)
