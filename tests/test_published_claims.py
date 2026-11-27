@@ -209,7 +209,10 @@ def test_no_published_file_asserts_five_independent_seeds(relative, banned):
 def test_any_surviving_mention_of_the_old_figure_keeps_its_reason(relative):
     """History is allowed. A bare reappearance is not."""
     text = (REPO / relative).read_text()
-    for marker in ("N=5", "N = 5"):
+    # "Across 5 seeds" slipped past an earlier version of this list, which looked
+    # for the N=5 form only, and left the withdrawn five-run figures asserted in
+    # the project page's verdict paragraph.
+    for marker in ("N=5", "N = 5", "5 seeds", "five seeds", "five runs"):
         start = 0
         while True:
             at = text.find(marker, start)
