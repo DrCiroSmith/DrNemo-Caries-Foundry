@@ -284,6 +284,31 @@ def test_the_five_percent_boundary_is_set_by_the_spread():
     assert round(margin / statistics.stdev(ns), 2) == 0.27
 
 
+def _section_3_3b():
+    text = PAPER.read_text()
+    start = text.index("## 3.3b")
+    return text[start:text.index("## 3.4", start)]
+
+
+def test_section_3_3b_warns_the_reader_about_the_five_run_reading():
+    """A reader shown two readings will reach for the one with more data.
+
+    So the paragraph that offers both must say, in the same place, that the
+    five-run reading includes a file whose coordinates match the campaign pose
+    across all nine modes and is therefore not an independent replicate. If
+    that warning is ever dropped, the weaker reading goes to a referee with
+    nothing attached to it.
+    """
+    section = _section_3_3b()
+    assert "seed 42" in section, "Section 3.3b no longer names the duplicated run"
+    assert "nine" in section, "Section 3.3b no longer says the match covers all nine modes"
+    for phrase in ("0.415", "0.475", "both ways"):
+        assert phrase in section, f"Section 3.3b no longer carries {phrase}"
+    assert "upper bound" in section, (
+        "Section 3.3b no longer calls the single-ligand figure an upper bound, which is "
+        "the whole of the conformer-reseeding caveat")
+
+
 def test_the_manuscript_still_carries_the_recomputed_figures():
     """Paper and data must not drift apart silently."""
     text = PAPER.read_text()
