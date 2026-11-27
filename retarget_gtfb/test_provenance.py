@@ -735,8 +735,8 @@ def test_dropping_the_non_independent_seed_does_not_weaken_the_pose_finding():
         "4.1b must state which records are excluded; a bare atom count is not a "
         "selection a reader can reproduce")
     assert "9.24" in text and "12.19" in text, (
-        "4.1b must keep the manuscript's figures beside its own and say they are not "
-        "a reproduction of each other")
+        "4.1b must keep the glue-inclusive figures beside the correct ones, so a "
+        "reader who recomputes either can see which selection produced which")
 
     heavy = {s: _mode1_coords(f, heavy_only=True) for s, f in files.items()}
     assert len(heavy[42]) == 84, "heavy-atom count changed; the 84 in 4.1b is stale"
@@ -837,12 +837,14 @@ def test_the_withdrawal_count_in_the_log_is_derived_from_the_log():
         "amendment")
 
 
-def test_the_manuscripts_rmsd_figures_reproduce_under_a_glue_inclusive_selection():
-    """4.1b claims the manuscript's 9.24 and 12.19 come from counting glue as heavy.
+def test_the_glue_inclusive_selection_reproduces_the_superseded_figures():
+    """The glue-inclusive selection yields 9.24 and 12.19 from these pose files.
 
-    This is an accusation about someone else's number, so it is recomputed here rather
-    than asserted. If the reproduction ever stops holding, 4.1b's table is wrong and
-    the paragraph that names a cause must come out.
+    This began as a check on someone else's published number. That number has since
+    been withdrawn and replaced, so what is pinned now is the selection itself: which
+    atom filter produces which figure, from files that do not change. Keeping it means
+    a future session can tell at once whether a figure it meets was computed with the
+    glue included, without rediscovering the mechanism a fourth time.
     """
     import itertools
     import math
@@ -1003,3 +1005,35 @@ def test_the_pytest_free_gate_also_checks_the_atom_selection():
     for needle in ("the glue pseudo-atom G0 is excluded",
                    "the closure carbon CG0 is kept, as carbon"):
         assert needle in text, f"the self-test no longer asserts: {needle}"
+
+
+def test_the_conformer_half_of_the_seed_42_finding_stays_narrowed():
+    """The input-conformer match is expected by construction and is not evidence.
+
+    Every ETKDGv3 path that builds this ligand embeds at seed 42, so asking the sweep
+    for seed 42 rebuilds the campaign conformer. 4.1b said for a while that seed 42 was
+    non-independent "on both sides of the calculation", which overstated it. The
+    docked pose is the evidence; the conformer is not. This test exists because that
+    overstatement is easy to reintroduce from a summary.
+    """
+    # the document is hard-wrapped, so compare on normalised whitespace
+    flat = " ".join((HERE / "PROTOCOL.md").read_text().split())
+    assert "The conformer match carries no weight" in flat, (
+        "4.1b must say plainly that the conformer identity is not evidence")
+    assert "The docked pose match is the evidence" in flat, (
+        "4.1b must say which half of the finding carries the weight")
+    assert "on both sides of the calculation" not in flat, (
+        "that phrasing treated the conformer match as evidence; it is withdrawn")
+
+    # and the claim rests on the builder, so the builder must still hardcode seed 42
+    engine = REPO_ROOT / "biophysics_engine.py"
+    if engine.exists():
+        src = engine.read_text()
+        assert "params.randomSeed = 42" in src, (
+            "build_macrocycle_3d no longer hardcodes seed 42, so the "
+            "expected-by-construction argument in 4.1b needs re-deriving")
+
+    sweep = REPO_ROOT / "scripts" / "run_exhaustive_disproof.py"
+    if sweep.exists():
+        assert "params.randomSeed = s" in sweep.read_text(), (
+            "the sweep no longer parameterises the conformer seed the same way")

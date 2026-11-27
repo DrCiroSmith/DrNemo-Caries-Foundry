@@ -334,10 +334,32 @@ campaign pose both digest to the same value, and the other four do not match eac
 other or it. The input conformers duplicate in the same pattern, which is the
 `56e034b2` group above.
 
-So seed 42 reused the campaign's conformer and reproduced its pose to the last
-decimal, on both sides of the calculation. Either its file is the campaign artefact
-relabelled, or it was a run whose output no longer exists; the files cannot tell which,
-and in neither case is it an independent replicate. The repository's claim of five
+The two halves of that table are not equally good evidence, and an earlier version of
+this section treated them as though they were. **The conformer match carries no
+weight.** Every path that builds this ligand embeds with seed 42 hardcoded or
+parameterised to the same value: `biophysics_engine.build_macrocycle_3d` sets
+`ETKDGv3` with `params.randomSeed = 42`, and the sweep sets `params.randomSeed = s` on
+the same `ETKDGv3` with the same `MMFFOptimizeMolecule` call, so asking the sweep for
+seed 42 rebuilds that conformer by construction. An identical input conformer is the
+expected result, not a suspicious one. That narrowing came from the manuscript work,
+which reached it independently, and it is correct.
+
+One caveat on it, which the files cannot resolve. A third path,
+`scripts/run_falsification_campaign.py` line 56, embeds with a plain
+`EmbedMolecule(mol, randomSeed=42)`, which is the default method and not `ETKDGv3`,
+followed by `MMFFOptimizeMolecule(maxIters=300)` rather than 500. That recipe should
+not produce byte-identical coordinates to the other two. So the identity is evidence
+that both files came from the `ETKDGv3` path rather than from the campaign script, and
+nothing in either file records which script wrote it.
+
+**The docked pose match is the evidence.** The campaign's docking ran through
+`biophysics_engine.run_docking_vina_and_vinardo`, which passes no `--seed`, so Vina
+drew its own seed. A nine-mode byte-identical match between an unseeded run and a
+seed-42 run is not something determinism produces. Two readings remain and the files
+distinguish neither: the file is one result standing under three names, or the whole
+group came from a single seeded run of the disproof script and was relabelled, in
+which case the determinism is real but all three names are still one run. In both
+readings seed 42's arm is not an independent replicate. The repository's claim of five
 independent conformer and docking seeds is therefore **not supported**: at most four
 are independent, and any dispersion computed over all five is computed over a set
 containing one non-independent member.
@@ -378,9 +400,16 @@ seeds 101 and 404, both independent. Over the 84 heavy atoms it rises from 9.04 
 reproduces and the pose does not strengthens very slightly when the non-independent
 member is removed, rather than depending on it.
 
-The manuscript's own figures for this sweep, 9.24 A mean and 12.19 A worst over five,
-reproduce exactly, and the selection that produces them can be named. It is mode 1
-with the eighteen hydrogens removed and the two `G0` glue markers kept, 86 records:
+The manuscript no longer publishes a glue-inclusive figure. As of its commit `f82bc3a`
+it publishes the four-run 9.11 A mean, 11.80 A worst pair and 0.39 A centroid spread
+over the 84 real heavy atoms, and names 9.34, 12.19 and 0.38 in its own text as what
+the earlier figures did. Its four-run values are this package's to the digit, reached
+independently on both sides.
+
+The figures it published before that, 9.24 A mean and 12.19 A worst over five, are kept
+here because the selection that produces them is worth naming and because the table
+below is why this package's own reader was audited. It is mode 1 with the eighteen
+hydrogens removed and the two `G0` glue markers kept, 86 records:
 
 | Selection | n | Mean over five | Worst pair |
 |---|---|---|---|
@@ -389,14 +418,14 @@ with the eighteen hydrogens removed and the two `G0` glue markers kept, 86 recor
 | **hydrogens removed, glue kept** | **86** | **9.24** | **12.19** |
 | heavy atoms, glue excluded | 84 | 9.04 | 11.80 |
 
-So the manuscript's figures count two pseudo-atoms as heavy atoms. The glue markers
-sit at the macrocycle closure and move with it, which is why including them inflates
-both figures rather than leaving them alone. The correct heavy-atom values are 9.04 A
-mean and 11.80 A worst. Both remain far above the 2.0 A convention, so the
-manuscript's conclusion does not change, but the published worst-pair figure would be
-0.39 A too large and the cause would be a pseudo-atom. This has been reported to the
-manuscript work; it is recorded here because the finding came out of this package's
-atom-selection fix and because the same table shows why that fix was needed.
+So the figures published before `f82bc3a` counted two pseudo-atoms as heavy atoms. The
+glue markers sit at the macrocycle closure and move with it, which is why including
+them inflates a distance rather than leaving it alone. The correct five-pose values are
+9.04 A mean and 11.80 A worst; the four-pose values, which is what both sides now
+publish, are 9.11 A and 11.80 A. The conclusion never changed, both being far above the
+2.0 A convention, but the figure would have been 0.39 A too large with a pseudo-atom as
+the cause. Recorded here because the finding came out of this package's own
+atom-selection fix, and because the same table is why that fix was needed.
 
 So the correction needed is to the label and to the score summary, not to the finding.
 
