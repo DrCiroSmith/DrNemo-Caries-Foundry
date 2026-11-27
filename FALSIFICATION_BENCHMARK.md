@@ -3,10 +3,17 @@
 **Autonomous Structural-Biology Verification Suite for *Streptococcus mutans* glucosyltransferase inhibitors**  
 *Principal Investigator:* Dr. Roi Castrellon, DDS (DrNemo Oral Biophysics Research, Miami, FL, USA)  
 *Benchmark Version:* 2.0.0 (Empirical $28.0\text{ \AA}$ Dual-Scoring Vina + Vinardo + OpenMM)  
-*Status:* Docking and biophysics scores are computed empirically. Eight of the twelve
-disproof angles are reported from a cached run rather than recomputed per candidate, and
-four gates in the current thresholds cannot fail on this contender set. Both limits are
-listed in section 5. No candidate in this benchmark is corroborated.
+*Status:* Every disproof angle now records where its numbers came from. On the committed
+data, eight are recomputed on the run, three are read from the contender database, and one
+(the OpenMM relaxation) cannot run without openmm, pdbfixer and rdkit and reports itself as
+not computed rather than printing a verdict. Two limits in the gates remain and are listed
+in section 5: the disulfide geometry check cannot discriminate, since all 260 rows fall
+between 2.050 and 2.070 Angstroms against a 1.95 to 2.25 window and no candidate has ever
+been failed by it, and the Stephan acid-switch criterion is arithmetically a histidine
+count. The instability index is no longer reported at all for cyclic peptides, where it is
+out of domain and was previously replaced by a literal 25.0. The protease criterion does
+discriminate: 111 of the 260 rows carry at least one trypsin site. No candidate in this
+benchmark is corroborated.
 
 ---
 

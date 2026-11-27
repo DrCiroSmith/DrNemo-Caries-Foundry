@@ -88,7 +88,7 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 | Angle | Evaluation Angle | Quantitative Metric | Honest Classification |
 |---|---|---|---|
 | **1** | Co-Crystal Redocking Calibration (3AIC) | Symmetry-corrected heavy-atom RMSD 4.507 A against the 2.0 A convention, Vina -7.915 kcal/mol. The protocol finds the cleft (centroid 3.03 A) but not the crystal pose. Recompute: `python3 scripts/compute_redocking_rmsd.py` | `CALIBRATION_FAILED` |
-| **2** | Multi-Seed Conformer & Docking (N=5) | Mean -8.10 +/- 0.37 kcal/mol, cleft centroid SD = 0.46 A | `PASSED_IN_SILICO` |
+| **2** | Multi-Seed Conformer & Docking (N=5) | Score reproducible (-8.10 +/- 0.37 kcal/mol) and centroid tight (SD 0.46 A), but the pose is not: mean pairwise RMSD between seeds 9.24 A, worst pair 12.19 A, against a 2.0 A convention | `SCORE_REPRODUCIBLE_POSE_NOT` |
 | **3** | Pose Mode Clustering & Energy Gap | Mode 1-2 Delta E = +0.10 kcal/mol, shift 1.74 A | `INCONCLUSIVE_WITHIN_NOISE` |
 | **4** | Force-Field Error Margin on 1SMD Selectivity | DeltaDeltaG = -0.848 kcal/mol against an assumed 2.85 kcal/mol scoring error, which carries no citation in this repository | `INCONCLUSIVE_WITHIN_NOISE` |
 | **5** | Charge-Matched Scrambled Null (N=39) | Lead -8.191 vs Null -8.343 +/- 0.470 (Z = +0.32, p = 0.5897) | `INCONCLUSIVE_WITHIN_NOISE` |
@@ -97,10 +97,10 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 | **8** | Broad Oral Protease & Peptidase Check | Trypsin shielded (Arg5-Pro6); Trp4/Trp7 vulnerable to chymotrypsin | `AT_RISK` |
 | **9** | Additional Host Screen (RCSB 1LZ1 Lysozyme) | Human lysozyme DG = -6.67 kcal/mol (DeltaDeltaG = -1.52) | `PASSED_IN_SILICO` |
 | **10** | Linear Control vs Cyclic Macrocycle | Linear AHWRPWH (-9.25 kcal/mol) vs cyclic (-8.19 kcal/mol; Vina under-penalizes unfolded entropy) | `INCONCLUSIVE_WITHIN_NOISE` |
-| **11** | OpenMM Implicit-Solvent Relaxation Drift | Amber14/GBn2 heavy-atom minimization drift RMSD = 0.92 A | `PASSED_IN_SILICO` |
-| **12** | Chitosan Donnan & Stephan Acid Switch | Saliva Q = +2.05 <= +4.0; Stephan Delta Q = +1.62 | `PASSED_IN_SILICO` |
+| **11** | OpenMM Implicit-Solvent Relaxation Drift | Energy minimisation only, no dynamics and no temperature. Last recorded heavy-atom drift 0.92 A; not reproducible without openmm, pdbfixer and rdkit installed | `NOT_COMPUTED` here |
+| **12** | Chitosan Donnan & Stephan Acid Switch | Saliva Q = +2.05 <= +4.0; Stephan Delta Q = +1.62, which is +0.809 per histidine, so this criterion is a histidine count and not independent of the charge one | `PASSED_IN_SILICO` |
 
-> **Scientific Skepticism Verdict:** CAHWRPWHC evaluation yields **5 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 0 Falsified**. Strict scientific skepticism highlights key caveats: co-crystal redocking RMSD (Angle 1), pose mode clustering gap (Angle 3), host selectivity margin (Angle 4), scrambled null differentiation (Angle 5), explicit pH 5.2 diprotonation ranking inversion (Angle 7), and linear control entropy artifact (Angle 10) fall within force-field uncertainty boundaries or indicate scoring limitations, while aromatic residues Trp4/Trp7 (Angle 8) carry chymotryptic risk requiring whole-saliva degradation assays. All results are strictly computational hypotheses requiring wet-lab enzymatic, whole human saliva, and cellular biofilm falsification.
+> **Verdict.** Recomputing the battery gives **2 passed in silico, 5 inconclusive within noise, 1 at risk, 1 calibration failed, 1 no hotspot identified, 1 score-reproducible-but-pose-not, and 1 not computed**. Nothing is falsified and nothing is corroborated. Read the two passes for what they are: Angle 9 is an off-target screen against lysozyme, and Angle 12 is composition arithmetic on charge and histidine count. The load-bearing results are negative. The docking protocol fails its own co-crystal control at the 2.0 A convention (Angle 1), the five seeds agree on a score but not on a pose (Angle 2), 23 of 39 charge-matched scrambles dock at least as well as the lead (Angle 5), no residue is an energetic anchor (Angle 6), acidification weakens rather than strengthens the predicted binding (Angle 7), the linear peptide outscores the macrocycle (Angle 10), and Trp4 and Trp7 are exposed to chymotrypsin (Angle 8). Every angle now records whether it was recomputed on the run, read from the vault, or not computed at all. Reproduce with `python3 scripts/run_exhaustive_disproof.py`.
 
 ---
 

@@ -29,7 +29,7 @@ SURVIVED_STATUSES = (STATUS_SURVIVED,) + LEGACY_SURVIVED_STATUSES
 STATUS_MEANINGS = {
     STATUS_SURVIVED: "cleared every in silico gate; not evidence of inhibition",
     "FALSIFIED_BROKEN_DISULFIDE": "disulfide distance outside the accepted range",
-    "FALSIFIED_ORAL_BARRIER": "failed the Donnan charge ceiling or carries protease sites",
+    "FALSIFIED_ORAL_BARRIER": "failed at least one of three unrelated oral-barrier criteria, which share this one status: Donnan charge ceiling at pH 6.0, Stephan switch delta_q >= 1.0 (arithmetically a histidine count of two or more), or any trypsin cleavage site. The row does not say which, so check falsification_reasons where a run recorded it",
     "FALSIFIED_AMYLASE_CROSSREACTIVITY": "failed the human salivary amylase selectivity gate",
     "SUBTHRESHOLD_AFFINITY": "docked above the affinity gate",
     "SCRAMBLED_NULL_CONTROL": "charge-matched sequence permutation control, not a design",

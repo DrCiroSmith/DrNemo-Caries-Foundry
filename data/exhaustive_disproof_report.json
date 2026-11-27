@@ -36,8 +36,13 @@
       "mean_pairwise_rmsd_angstrom": 9.24,
       "max_pairwise_rmsd_angstrom": 12.19,
       "centroid_sd_angstrom": 0.46,
-      "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "Across N=5 independent conformer and docking seeds, CAHWRPWHC converged with score mean -8.10 +/- 0.37 kcal/mol and tight active cleft centroid SD of 0.46 A, demonstrating reproducible localization in the catalytic cleft."
+      "pose_agreement_threshold_angstrom": 2.0,
+      "score_reproducible": true,
+      "centroid_reproducible": true,
+      "pose_reproducible": false,
+      "provenance": "computed_this_run",
+      "classification": "SCORE_REPRODUCIBLE_POSE_NOT",
+      "scientific_summary": "Across N=5 independent conformer and docking seeds the score is reproducible (-8.10 +/- 0.37 kcal/mol) and the centre of mass lands in the same region (centroid SD 0.46 A), but the pose is not: mean pairwise heavy-atom RMSD between seeds is 9.24 A and the worst pair is 12.19 A, against a 2.0 A agreement convention. On a nonapeptide of roughly that span, the seeds are not finding the same binding mode, so nothing here supports a claim about which contacts are made. A reproducible score over irreproducible poses is what a shallow, non-specific scoring surface looks like, and it is consistent with the scrambled-null result in Angle 5."
     },
     {
       "angle": 3,
@@ -95,6 +100,8 @@
           "delta_e_mode1": 0.525
         }
       ],
+      "provenance": "computed_this_run",
+      "pose_file": "data/poses/contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt",
       "classification": "INCONCLUSIVE_WITHIN_NOISE",
       "scientific_summary": "Mode 1 demonstrates an energetic gap of Delta E = +0.10 kcal/mol relative to Mode 2, with centroid displacement of 1.74 A, indicating a distinct primary binding basin."
     },
@@ -224,11 +231,13 @@
         "selectivity_ddg_kcal": 0.435
       },
       "affinity_shift_upon_protonation_kcal": 0.485,
-      "receptor_protonation_state": "Receptors 3AIC, 1SMD, and 1LZ1 were prepared at physiological pH 7.4; Angle 7 tests explicit diprotonation of the peptide ligand at plaque acidic pH 5.2 against the physiological receptor model.",
+      "receptor_protonation_state": "Receptors 3AIC, 1SMD, and 1LZ1 were prepared at physiological pH 7.4; Angle 7 tests explicit diprotonation of the peptide ligand at plaque acidic pH 5.2 against the physiological receptor model. The receptor is therefore at the wrong pH for the acidic case, which is a limitation of the comparison, not a property of the candidate.",
+      "provenance": "computed_this_run",
       "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "Explicit diprotonation at pH 5.2 shifts ligand formal charge from +1 to +3 (receptors prepared at physiological pH 7.4). GTF-SI binding free energy is -7.71 kcal/mol vs -8.19 kcal/mol at pH 7.2 (Delta = +0.48 kcal/mol). Explicit diprotonation weakens 3AIC score by 0.49 kcal/mol and slightly inverts raw 1SMD ranking within Vina's +/-2.85 kcal/mol error."
+      "scientific_summary": "Explicit diprotonation at pH 5.2 shifts the ligand's formal charge from +1 to +3, against receptors prepared at pH 7.4. The GTF-SI score moves from -8.19 to -7.71 kcal/mol (Delta = +0.48 kcal/mol), so protonation weakens rather than strengthens the predicted binding, which is the opposite of the acid-activation story the formulation angle tells. The 1SMD ranking inverts by a similar margin. Both shifts are small enough to be unresolved against an assumed scoring error of 2.85 kcal/mol, a figure this repository quotes without a source."
     },
     {
+      "provenance": "computed_this_run",
       "angle": 8,
       "name": "Broad Oral Protease and Peptidase Vulnerability Check",
       "trypsin_salivary_sites": [],
@@ -257,7 +266,8 @@
         25.96
       ],
       "vina_1lz1_affinity_kcal": -6.67,
-      "gtfb_3aic_affinity_kcal": -8.191,
+      "gtf_si_3aic_affinity_kcal": -8.191,
+      "provenance": "computed_this_run",
       "selectivity_ddg_kcal": -1.521,
       "classification": "PASSED_IN_SILICO",
       "scientific_summary": "Counter-docking against the active cleft of human salivary lysozyme (1LZ1) yielded -6.67 kcal/mol (DeltaDeltaG = -1.52 kcal/mol vs 3AIC), demonstrating negligible off-target affinity against innate mucosal protective enzymes."
@@ -271,8 +281,9 @@
       "cyclization_benefit_kcal": 1.059,
       "rotatable_bonds_linear": 28,
       "rotatable_bonds_cyclic": 14,
+      "provenance": "computed_this_run",
       "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "Linear non-cyclized peptide docked with -9.25 kcal/mol vs -8.19 kcal/mol for cyclic CAHWRPWHC (DeltaDeltaG = 1.06 kcal/mol). Raw Vina scores flexible linear peptide 1.06 kcal/mol stronger than macrocycle, demonstrating Vina's under-penalization of unfolded conformational entropy; requires wet-lab ITC Kd."
+      "scientific_summary": "The linear peptide docks at -9.25 kcal/mol against -8.19 kcal/mol for the cyclic lead, so cyclisation is worth +1.06 kcal/mol by this score, i.e. the floppier molecule scores 1.06 kcal/mol better. Vina under-penalises the conformational entropy that an unconstrained chain loses on binding, so this is a property of the scoring function rather than evidence against cyclisation. It also means the score cannot be used to argue that the macrocycle is the better binder. Only a measured Kd can settle that."
     },
     {
       "angle": 11,
@@ -296,8 +307,10 @@
       "q_acidic_plaque_pH5_2": 2.747,
       "delta_q_stephan": 1.618,
       "is_ph_switch_active": true,
+      "histidine_count": 2,
+      "provenance": "computed_this_run",
       "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "CAHWRPWHC clears the Donnan mucosal partition ceiling (net charge 2.05 <= +4.0 at pH 6.0) and delivers an electrostatic surge of Delta Q = +1.62 across the Stephan acidogenic transition (pH 7.2 -> 5.2)."
+      "scientific_summary": "The lead clears the Donnan partition ceiling (net charge +2.05 against a +4.0 limit at pH 6.0) and its charge rises by Delta Q = +1.62 between pH 7.2 and pH 5.2. Read the second criterion carefully: with one titratable pKa near 6.0, that shift is about +0.809 per histidine, so Delta Q >= 1.0 is arithmetically a threshold on histidine count, satisfied here by the two histidines and by nothing else. It is not independent of the charge criterion above it, and it is not evidence that the peptide does anything in acid. Both are composition arithmetic, not a measurement of binding or of delivery."
     }
   ],
   "classification_summary": {
@@ -306,12 +319,12 @@
     "INCONCLUSIVE_WITHIN_NOISE": 5,
     "NOT_COMPUTED": 1,
     "NO_HOTSPOT_IDENTIFIED": 1,
-    "PASSED_IN_SILICO": 3
+    "PASSED_IN_SILICO": 2,
+    "SCORE_REPRODUCIBLE_POSE_NOT": 1
   },
   "provenance_summary": {
-    "computed_this_run": 1,
+    "computed_this_run": 8,
     "not_computed": 1,
-    "unlabelled": 7,
     "vault_query": 3
   },
   "formal_scientific_statement": "All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification."

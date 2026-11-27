@@ -877,3 +877,92 @@ def test_openmm_angle_never_claims_dynamics_or_a_temperature():
     assert "310.15 k" not in text, "no reported number here is produced at a temperature"
     for forbidden in ("molecular dynamics at", "ns molecular dynamics", "dynamics simulation of"):
         assert forbidden not in text
+
+
+def test_no_gate_reports_a_substituted_number_as_a_measurement():
+    """The viability screen must not report a literal in place of a measurement.
+
+    The instability index was replaced by 25.0, a comfortable pass, for any sequence
+    starting and ending with cysteine, which is every cyclic candidate in this library,
+    and the isoelectric point fell back to a lookup on the arginine count when biopython
+    was absent. Both were then reported to three decimal places as if measured.
+    """
+    viable, metrics = is_viable("CAHWRPWHC")
+
+    assert metrics["instability_index"] is None, (
+        "the Guruprasad index is out of domain for a cyclic peptide and must be reported "
+        "as not applicable, never substituted with a passing literal"
+    )
+    assert metrics["instability_index_applicable"] is False
+    assert "instability_index" not in metrics["gates_applied"]
+    assert metrics["instability_index"] != 25.0
+
+    if metrics["isoelectric_point"] is not None:
+        assert metrics["isoelectric_point_source"] == "biopython_ProteinAnalysis"
+    else:
+        assert metrics["isoelectric_point_source"] == "not_computed_biopython_missing"
+
+
+def test_stephan_switch_is_a_histidine_count_and_says_so():
+    """The acid switch must not be presented as an axis independent of composition."""
+    from solubility_shield import calc_stephan_switch
+
+    per_histidine = None
+    for sequence, histidines in (("CAAWRPWAC", 0), ("CAHWRPWAC", 1), ("CAHWRPWHC", 2)):
+        switch = calc_stephan_switch(sequence)
+        assert switch["histidine_count"] == histidines
+        if histidines:
+            step = switch["delta_q_stephan"] / histidines
+            if per_histidine is None:
+                per_histidine = step
+            assert abs(step - per_histidine) < 0.01, (
+                "delta_q must be linear in histidine count; it is the same titration repeated"
+            )
+    assert abs(per_histidine - 0.809) < 0.01
+    assert "histidine count" in calc_stephan_switch("CAHWRPWHC")["gate_note"]
+
+    # The gate is satisfied by two histidines and by nothing else in this library.
+    assert calc_stephan_switch("CAHWRPWAC")["is_ph_switch_active"] is False
+    assert calc_stephan_switch("CAHWRPWHC")["is_ph_switch_active"] is True
+
+
+def test_disulfide_gate_is_documented_as_non_discriminating():
+    """Every row in the vault passes the S-S window, so it cannot be called a filter."""
+    conn = sqlite3.connect(str(REPO_ROOT / "data" / "foundry_contenders.sqlite"))
+    try:
+        distances = [
+            row[0] for row in conn.execute(
+                "SELECT ss_bond_angstrom FROM contenders WHERE ss_bond_angstrom IS NOT NULL"
+            )
+        ]
+        statuses = [
+            row[0] for row in conn.execute("SELECT falsification_status FROM contenders")
+        ]
+    finally:
+        conn.close()
+
+    assert distances, "the vault must record S-S distances"
+    assert min(distances) >= 1.95 and max(distances) <= 2.25
+    assert "FALSIFIED_BROKEN_DISULFIDE" not in statuses, (
+        "no candidate has ever failed this gate; it is a build sanity check, not a filter"
+    )
+
+    # ...and the code must say so where the gate is applied, so nobody counts it as a
+    # filter a candidate survived.
+    for source in ("gtfb_orchestrator.py", "scripts/continuous_hunter.py"):
+        text = (REPO_ROOT / source).read_text(encoding="utf-8")
+        assert "build sanity check" in text, f"{source} must document what this gate measures"
+
+
+def test_protease_gate_does_discriminate():
+    """Counterweight to the above: this gate is real, and the record should show it."""
+    conn = sqlite3.connect(str(REPO_ROOT / "data" / "foundry_contenders.sqlite"))
+    try:
+        rows = [row[0] for row in conn.execute("SELECT protease_sites FROM contenders")]
+    finally:
+        conn.close()
+    failing = [n for n in rows if n and n > 0]
+    assert len(failing) > 50, (
+        "the protease criterion rejects a large fraction of the library, so it must not be "
+        "described as a gate that cannot fail"
+    )

@@ -92,9 +92,21 @@ def calc_net_charge_at_ph(seq: str, ph: float, is_cyclic: bool = True) -> float:
 
 
 def calc_stephan_switch(seq: str) -> Dict[str, float]:
-    """
-    Calculates Stephan-curve pH protonation shift between resting saliva (pH 7.2)
-    and cariogenic acidogenic plaque biofilm (pH 5.2).
+    """Charge shift between resting saliva (pH 7.2) and acidogenic plaque (pH 5.2).
+
+    Be clear about what this is. With a single titratable pKa near 6.0, the charge
+    gained per histidine between pH 7.2 and pH 5.2 is fixed by Henderson-Hasselbalch
+    at about +0.809, so for a sequence whose only titratable side chains are histidines
+
+        delta_q_stephan ~= 0.809 * (number of histidines)
+
+    Across the 260 rows in the vault this holds exactly for 239 of them, and the
+    remainder differ only by the small tyrosine contribution. The observed values
+    cluster at 0.000, 0.809, 1.618 and 2.427, which are nought, one, two and three
+    histidines. The downstream gate, delta_q >= 1.0, is therefore a threshold on
+    histidine count: it is satisfied by two or more histidines and by nothing else.
+    It is not an independent biophysical axis, and a candidate passing it has not been
+    shown to do anything in acid; it has been shown to contain two histidines.
     """
     q_resting = calc_net_charge_at_ph(seq, 7.2)
     q_acidic = calc_net_charge_at_ph(seq, 5.2)
@@ -103,7 +115,9 @@ def calc_stephan_switch(seq: str) -> Dict[str, float]:
         "q_pH7_2": q_resting,
         "q_pH5_2": q_acidic,
         "delta_q_stephan": delta_q,
-        "is_ph_switch_active": delta_q >= 1.0
+        "histidine_count": seq.count("H"),
+        "is_ph_switch_active": delta_q >= 1.0,
+        "gate_note": "delta_q >= 1.0 is equivalent to a histidine count of 2 or more; see the docstring.",
     }
 
 
@@ -192,38 +206,63 @@ def is_viable(sequence: str) -> Tuple[bool, dict]:
     # Protease resistance
     protease = count_protease_cleavage_sites(seq)
 
+    # The Guruprasad instability index is parameterised on linear proteins, so it is out
+    # of domain for a disulfide-cyclised nonapeptide. Earlier versions handled that by
+    # silently substituting the literal 25.0, a comfortable pass, and then reporting it
+    # as "instability_index" to three decimal places. Every cyclic candidate in this
+    # library starts and ends with cysteine, so the instability gate could not fail for
+    # any of them. It is now reported as not applicable and the gate is not applied, so
+    # nobody can read a fabricated 25.0 as a measurement. The same held for the
+    # isoelectric point when biopython is missing: 11.0, 9.5 and 6.5 were a lookup on the
+    # arginine count, not a computed pI.
+    is_cyclic_peptide = seq.startswith("C") and seq.endswith("C")
+    instability_raw = None
+    instability_applied = False
+    instability = None
+
     if HAS_BIOPYTHON:
         try:
             analyzer = ProteinAnalysis(seq)
             gravy = analyzer.gravy()
-            raw_instab = analyzer.instability_index()
-            if (seq.startswith("C") and seq.endswith("C")) or (arg_count >= 2 and len(seq) <= 20):
-                instability = 25.0
-            else:
-                instability = raw_instab
-            pi = analyzer.isoelectric_point()
+            instability_raw = round(analyzer.instability_index(), 3)
+            pi = round(analyzer.isoelectric_point(), 3)
+            pi_source = "biopython_ProteinAnalysis"
+            if not is_cyclic_peptide:
+                instability = instability_raw
+                instability_applied = True
         except Exception as e:
             return False, {"error": str(e)}
     else:
         gravy = sum(KD_HYDROPATHY.get(aa, 0.0) for aa in seq) / len(seq)
-        instability = 25.0
-        pi = 11.0 if arg_count >= 2 else (9.5 if arg_count == 1 else 6.5)
+        pi = None
+        pi_source = "not_computed_biopython_missing"
 
     metrics = {
         "gravy": round(gravy, 3),
-        "instability_index": round(instability, 3),
-        "isoelectric_point": round(pi, 3),
+        "instability_index": instability,
+        "instability_index_raw": instability_raw,
+        "instability_index_applicable": instability_applied,
+        "instability_index_note": (
+            "Not applied: the Guruprasad index is parameterised on linear proteins and is "
+            "out of domain for a disulfide-cyclised peptide. This screen therefore does "
+            "not test chemical stability at all."
+            if not instability_applied else
+            "Applied: linear sequence, within the index's domain."
+        ),
+        "isoelectric_point": pi,
+        "isoelectric_point_source": pi_source,
         "arg_count": arg_count,
         "net_charge_pH6": q_ph6,
         "stephan_switch": stephan,
         "protease": protease,
-        "chitosan_native": True
+        "chitosan_native": True,
+        "gates_applied": ["gravy"] + (["instability_index"] if instability_applied else []),
     }
 
     if gravy > MAX_GRAVY:
         return False, metrics
 
-    if instability > MAX_INSTABILITY:
+    if instability_applied and instability > MAX_INSTABILITY:
         return False, metrics
 
     return True, metrics

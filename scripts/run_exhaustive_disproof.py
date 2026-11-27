@@ -354,9 +354,24 @@ def evaluate_angle2_multiseed_reproducibility() -> Dict[str, Any]:
     centroid_arr = np.array(centroids) if centroids else np.zeros((1, 3))
     centroid_sd = float(np.mean(np.std(centroid_arr, axis=0)))
 
-    # Classification: Centroid localization within active cleft (< 1.0 A) and score SD < 0.6 kcal
-    passed = (score_sd < 0.6) and (centroid_sd < 1.0)
-    classification = "PASSED_IN_SILICO" if passed else "INCONCLUSIVE_WITHIN_NOISE"
+    # Three separate questions, which the old single verdict ran together. The score can
+    # be reproducible while the pose is not, and that is exactly what happens here: the
+    # old criteria were score SD < 0.6 and centroid SD < 1.0, both of which pass, while
+    # the mean pairwise pose RMSD of about 9 Angstroms went unexamined and the summary
+    # still claimed reproducible localisation. A pairwise RMSD of 9 A on a nonapeptide
+    # roughly 9 A across means the five seeds do not agree on a pose at all: they agree
+    # only on roughly where the centre of mass sits.
+    POSE_AGREEMENT_ANGSTROM = 2.0
+    score_reproducible = score_sd < 0.6
+    centroid_reproducible = centroid_sd < 1.0
+    pose_reproducible = bool(pairwise_rmsds) and mean_rmsd <= POSE_AGREEMENT_ANGSTROM
+
+    if score_reproducible and centroid_reproducible and pose_reproducible:
+        classification = "PASSED_IN_SILICO"
+    elif score_reproducible and centroid_reproducible:
+        classification = "SCORE_REPRODUCIBLE_POSE_NOT"
+    else:
+        classification = "INCONCLUSIVE_WITHIN_NOISE"
 
     return {
         "angle": 2,
@@ -368,8 +383,23 @@ def evaluate_angle2_multiseed_reproducibility() -> Dict[str, Any]:
         "mean_pairwise_rmsd_angstrom": round(mean_rmsd, 2),
         "max_pairwise_rmsd_angstrom": round(max_rmsd, 2),
         "centroid_sd_angstrom": round(centroid_sd, 2),
+        "pose_agreement_threshold_angstrom": POSE_AGREEMENT_ANGSTROM,
+        "score_reproducible": score_reproducible,
+        "centroid_reproducible": centroid_reproducible,
+        "pose_reproducible": pose_reproducible,
+        "provenance": PROVENANCE_COMPUTED,
         "classification": classification,
-        "scientific_summary": f"Across N=5 independent conformer and docking seeds, CAHWRPWHC converged with score mean {score_mean:.2f} +/- {score_sd:.2f} kcal/mol and tight active cleft centroid SD of {centroid_sd:.2f} A, demonstrating reproducible localization in the catalytic cleft."
+        "scientific_summary": (
+            f"Across N=5 independent conformer and docking seeds the score is reproducible "
+            f"({score_mean:.2f} +/- {score_sd:.2f} kcal/mol) and the centre of mass lands in the same "
+            f"region (centroid SD {centroid_sd:.2f} A), but the pose is not: mean pairwise heavy-atom "
+            f"RMSD between seeds is {mean_rmsd:.2f} A and the worst pair is {max_rmsd:.2f} A, against a "
+            f"{POSE_AGREEMENT_ANGSTROM:.1f} A agreement convention. On a nonapeptide of roughly that "
+            f"span, the seeds are not finding the same binding mode, so nothing here supports a claim "
+            f"about which contacts are made. A reproducible score over irreproducible poses is what a "
+            f"shallow, non-specific scoring surface looks like, and it is consistent with the "
+            f"scrambled-null result in Angle 5."
+        )
     }
 
 
@@ -429,6 +459,8 @@ def evaluate_angle3_pose_clustering() -> Dict[str, Any]:
         "centroid_distance_mode1_mode2_angstrom": round(centroid_dist_1_2, 2),
         "heavy_atom_rmsd_mode1_mode2_angstrom": round(rmsd_1_2, 2),
         "modes_summary": modes,
+        "provenance": PROVENANCE_COMPUTED if docked_pose.exists() else PROVENANCE_CACHED,
+        "pose_file": str(docked_pose.relative_to(REPO_ROOT)) if docked_pose.exists() else None,
         "classification": "PASSED_IN_SILICO" if passed else "INCONCLUSIVE_WITHIN_NOISE",
         "scientific_summary": f"Mode 1 demonstrates an energetic gap of Delta E = +{delta_e_top:.2f} kcal/mol relative to Mode 2, with centroid displacement of {centroid_dist_1_2:.2f} A, indicating a distinct primary binding basin."
     }
@@ -724,17 +756,42 @@ def evaluate_angle7_explicit_protonation() -> Dict[str, Any]:
     run_dock(acidic_pdbqt, "1SMD", docked_acidic_1smd)
 
     def parse_vina(path):
+        # Returns None when there is nothing to read. It used to return -8.0, a plausible
+        # looking score indistinguishable from a measurement, so a missing pose file
+        # produced a number rather than an absence.
         if path.exists():
             with open(path, "r", encoding="utf-8") as f:
                 for line in f:
                     if line.startswith("REMARK VINA RESULT:"):
                         return float(line.split()[3])
-        return -8.0
+        return None
 
-    score_n_3aic = parse_vina(docked_neutral_3aic)
-    score_a_3aic = parse_vina(docked_acidic_3aic)
-    score_n_1smd = parse_vina(docked_neutral_1smd)
-    score_a_1smd = parse_vina(docked_acidic_1smd)
+    parsed = {
+        "neutral_3AIC": parse_vina(docked_neutral_3aic),
+        "acidic_3AIC": parse_vina(docked_acidic_3aic),
+        "neutral_1SMD": parse_vina(docked_neutral_1smd),
+        "acidic_1SMD": parse_vina(docked_acidic_1smd),
+    }
+    unreadable = [name for name, value in parsed.items() if value is None]
+    if unreadable:
+        return {
+            "angle": 7,
+            "name": "pH-Dependent Explicit Histidine Protonation Test",
+            "classification": "NOT_COMPUTED",
+            "provenance": PROVENANCE_NOT_COMPUTED,
+            "missing_poses": unreadable,
+            "scientific_summary": (
+                "Not computed: no docked pose could be read for "
+                + ", ".join(unreadable)
+                + ". Dock the protonation variants and rerun; this angle no longer "
+                "substitutes a placeholder score for a missing file."
+            ),
+        }
+
+    score_n_3aic = parsed["neutral_3AIC"]
+    score_a_3aic = parsed["acidic_3AIC"]
+    score_n_1smd = parsed["neutral_1SMD"]
+    score_a_1smd = parsed["acidic_1SMD"]
 
     delta_3aic_protonation = round(score_a_3aic - score_n_3aic, 3)
     selectivity_acidic = round(score_a_3aic - score_a_1smd, 3)
@@ -757,9 +814,10 @@ def evaluate_angle7_explicit_protonation() -> Dict[str, Any]:
             "selectivity_ddg_kcal": selectivity_acidic
         },
         "affinity_shift_upon_protonation_kcal": delta_3aic_protonation,
-        "receptor_protonation_state": "Receptors 3AIC, 1SMD, and 1LZ1 were prepared at physiological pH 7.4; Angle 7 tests explicit diprotonation of the peptide ligand at plaque acidic pH 5.2 against the physiological receptor model.",
+        "receptor_protonation_state": "Receptors 3AIC, 1SMD, and 1LZ1 were prepared at physiological pH 7.4; Angle 7 tests explicit diprotonation of the peptide ligand at plaque acidic pH 5.2 against the physiological receptor model. The receptor is therefore at the wrong pH for the acidic case, which is a limitation of the comparison, not a property of the candidate.",
+        "provenance": PROVENANCE_COMPUTED,
         "classification": "INCONCLUSIVE_WITHIN_NOISE",
-        "scientific_summary": f"Explicit diprotonation at pH 5.2 shifts ligand formal charge from +1 to +3 (receptors prepared at physiological pH 7.4). GTF-SI binding free energy is {score_a_3aic:.2f} kcal/mol vs {score_n_3aic:.2f} kcal/mol at pH 7.2 (Delta = {delta_3aic_protonation:+.2f} kcal/mol). Explicit diprotonation weakens 3AIC score by 0.49 kcal/mol and slightly inverts raw 1SMD ranking within Vina's +/-2.85 kcal/mol error."
+        "scientific_summary": f"Explicit diprotonation at pH 5.2 shifts the ligand's formal charge from +1 to +3, against receptors prepared at pH 7.4. The GTF-SI score moves from {score_n_3aic:.2f} to {score_a_3aic:.2f} kcal/mol (Delta = {delta_3aic_protonation:+.2f} kcal/mol), so protonation weakens rather than strengthens the predicted binding, which is the opposite of the acid-activation story the formulation angle tells. The 1SMD ranking inverts by a similar margin. Both shifts are small enough to be unresolved against an assumed scoring error of 2.85 kcal/mol, a figure this repository quotes without a source."
     }
 
 
@@ -767,8 +825,13 @@ def evaluate_angle7_explicit_protonation() -> Dict[str, Any]:
 # ANGLE 8: Broad Oral Protease & Chymotrypsin / Peptidase Vulnerability Check
 # =========================================================================
 def evaluate_angle8_broad_protease_check() -> Dict[str, Any]:
-    prot = count_protease_cleavage_sites("CAHWRPWHC")
+    # Computed from the sequence on every run. Worth noting against the claim that this
+    # gate is toothless: across the 260 rows in the vault, 111 of them carry at least one
+    # trypsin site, so the protease criterion does discriminate, unlike the disulfide
+    # geometry check.
+    prot = count_protease_cleavage_sites(LEAD_SEQUENCE)
     return {
+        "provenance": PROVENANCE_COMPUTED,
         "angle": 8,
         "name": "Broad Oral Protease and Peptidase Vulnerability Check",
         "trypsin_salivary_sites": prot["trypsin_cleavage_sites"],
@@ -825,7 +888,8 @@ def evaluate_angle9_lysozyme_counter_screen() -> Dict[str, Any]:
         "target": "RCSB 1LZ1 (Human Salivary Lysozyme, 1.50 A)",
         "binding_groove_center": cfg["center"],
         "vina_1lz1_affinity_kcal": vina_1lz1,
-        "gtfb_3aic_affinity_kcal": vina_3aic,
+        "gtf_si_3aic_affinity_kcal": vina_3aic,
+        "provenance": PROVENANCE_COMPUTED if docked_1lz1.exists() else PROVENANCE_CACHED,
         "selectivity_ddg_kcal": selectivity_vs_lysozyme,
         "classification": "PASSED_IN_SILICO" if passed else "INCONCLUSIVE_WITHIN_NOISE",
         "scientific_summary": f"Counter-docking against the active cleft of human salivary lysozyme (1LZ1) yielded {vina_1lz1:.2f} kcal/mol (DeltaDeltaG = {selectivity_vs_lysozyme:+.2f} kcal/mol vs 3AIC), demonstrating negligible off-target affinity against innate mucosal protective enzymes."
@@ -881,7 +945,8 @@ def evaluate_angle10_linear_control() -> Dict[str, Any]:
                     linear_vina = float(line.split()[3])
                     break
 
-    cyclic_vina = -8.191
+    vault = _query_vault_affinity(LEAD_SEQUENCE)
+    cyclic_vina = round(vault["vina_3aic"], 3) if vault else -8.191
     cyclization_benefit_kcal = round(cyclic_vina - linear_vina, 3)
 
     return {
@@ -893,8 +958,9 @@ def evaluate_angle10_linear_control() -> Dict[str, Any]:
         "cyclization_benefit_kcal": cyclization_benefit_kcal,
         "rotatable_bonds_linear": 28,
         "rotatable_bonds_cyclic": 14,
+        "provenance": PROVENANCE_COMPUTED if docked_linear_3aic.exists() else PROVENANCE_CACHED,
         "classification": "INCONCLUSIVE_WITHIN_NOISE",
-        "scientific_summary": f"Linear non-cyclized peptide docked with {linear_vina:.2f} kcal/mol vs {cyclic_vina:.2f} kcal/mol for cyclic CAHWRPWHC (DeltaDeltaG = {cyclization_benefit_kcal:.2f} kcal/mol). Raw Vina scores flexible linear peptide 1.06 kcal/mol stronger than macrocycle, demonstrating Vina's under-penalization of unfolded conformational entropy; requires wet-lab ITC Kd."
+        "scientific_summary": f"The linear peptide docks at {linear_vina:.2f} kcal/mol against {cyclic_vina:.2f} kcal/mol for the cyclic lead, so cyclisation is worth {cyclization_benefit_kcal:+.2f} kcal/mol by this score, i.e. the floppier molecule scores {abs(cyclization_benefit_kcal):.2f} kcal/mol better. Vina under-penalises the conformational entropy that an unconstrained chain loses on binding, so this is a property of the scoring function rather than evidence against cyclisation. It also means the score cannot be used to argue that the macrocycle is the better binder. Only a measured Kd can settle that."
     }
 
 
@@ -1022,8 +1088,10 @@ def evaluate_angle12_chitosan_and_stephan() -> Dict[str, Any]:
         "q_acidic_plaque_pH5_2": stephan["q_pH5_2"],
         "delta_q_stephan": stephan["delta_q_stephan"],
         "is_ph_switch_active": switch_ok,
+        "histidine_count": LEAD_SEQUENCE.count("H"),
+        "provenance": PROVENANCE_COMPUTED,
         "classification": "PASSED_IN_SILICO",
-        "scientific_summary": f"CAHWRPWHC clears the Donnan mucosal partition ceiling (net charge {q_ph6:.2f} <= +4.0 at pH 6.0) and delivers an electrostatic surge of Delta Q = +{stephan['delta_q_stephan']:.2f} across the Stephan acidogenic transition (pH 7.2 -> 5.2)."
+        "scientific_summary": f"The lead clears the Donnan partition ceiling (net charge {q_ph6:+.2f} against a +4.0 limit at pH 6.0) and its charge rises by Delta Q = {stephan['delta_q_stephan']:+.2f} between pH 7.2 and pH 5.2. Read the second criterion carefully: with one titratable pKa near 6.0, that shift is about +0.809 per histidine, so Delta Q >= 1.0 is arithmetically a threshold on histidine count, satisfied here by the two histidines and by nothing else. It is not independent of the charge criterion above it, and it is not evidence that the peptide does anything in acid. Both are composition arithmetic, not a measurement of binding or of delivery."
     }
 
 
