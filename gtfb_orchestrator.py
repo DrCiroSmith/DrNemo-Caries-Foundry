@@ -197,7 +197,15 @@ def evaluate_biophysics_node(state: GtfBEvolutionState) -> Dict[str, Any]:
 
 
 def falsify_and_rank_node(state: GtfBEvolutionState) -> Dict[str, Any]:
-    """Applies Popperian falsification criteria and assigns Pareto ranks."""
+    """Applies the falsification criteria and assigns a status tier.
+
+    Note the name: pareto_rank is not a Pareto rank. It is 1 for a candidate that
+    survived every gate, 2 for one that failed a soft gate and 3 for a hard failure,
+    so it is a tier derived from falsification_status and nothing in it tests
+    dominance. On the committed database it agrees with the status on all 260 rows.
+    For the real front, run scripts/compute_pareto_front.py, which shows that the
+    lead is on neither the overall front nor the front over survivors.
+    """
     ranked = []
     winning = None
     
@@ -320,7 +328,7 @@ def verify_vault():
     
     if champ:
         print("\n" + "-" * 70)
-        print("PARETO REFERENCE SCAFFOLD (Non-Dominated Candidate):")
+        print("REFERENCE SCAFFOLD (highest status tier; NOT non-dominated, see scripts/compute_pareto_front.py):")
         print(f"  Sequence:         {champ['sequence']}")
         print(f"  GTF-SI (3AIC):      {champ['vina_3aic_kcal']} kcal/mol")
         print(f"  Amylase (1SMD):   {champ['vina_1smd_kcal']} kcal/mol")
@@ -342,7 +350,7 @@ def run_demo():
     print("Evaluating baseline candidates:")
     print("  1. CRRRWWRRRRC: Naive poly-arginine heuristic control")
     print("  2. CPHWRPWHC  : Wild-type generation 1 lead")
-    print("  3. CAHWRPWHC  : P2A hinge mutant Pareto candidate")
+    print("  3. CAHWRPWHC  : the wild type's P2A mutant, the lead this campaign pursued")
     
     init_state: GtfBEvolutionState = {
         "generation": 1,

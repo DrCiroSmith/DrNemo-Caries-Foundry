@@ -222,7 +222,13 @@ class ContenderVault:
         return count
 
     def get_pareto_champion(self) -> Optional[Dict[str, Any]]:
-        """Returns the #1 Pareto lead (best affinity + selectivity passing all oral & amylase gates)."""
+        """Returns the best-scoring row that survived every gate.
+
+        Not a Pareto champion, despite the name: this orders by score, it does not
+        test dominance, and the row it returns is not on the Pareto front of the
+        committed database. scripts/compute_pareto_front.py computes the real front.
+        The name is kept because callers and the stored reports use it.
+        """
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
