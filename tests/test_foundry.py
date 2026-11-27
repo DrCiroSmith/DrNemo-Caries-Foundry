@@ -306,7 +306,9 @@ def test_falsification_angle3_scrambled_null_permutation():
     assert gate3["classification"] == "INCONCLUSIVE_WITHIN_NOISE"
     # N=39 isomers evaluated empirically
     assert gate3["null_mean"] <= -8.0
-    assert gate3["p_value"] == 0.5897
+    # (k+1)/(n+1) with k=23 and n=39. The bare proportion 23/39 = 0.5897 was
+    # published as this p value; it is not the permutation estimator.
+    assert gate3["p_value"] == 0.600
     assert gate3["b_count"] >= 0
 
 
@@ -700,7 +702,7 @@ def test_falsification_engine_programmatic_thresholds():
     assert g1["classification"] == "CALIBRATION_WARNING"
     
     g3 = audit["gates"]["gate3_scrambled_null_permutation"]
-    assert g3["p_value"] == 0.5897
+    assert g3["p_value"] == 0.600  # (k+1)/(n+1), not the 23/39 proportion
     assert g3["z_score"] == 0.3241 or round(g3["z_score"], 2) == 0.32
     assert g3["lead_passed"] is False
     assert g3["classification"] == "INCONCLUSIVE_WITHIN_NOISE"
@@ -885,9 +887,16 @@ def test_angles_report_where_their_numbers_came_from():
 
     # p is the empirical rank, recomputed from the null rows, not a normal-theory p.
     assert angle5["p_value_kind"] == "one_sided_empirical_rank"
-    assert angle5["p_value"] == round(
-        angle5["scrambles_at_least_as_good_as_lead"] / angle5["n_isomers"], 4
-    )
+    # And the estimator counts the lead among the exchangeable scores. The bare
+    # proportion k/n was published under this field's name; it is biased downward and
+    # can return zero from a finite control set.
+    assert angle5["p_value_estimator"] == "(k+1)/(n+1)"
+    k = angle5["scrambles_at_least_as_good_as_lead"]
+    n = angle5["n_isomers"]
+    assert angle5["p_value"] == round((k + 1) / (n + 1), 4), (
+        f"angle 5's p is not (k+1)/(n+1) for k={k}, n={n}")
+    assert angle5["raw_proportion_at_least_as_good"] == round(k / n, 4)
+    assert angle5["p_value"] > angle5["raw_proportion_at_least_as_good"]
     assert not angle5["is_null_hypothesis_rejected"]
 
 

@@ -1710,7 +1710,7 @@
           </div>
           <div class="metric-cell">
             <span class="metric-cell-label">Permutation Null (N=39)</span>
-            <span class="metric-cell-val teal" id="metric-scrambled">Z = +0.32σ (p=0.5897)</span>
+            <span class="metric-cell-val teal" id="metric-scrambled">Z = +0.32σ (p=0.600)</span>
           </div>
           <div class="metric-cell">
             <span class="metric-cell-label">Ala Scan (largest loss, WT parent)</span>
@@ -1797,7 +1797,7 @@
                 </div>
                 <div class="matrix-row-stat">
                   <span class="status-tag warn">INCONCLUSIVE (H0)</span>
-                  <span class="matrix-row-metric">Z = +0.32σ | p = 0.5897</span>
+                  <span class="matrix-row-metric">Z = +0.32σ | p = 0.600</span>
                 </div>
               </div>
 
@@ -1880,7 +1880,7 @@
             </div>
 
             <div class="verdict-note">
-              <strong>Popperian Comparative Verdict:</strong> Candidate <code>CAHWRPWHC</code> faced 12 computational disproof tests and did not survive them: no passes, 6 Inconclusive within Noise, 1 At Risk, 3 Negative, 1 Composition Arithmetic Only, 1 Not Computed. An earlier version of this note counted one pass while this table carried two tags reading PASSED, on Angles 9 and 12; both are withdrawn above and the count is corrected here. Three results are load-bearing against the hypothesis. Redocking the crystallographic acarbose of 3AIC returns a symmetry-corrected RMSD of 4.51 &#8491; against the 2.0 &#8491; convention, so the scoring function is not calibrated for pose prediction in this box (Angle 1). Across 5 seeds the score reproduces to &#177;0.37 kcal/mol while the mean pairwise pose RMSD is 9.24 &#8491;, so nothing here supports a claim about which contacts are made (Angle 2). The alanine scan of the wild type reaches a largest affinity loss of +0.26 kcal/mol against this repository's own +0.70 kcal/mol threshold, so no residue is an energetic anchor, and three substitutions improve the score (Angle 6). A reproducible score over irreproducible poses, no hotspot, and a scrambled-sequence null the lead does not beat (p = 0.5897, Angle 5) are together what a shallow, non-specific scoring surface looks like. The amylase selectivity margin (Angle 4) is read against a &#177;2.85 kcal/mol error figure this repository assumes and never cites. Angle 11 was not run: openmm is not installed here, so there is no relaxation drift figure. Results are in silico hypotheses and the negative ones are the findings; nothing here is a corroborated inhibitor.
+              <strong>Popperian Comparative Verdict:</strong> Candidate <code>CAHWRPWHC</code> faced 12 computational disproof tests and did not survive them: no passes, 6 Inconclusive within Noise, 1 At Risk, 3 Negative, 1 Composition Arithmetic Only, 1 Not Computed. An earlier version of this note counted one pass while this table carried two tags reading PASSED, on Angles 9 and 12; both are withdrawn above and the count is corrected here. Three results are load-bearing against the hypothesis. Redocking the crystallographic acarbose of 3AIC returns a symmetry-corrected RMSD of 4.51 &#8491; against the 2.0 &#8491; convention, so the scoring function is not calibrated for pose prediction in this box (Angle 1). Across 5 seeds the score reproduces to &#177;0.37 kcal/mol while the mean pairwise pose RMSD is 9.24 &#8491;, so nothing here supports a claim about which contacts are made (Angle 2). The alanine scan of the wild type reaches a largest affinity loss of +0.26 kcal/mol against this repository's own +0.70 kcal/mol threshold, so no residue is an energetic anchor, and three substitutions improve the score (Angle 6). A reproducible score over irreproducible poses, no hotspot, and a scrambled-sequence null the lead does not beat (p = 0.600, Angle 5) are together what a shallow, non-specific scoring surface looks like. The amylase selectivity margin (Angle 4) is read against a &#177;2.85 kcal/mol error figure this repository assumes and never cites. Angle 11 was not run: openmm is not installed here, so there is no relaxation drift figure. Results are in silico hypotheses and the negative ones are the findings; nothing here is a corroborated inhibitor.
             </div>
           </div>
 
@@ -2175,7 +2175,7 @@
         openmm: "200-step steric relaxation",
         vina: "-8.191 kcal/mol",
         amylase: "ΔΔG -0.85 kcal/mol",
-        scrambled: "Z = +0.32σ (p=0.5897)",
+        scrambled: "Z = +0.32σ (p=0.600)",
         hotspot: "not scanned (WT parent only)",
         stephan: "ΔQ = +1.62 (pH 5.2)",
         protease: "0 Sites (RP Shielded)",

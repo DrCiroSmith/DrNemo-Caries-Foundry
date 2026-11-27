@@ -17,7 +17,7 @@
   <a href="https://openmm.org"><img src="https://img.shields.io/badge/ForceField-OpenMM_Amber14-blueviolet.svg" alt="OpenMM Amber14"></a>
 </p>
 
-An open-source computational falsification case study and screening pipeline evaluating cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-SI (GTF-SI, gtfC gene product, UniProt P13470). Built on AutoDock Vina v1.2.7 / Vinardo empirical grid docking and OpenMM Amber14/GBn2 isolated-ligand steric minimization (200 steps), the platform demonstrates how automated negative controls (4.51 A co-crystal redocking drift, p = 0.5897 scrambled null permutation, and pH 5.2 histidine diprotonation inversion) systematically catch false-positive docking leads, No contender in the 260-row vault is corroborated: the best of them survive every in silico gate, which is not evidence of enzyme inhibition, and the leading candidate does not separate from its charge-matched scrambled nulls ($Z = +0.32$, $p = 0.5897$). All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
+An open-source computational falsification case study and screening pipeline evaluating cyclic disulfide macrocycle inhibitors of *Streptococcus mutans* glucosyltransferase-SI (GTF-SI, gtfC gene product, UniProt P13470). Built on AutoDock Vina v1.2.7 / Vinardo empirical grid docking and OpenMM Amber14/GBn2 isolated-ligand steric minimization (200 steps), the platform demonstrates how automated negative controls (4.51 A co-crystal redocking drift, p = 0.600 scrambled null permutation, and pH 5.2 histidine diprotonation inversion) systematically catch false-positive docking leads, No contender in the 260-row vault is corroborated: the best of them survive every in silico gate, which is not evidence of enzyme inhibition, and the leading candidate does not separate from its charge-matched scrambled nulls ($Z = +0.32$, $p = 0.600$). All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification.
 
 ---
 
@@ -94,7 +94,7 @@ In accordance with Karl Popper's demarcation principle, candidate **CAHWRPWHC** 
 | **2** | Multi-Seed Conformer & Docking (4 independent seeds) | Score -8.08 +/- 0.41 kcal/mol and centroid SD 0.39 A, but the pose does not reproduce: mean pairwise RMSD between seeds 9.11 A, worst pair 11.80 A, against a 2.0 A convention. Distances are over the 84 real heavy atoms; counting Meeko's two macrocycle glue pseudo-atoms as atoms, which is what the earlier figures did, gives 9.34 A, 12.19 A and 0.38 A. Published earlier as N=5 at -8.10 +/- 0.37; seed 42 is excluded because its docked pose is byte-identical to the campaign pose across all nine modes, so it is not an independent replicate. Spreads here and there are population SDs over the runs in each set, which is why the figure moves from 0.37 to 0.41 on one fewer run; the sample SDs are 0.41 over the five and 0.48 over the four. Recompute: `python3 scripts/compute_paper_numbers.py` | `SCORE_REPRODUCIBLE_POSE_NOT` |
 | **3** | Pose Mode Clustering & Energy Gap | Mode 1-2 Delta E = +0.10 kcal/mol, centroid shift 1.78 A, heavy-atom RMSD 5.63 A over 84 atoms. Published earlier as 1.74 A and 5.58 A, which counted the two glue pseudo-atoms as atoms | `INCONCLUSIVE_WITHIN_NOISE` |
 | **4** | Force-Field Error Margin on 1SMD Selectivity | DeltaDeltaG = -0.848 kcal/mol against an assumed 2.85 kcal/mol scoring error, which carries no citation in this repository | `INCONCLUSIVE_WITHIN_NOISE` |
-| **5** | Charge-Matched Scrambled Null (N=39) | Lead -8.191 vs Null -8.343 +/- 0.470 (Z = +0.32, p = 0.5897) | `INCONCLUSIVE_WITHIN_NOISE` |
+| **5** | Charge-Matched Scrambled Null (N=39) | Lead -8.191 vs Null -8.343 +/- 0.470 (Z = +0.32; one-sided permutation p = (k+1)/(n+1) = 24/40 = 0.600, counting the lead among the exchangeable scores). The 39 controls are permutations of the parent and not of the lead. Published earlier as 0.5897, which is the raw proportion 23/39 and not a p value | `INCONCLUSIVE_WITHIN_NOISE` |
 | **6** | In-Silico Alanine-Scanning Mutagenesis | No residue reaches the +0.70 kcal/mol hotspot threshold; largest loss is W7A at +0.257 kcal/mol; P6A opens a trypsin site | `NO_HOTSPOT_IDENTIFIED` |
 | **7** | Explicit pH 5.2 Histidine Diprotonation | Formal charge +1 -> +3; 3AIC -7.71 vs 1SMD -7.89 kcal/mol (Delta = +0.48, slight 1SMD inversion within noise) | `INCONCLUSIVE_WITHIN_NOISE` |
 | **8** | Broad Oral Protease & Peptidase Check | Trypsin shielded (Arg5-Pro6); Trp4/Trp7 vulnerable to chymotrypsin | `AT_RISK` |
@@ -125,8 +125,8 @@ with `--check`.
 scrambles average -8.343 kcal/mol with a sample SD of 0.470, and 23 of the 39
 score at least as well as the lead's -8.191. The one-sided permutation p is
 (23 + 1) / (39 + 1) = 0.600, and for the parent it is 0.675. Earlier versions
-of this section gave p = 0.5897, which is 23/39, the raw proportion rather than
-a p value; the conclusion is the same either way, and neither number is close to
+of this section gave 0.5897 for it, which is 23/39, the raw proportion rather
+than a p value; the conclusion is the same either way, and neither number is close to
 significance. The controls are permutations of the parent `CPHWRPWHC`, not of
 the lead, so this is a null matched to the wrong molecule, and the figure should
 be read as a test the lead was never given rather than as a test it passed.

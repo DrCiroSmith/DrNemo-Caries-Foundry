@@ -165,7 +165,6 @@ class FalsificationEngine:
             "mean_kcal": -8.343,
             "std_kcal": 0.470,
             "z_score": 0.32,
-            "p_value": 0.5897,
             "b_count": 23
         })
 
@@ -179,7 +178,15 @@ class FalsificationEngine:
         gate1_passed = bool(gate1_rmsd < 2.0 and gate1_delta_g < -7.0)
 
         gate3_z = scrambled_data.get("z_score", 0.32)
-        gate3_p = scrambled_data.get("p_value", 0.5897)
+        # Recomputed from the counts rather than read from the record. The recorded
+        # p_value is the raw proportion k/n, which is not the one-sided empirical rank p
+        # of a permutation test: under H0 the lead is one draw from the same
+        # distribution as its scrambles, so the estimator counts it among them,
+        # (k+1)/(n+1). With k=23 and n=39 that is 0.600; the raw proportion is 0.5897.
+        _b = scrambled_data.get("b_count", 23)
+        _n = scrambled_data.get("n_isomers", 39)
+        gate3_p = round((_b + 1) / (_n + 1), 4)
+        gate3_p_raw_proportion = round(_b / _n, 4)
         gate3_passed = bool(gate3_p < 0.05 and gate3_z < -1.96)
 
         # 6 Falsification Gate Verdicts
@@ -214,7 +221,7 @@ class FalsificationEngine:
                 "b_count": scrambled_data.get("b_count", 23),
                 "linear_loss_delta": benchmark.get("linear_control", {}).get("cyclization_delta_kcal", -0.803),
                 "classification": "INCONCLUSIVE_WITHIN_NOISE",
-                "null_reality_check": "H0 not rejected (Z = +0.32, p = 0.5897); rigid-receptor static docking under-penalizes aqueous conformational entropy",
+                "null_reality_check": "H0 not rejected (Z = +0.32, one-sided empirical rank p = 0.600, a raw proportion of 0.5897); rigid-receptor static docking under-penalizes aqueous conformational entropy",
                 "criterion": "Statistical significance: p < 0.05 and Z < -1.96 vs empirical N=39 null permutation battery"
             },
             "gate4_alanine_hotspot_scan": {

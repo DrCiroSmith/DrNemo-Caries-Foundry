@@ -827,7 +827,7 @@ with tab_popper:
     with col_p2:
         st.metric(label="Amylase 1SMD ΔΔG (CAHWRPWHC)", value="-0.848 kcal/mol", delta="Inconclusive (assumed ±2.85, uncited)")
     with col_p3:
-        st.metric(label="Scrambled Permutation Z", value="+0.32σ", delta="p = 0.5897 (H0 Not Rejected)")
+        st.metric(label="Scrambled Permutation Z", value="+0.32σ", delta="p = 0.600 (H0 Not Rejected)")
     with col_p4:
         st.metric(label="Broad Oral Proteases", value="At Risk (W4, W7)", delta="Trypsin Shielded (RP)")
 
@@ -862,7 +862,7 @@ with tab_popper:
         * **Angle 2 (Multi-Seed, 4 independent seeds):** Score mean **-8.08 ± 0.41 kcal/mol** (population SD) and centroid SD **0.39 Å** both reproduce, but mean pairwise pose RMSD is **9.11 Å** (worst pair 11.80 Å, both over the 84 real heavy atoms) against a 2.0 Å convention, so the seeds are not finding the same binding mode (`SCORE_REPRODUCIBLE_POSE_NOT`). Published earlier as N=5 at -8.10 ± 0.37; seed 42 is excluded because its docked pose is byte-identical to the campaign pose across all nine modes.
         * **Angle 3 (Pose Mode Clustering):** Mode 1-2 gap **+0.10 kcal/mol**, centroid shift **1.78 Å**, heavy-atom RMSD **5.63 Å** (`INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 4 (1SMD Selectivity Reality Check):** ΔΔG = **-0.85 kcal/mol** vs Vina SE ~2.85 kcal/mol (`INCONCLUSIVE_WITHIN_NOISE`).
-        * **Angle 5 (Null Permutation, N=39):** Z = **+0.32σ**, p = **0.5897** (null mean -8.343 ± 0.470 kcal/mol; static docking fails to reject H0; `INCONCLUSIVE_WITHIN_NOISE`).
+        * **Angle 5 (Null Permutation, N=39):** Z = **+0.32σ**, p = **0.600** (null mean -8.343 ± 0.470 kcal/mol; static docking fails to reject H0; `INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 6 (Alanine Hotspot Scan):** no hotspot. Against the wild-type parent `CPHWRPWHC` (-8.062), the largest affinity loss is W7A at +0.257 kcal/mol, well under the +0.70 threshold (`NO_HOTSPOT_IDENTIFIED`).
         * **Angle 7 (Explicit pH 5.2):** Diprotonated His **-7.706 kcal/mol** in 3AIC / **-7.891 kcal/mol** in 1SMD (slight ranking inversion within Vina SE; `INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 8 (Protease Vulnerability):** Trypsin shielded by Pro6, but chymotrypsin/cathepsin G cleaves Trp4/Trp7 (`AT_RISK`).

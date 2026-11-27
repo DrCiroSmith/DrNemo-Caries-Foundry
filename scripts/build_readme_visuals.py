@@ -905,7 +905,7 @@ body {{ width:1200px; height:760px; overflow:hidden; padding:18px; }}
         <div class="badge-letter">B</div>
         <div class="cell-title">N=39 Scrambled Null Isomer Distribution</div>
       </div>
-      <div class="cell-meta">Z = +0.32σ · p = 0.5897 (H0 Not Rejected)</div>
+      <div class="cell-meta">Z = +0.32σ · p = 0.600 (H0 Not Rejected)</div>
     </div>
     <div class="chart-box">
       <svg width="530" height="235" viewBox="0 0 530 235">

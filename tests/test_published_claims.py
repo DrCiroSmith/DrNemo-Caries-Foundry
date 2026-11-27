@@ -19,6 +19,7 @@ Two things are pinned here.
 import hashlib
 import itertools
 import json
+import re
 import math
 import statistics
 from pathlib import Path
@@ -297,3 +298,81 @@ def test_the_correction_did_not_silently_improve_the_result():
         f"dropping the duplicated run moves the mean by {shift:.3f} kcal/mol, "
         f"which is no longer a rounding matter: the published prose says the "
         f"result barely moves and would need rewriting")
+
+
+# ---------------------------------------------------------------------------
+# The permutation p value
+#
+# The project published p = 0.5897 for the scrambled null. That is 23/39, the
+# bare proportion of controls scoring at least as well as the lead, and it was
+# labelled a one-sided empirical rank p in the code, the README, the page, the
+# dashboard, the benchmark file, four notebooks and two test assertions. The
+# estimator for a permutation test counts the observation among the null,
+# (k+1)/(n+1) = 24/40 = 0.600, because under the null the lead is one draw from
+# the same distribution as its scrambles. The conclusion does not change: both
+# figures are far from significance. The label did change, and a reader who
+# recomputes the number should land on the same one the text prints.
+# ---------------------------------------------------------------------------
+
+# A file may state the old figure where it says what that figure was, so the old
+# number is not banned outright. What is banned is writing it in the form of a p
+# value: "p = 0.5897" and its variants. A historical note can say "0.5897, the raw
+# proportion 23/39" and carry the same information without asserting it as p. An
+# earlier version of this test allowed any line holding an explaining word, which
+# let a line both assert the figure and explain it away.
+_P_AS_A_P_VALUE = re.compile(r"\$?p\s*(?:=|:)\s*\**\$?\s*0\.5897", re.IGNORECASE)
+
+_P_SURFACES = (
+    "README.md",
+    "FALSIFICATION_BENCHMARK.md",
+    "dashboard.py",
+    "docs/index.html",
+    "falsification_engine.py",
+    "scripts/run_exhaustive_disproof.py",
+    "scripts/build_educational_sops.py",
+    "scripts/build_sop_notebook.py",
+    "scripts/build_readme_visuals.py",
+    "paper/negative_result_GTF-SI.md",
+)
+
+
+def test_the_published_p_value_is_the_permutation_estimator():
+    """No surface states the raw proportion in the form of a p value."""
+    offenders = []
+    for rel in _P_SURFACES:
+        path = REPO / rel
+        if not path.exists():
+            continue
+        for number, line in enumerate(path.read_text().splitlines(), start=1):
+            if "0.5897" in line and _P_AS_A_P_VALUE.search(line):
+                offenders.append(f"{rel}:{number}: {line.strip()[:120]}")
+    assert not offenders, (
+        "0.5897 is written as a p value; it is the raw proportion 23/39, and the "
+        "permutation p is (k+1)/(n+1) = 0.600:\n" + "\n".join(offenders))
+
+
+def test_no_notebook_states_the_old_p_value():
+    """The notebooks are generated, and the generators were corrected, so a hit
+    here means a notebook was committed without being regenerated. That already
+    happened once: the Angle 9 label was corrected in the generator and the
+    committed notebook kept the old one."""
+    stale = [str(p.relative_to(REPO)) for p in (REPO / "notebooks").glob("*.ipynb")
+             if "0.5897" in p.read_text()]
+    assert not stale, f"regenerate these notebooks from their builders: {stale}"
+
+
+def test_the_battery_recomputes_p_from_its_own_counts():
+    """The recorded report carries the old figure, and it is left alone as the
+    record of that run. The code must not agree with it."""
+    recorded = json.loads(DISPROOF.read_text())
+    angles = recorded.get("angles") or recorded.get("disproof_angles") or []
+    angle5 = next(a for a in angles if a.get("angle") == 5)
+    k = angle5["scrambles_at_least_as_good_as_lead"]
+    n = angle5["n_isomers"]
+    assert angle5["p_value"] == round(k / n, 4), (
+        "the recorded report no longer carries the raw proportion, so this test has "
+        "lost its subject; if the report was regenerated, that is the thing to check")
+    source = (REPO / "scripts" / "run_exhaustive_disproof.py").read_text()
+    assert "(better_or_equal + 1) / (n_isomers + 1)" in source, (
+        "angle 5 no longer computes (k+1)/(n+1)")
+    assert round((k + 1) / (n + 1), 4) == 0.600

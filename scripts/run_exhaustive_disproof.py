@@ -553,11 +553,21 @@ def evaluate_angle5_scrambled_null_test() -> Dict[str, Any]:
         provenance = PROVENANCE_CACHED
 
     z_score = round((lead_score - null_mean) / null_std, 2)
-    # One-sided empirical rank p: the fraction of charge-matched scrambles that dock at
-    # least as well as the lead. This is NOT a two-tailed normal p-value on the Z score,
-    # which an earlier version of this function labelled it as; with N=39 the rank
-    # statistic is the defensible one, since the null scores are not assumed Gaussian.
-    p_value = round(better_or_equal / n_isomers, 4)
+    # One-sided empirical rank p. This is NOT a two-tailed normal p-value on the Z
+    # score, which an earlier version of this function labelled it as; with N=39 the
+    # rank statistic is the defensible one, since the null scores are not assumed
+    # Gaussian. The estimator counts the observation among the null, (k+1)/(n+1), not
+    # the bare proportion k/n: under H0 the lead is one draw from the same
+    # distribution as its scrambles, so there are n+1 exchangeable scores and at least
+    # k+1 of them are as good as the lead, itself included. k/n is biased downward and
+    # can return 0, which would claim a p of zero from 39 controls. An earlier version
+    # of this function returned k/n = 0.5897 under this field's name, and that figure
+    # reached the README, the page, the dashboard, the benchmark file, four notebooks
+    # and two test assertions. The proportion is still reported below, under its own
+    # name, because it is a legitimate descriptive figure and it is what those
+    # documents published.
+    raw_proportion = round(better_or_equal / n_isomers, 4)
+    p_value = round((better_or_equal + 1) / (n_isomers + 1), 4)
     is_h0_rejected = p_value < 0.05
 
     return {
@@ -571,6 +581,8 @@ def evaluate_angle5_scrambled_null_test() -> Dict[str, Any]:
         "scrambles_at_least_as_good_as_lead": better_or_equal,
         "p_value": p_value,
         "p_value_kind": "one_sided_empirical_rank",
+        "p_value_estimator": "(k+1)/(n+1)",
+        "raw_proportion_at_least_as_good": raw_proportion,
         "is_null_hypothesis_rejected": is_h0_rejected,
         "provenance": provenance,
         "classification": "INCONCLUSIVE_WITHIN_NOISE",
@@ -578,7 +590,8 @@ def evaluate_angle5_scrambled_null_test() -> Dict[str, Any]:
             f"{LEAD_SEQUENCE} docks at {lead_score} kcal/mol against GTF-SI. Its N={n_isomers} "
             f"charge-matched scrambled isomers average {null_mean} +/- {null_std} kcal/mol, and "
             f"{better_or_equal} of {n_isomers} of them dock at least as well as the lead "
-            f"(one-sided empirical rank p = {p_value}, Z = {z_score:+.2f}). H0 is not rejected: on "
+            f"(one-sided empirical rank p = (k+1)/(n+1) = {p_value}, a raw proportion of "
+            f"{raw_proportion}, Z = {z_score:+.2f}). H0 is not rejected: on "
             f"this evidence the lead's sequence carries no detectable specificity, and the docking "
             f"score is consistent with amino-acid composition alone. Reproduce with: "
             f"sqlite3 data/foundry_contenders.sqlite"
