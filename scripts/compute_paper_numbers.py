@@ -741,6 +741,13 @@ def main():
          f"{min(ss)} to {max(ss)}", "this script")
     emit("R", "rows failing a 1.95 to 2.25 A disulfide window",
          sum(1 for v in ss if not 1.95 <= v <= 2.25), "this script")
+    # FALSIFICATION_BENCHMARK.md states that 111 of the 260 rows carry at least
+    # one trypsin site. That count was derivable from the ledger but nothing
+    # emitted it, so a provenance audit could only trace it to a Python literal
+    # elsewhere in the tree. Emitted here so the figure has a source.
+    emit("R", "rows carrying at least one protease cleavage site",
+         f"{sum(1 for r in rows if r['protease_sites'] >= 1)} of {len(rows)}",
+         "this script")
 
     # ------------------------------------------------- angle 10, cyclisation
     heading("11. Angle 10 and the linear controls")
