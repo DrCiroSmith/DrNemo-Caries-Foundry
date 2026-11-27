@@ -32,6 +32,15 @@ from provenance import audit  # noqa: E402
 BASELINE = REPO / "data" / "provenance_baseline.json"
 
 
+def _display(path: str) -> str:
+    """Repository-relative where possible, absolute otherwise. Never raises."""
+    resolved = Path(path).resolve()
+    try:
+        return str(resolved.relative_to(REPO))
+    except ValueError:
+        return str(resolved)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default=None,
@@ -43,7 +52,10 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", dest="as_json")
     args = ap.parse_args()
 
-    root = Path(args.root) if args.root else REPO
+    # Resolved up front, so a relative --root behaves exactly like an absolute
+    # one. Before this, "--root ." reached the display code with relative paths
+    # and crashed there.
+    root = Path(args.root).resolve() if args.root else REPO
     paths = [p for p in sorted(root.rglob("*.pdbqt")) if ".git" not in p.parts]
     baseline = {}
     if not args.no_baseline and BASELINE.exists():
@@ -71,7 +83,7 @@ def main() -> int:
         print(f"\n  known  [{g['kind']}] {len(g['files'])} files, "
               f"digest {g['coordinate_digest'][:12]}")
         for f in g["files"]:
-            print(f"           {Path(f).relative_to(REPO) if REPO in Path(f).resolve().parents else f}")
+            print(f"           {_display(f)}")
 
     for g in soft:
         print(f"\n  NOTE   one run written under {len(g['files'])} names, "

@@ -2,15 +2,18 @@
 
 Section 3.3b of paper/negative_result_GTF-SI.md states that the margin this
 screen produced cannot be brought inside a 5 per cent rejection region by
-adding control sequences, because the null's dispersion is run-to-run noise
-rather than sequence. That argument is arithmetic on two committed artefacts.
-If either changes, the argument has to be rewritten rather than quietly
-inherited, so these tests recompute every number in it and also check that the
-prose still carries the recomputed values.
+adding control sequences, because the rejection boundary is set by the null's
+dispersion rather than by the number of controls. That argument is arithmetic
+on two committed artefacts. If either changes, the argument has to be rewritten
+rather than quietly inherited, so these tests recompute every number in it and
+also check that the prose still carries the recomputed values.
 
-The load-bearing one is test_the_nulls_spread_is_not_sequence_driven. If it
-ever fails, Section 3.3b is wrong and the paper must not be published as it
-stands.
+The load-bearing one is test_the_nulls_spread_is_not_demonstrably_sequence_driven.
+It pins the comparison the section is allowed to make, which is that the two
+standard deviations are of the same order and that neither is resolved well
+enough to separate them. It deliberately does not pin the sign of the variance
+difference, which sits inside the noise and would flip on a rerun for no
+scientific reason.
 """
 
 import csv
@@ -28,6 +31,12 @@ REPORT = REPO_ROOT / "data" / "exhaustive_disproof_report.json"
 
 Z95 = 1.6448536269514722
 Z80 = 0.8416212335729143
+
+# Chi-square quantiles for a two-sided 95 per cent interval on a standard
+# deviation from four observations (df = 3). Published table values, and
+# reproduced to four decimals by chi2_ppf in scripts/compute_paper_numbers.py.
+CHI2_DF3_LOWER_TAIL = 0.2158
+CHI2_DF3_UPPER_TAIL = 9.3484
 DUPLICATED_SCORE = -8.191  # the value carried by the duplicated file, Section 3.10
 
 
@@ -72,23 +81,58 @@ def test_the_leads_margin_over_its_parent():
     assert round(rows["CAHWRPWHC"] - statistics.mean(_null_scores()), 3) == 0.152
 
 
-def test_the_nulls_spread_is_not_sequence_driven():
-    """The claim Section 3.3b rests on.
+def _repeat_sd_interval():
+    """Two-sided 95 per cent interval on the repeat-run sd, from the committed runs."""
+    repeat = _repeat_runs()
+    df = len(repeat) - 1
+    assert df == 3, "the chi-square constants here are for four observations"
+    sd = statistics.stdev(repeat)
+    return (sd * math.sqrt(df / CHI2_DF3_UPPER_TAIL),
+            sd * math.sqrt(df / CHI2_DF3_LOWER_TAIL))
 
-    Treating a control's score as a sequence effect plus run-to-run noise, the
-    between-sequence variance is the null variance minus the repeat-run
-    variance. The point estimate is zero or negative. If new data ever makes it
-    clearly positive, the section is wrong.
+
+def test_the_interval_the_manuscript_quotes_is_the_one_the_data_gives():
+    """Anchors the two bounds Section 3.3b prints.
+
+    This is a prose check, not the scientific claim. If the committed runs ever
+    change, this test should fail so the manuscript gets updated, while
+    test_the_nulls_spread_is_not_demonstrably_sequence_driven keeps holding as
+    long as the claim itself survives.
     """
-    null_var = statistics.variance(_null_scores())
+    low, high = _repeat_sd_interval()
+    assert (round(low, 3), round(high, 3)) == (0.269, 1.772), (
+        f"Section 3.3b prints 0.269 to 1.772; the data now gives {low:.3f} to {high:.3f}")
+
+
+def test_the_nulls_spread_is_not_demonstrably_sequence_driven():
+    """The claim Section 3.3b is allowed to make, and no more than that.
+
+    The section says the spread of one ligand docked repeatedly is of the same
+    order as the spread across 39 different sequences, so the null's dispersion
+    is not demonstrably sequence-driven. Two things have to hold for that: the
+    two standard deviations must be close, and the repeat-run estimate must be
+    too imprecise to separate them. Both are checked here.
+
+    What is deliberately not checked is the sign of the null variance minus the
+    repeat-run variance. That difference is -0.005 kcal squared per mol squared
+    against standard deviations near 0.47, so it is inside the noise, and an
+    assertion on its sign would fail on a rerun for no scientific reason.
+    """
+    null_sd = statistics.stdev(_null_scores())
     repeat = _repeat_runs()
     assert len(repeat) == 4, "Section 3.2 reports four independent runs, not five"
-    repeat_var = statistics.variance(repeat)
-    assert repeat_var >= null_var, (
-        f"between-sequence variance is now {null_var - repeat_var:+.4f}, so the null's "
-        "spread is no longer consistent with pure run-to-run noise and Section 3.3b "
-        "must be rewritten")
-    assert round(null_var - repeat_var, 4) == -0.0053
+    repeat_sd = statistics.stdev(repeat)
+
+    ratio = repeat_sd / null_sd
+    assert 0.8 <= ratio <= 1.25, (
+        f"the repeat-run sd is now {ratio:.3f} times the null sd, so the two are no "
+        "longer of the same order and Section 3.3b must be rewritten")
+
+    low, high = _repeat_sd_interval()
+    assert low <= null_sd <= high, (
+        f"the null sd {null_sd:.4f} now falls outside the interval {low:.3f} to "
+        f"{high:.3f} on the repeat-run sd, so the two estimates are distinguishable "
+        "and Section 3.3b's comparison no longer holds")
 
 
 @pytest.mark.parametrize("z, expected_m, expected_runs", [
@@ -119,6 +163,7 @@ def test_the_manuscript_still_carries_the_recomputed_figures():
     """Paper and data must not drift apart silently."""
     text = PAPER.read_text()
     assert "## 3.3b" in text, "Section 3.3b is missing from the manuscript"
-    for figure in ("-9.378", "1.035", "0.129", "0.773", "0.470", "0.475",
-                   "0.2207", "0.2259", "m = 36", "1,440", "m = 82", "3,280"):
+    for figure in ("-9.378", "1.035", "0.129", "0.152", "0.773", "0.470", "0.475",
+                   "0.2207", "0.2259", "0.269", "1.772", "0.384", "0.605",
+                   "m = 36", "1,440", "m = 82", "3,280"):
         assert figure in text, f"the manuscript no longer states {figure}"

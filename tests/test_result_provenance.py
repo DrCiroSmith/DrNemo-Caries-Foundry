@@ -259,6 +259,26 @@ def test_the_checker_cli_passes_on_the_repository_as_committed():
     assert "Result: pass" in res.stdout
 
 
+def test_the_checker_cli_accepts_a_relative_root():
+    """A relative --root is what a person types, and it used to crash.
+
+    The display code tested the resolved path for containment and then called
+    relative_to on the unresolved one, so "--root ." raised ValueError while
+    the CI invocation, which passes no --root at all, passed. The two forms
+    must now agree.
+    """
+    runs = {}
+    for label, argv in (("default", []), ("relative", ["--root", "."])):
+        res = subprocess.run([sys.executable, "scripts/check_result_provenance.py", *argv],
+                             cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=600)
+        assert res.returncode == 0, f"--root {label}: " + res.stdout + res.stderr
+        assert "Traceback" not in res.stderr, f"--root {label} crashed: {res.stderr}"
+        assert "Result: pass" in res.stdout
+        runs[label] = [ln for ln in res.stdout.splitlines() if "Scanned" not in ln]
+    assert runs["default"] == runs["relative"], (
+        "the two invocations disagree about what is in the repository")
+
+
 def test_the_checker_cli_fails_when_the_baseline_is_ignored():
     """Proof the check has teeth: without the baseline, the known groups fail it."""
     res = subprocess.run([sys.executable, "scripts/check_result_provenance.py",

@@ -93,6 +93,65 @@ def remark(text):
         print(f"      {line}")
 
 
+def _gammainc_lower_reg(a, x):
+    """Regularized lower incomplete gamma P(a, x), to machine precision.
+
+    Series below the crossover, continued fraction above it. Here only to give
+    chi-square quantiles, because this environment has no scipy and a interval
+    on a standard deviation should not be read off a table by hand.
+    """
+    if x <= 0:
+        return 0.0
+    lg = math.lgamma(a)
+    if x < a + 1.0:
+        term = total = 1.0 / a
+        for n in range(1, 10000):
+            term *= x / (a + n)
+            total += term
+            if abs(term) < abs(total) * 1e-16:
+                break
+        return total * math.exp(-x + a * math.log(x) - lg)
+    tiny = 1e-300
+    b, c = x + 1.0 - a, 1.0 / 1e-300
+    d = 1.0 / b
+    h = d
+    for i in range(1, 10000):
+        an = -i * (i - a)
+        b += 2.0
+        d = an * d + b
+        d = tiny if abs(d) < tiny else d
+        c = b + an / c
+        c = tiny if abs(c) < tiny else c
+        d = 1.0 / d
+        de = d * c
+        h *= de
+        if abs(de - 1.0) < 1e-16:
+            break
+    return 1.0 - math.exp(-x + a * math.log(x) - lg) * h
+
+
+def chi2_ppf(prob, df):
+    """Inverse chi-square CDF by bisection. Verified against published tables."""
+    lo, hi = 1e-12, 10.0
+    while _gammainc_lower_reg(df / 2.0, hi / 2.0) < prob and hi < 1e12:
+        hi *= 2.0
+    for _ in range(300):
+        mid = 0.5 * (lo + hi)
+        if _gammainc_lower_reg(df / 2.0, mid / 2.0) < prob:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
+
+
+def sd_interval(sd, n, level=0.95):
+    """Two-sided confidence interval for a population sd from a sample sd."""
+    df = n - 1
+    tail = (1.0 - level) / 2.0
+    return (sd * math.sqrt(df / chi2_ppf(1.0 - tail, df)),
+            sd * math.sqrt(df / chi2_ppf(tail, df)))
+
+
 def heading(text):
     print()
     print(text)
@@ -1253,21 +1312,33 @@ def main():
         noise_sd = statistics.stdev(indep)
         emit("R", "one ligand, independent repeat runs / their sample sd (kcal/mol)",
              f"{len(indep)} / {noise_sd:.4f}", "data/exhaustive_disproof_report.json")
+        emit("R", "ratio of the repeat-run sd to the null sd",
+             f"{noise_sd / null_sd:.4f}", "this script")
+        n_lo, n_hi = sd_interval(noise_sd, len(indep))
+        k_lo, k_hi = sd_interval(null_sd, n_null)
+        emit("R", f"95 percent interval on the repeat-run sd (n={len(indep)})",
+             f"{n_lo:.4f} to {n_hi:.4f}", "this script")
+        emit("R", f"95 percent interval on the null sd (n={n_null})",
+             f"{k_lo:.4f} to {k_hi:.4f}", "this script")
         between = null_sd ** 2 - noise_sd ** 2
         emit("R", "null variance minus repeat-run variance (kcal/mol squared)",
              f"{between:+.4f}", "this script")
-        remark("The implied between-sequence component of the null's spread is "
-             f"{'zero or negative' if between <= 0 else f'{math.sqrt(between):.4f} kcal/mol'}, "
-             "so the point estimate of the sequence-dependent part is zero. The "
-             f"repeat-run estimate carries {len(indep) - 1} degrees of freedom and is "
-             "itself imprecise, so this bounds the sequence component loosely. What it "
-             "shows is that nothing in the data requires any of the null's spread to be "
-             "sequence-dependent.")
-        if noise_sd ** 2 < null_sd ** 2 * 0.5:
+        remark("What this does and does not support. The two spreads differ by "
+               f"{abs(1 - noise_sd / null_sd) * 100:.1f} per cent, and each interval "
+               "contains the other estimate, so the data cannot distinguish a null whose "
+               "dispersion is entirely run-to-run noise from one with a real "
+               "sequence-dependent component. The difference of variances is "
+               f"{between:+.4f}, and a negative point estimate is what two close "
+               "estimates give when one of them rests on three degrees of freedom; it is "
+               "not evidence that the component is nil. The supportable claim is only "
+               "that the null's dispersion is not demonstrably sequence-driven. The "
+               "repeat runs are also the four that remain after the duplicate of "
+               "unestablished origin was removed from the original five, and all of them "
+               "were unseeded.")
+        if not (n_lo <= null_sd <= n_hi):
             discrepancies.append(
-                "repeat-run variance is less than half the null variance, so section "
-                "3.3b's claim that the null's spread is consistent with pure run-to-run "
-                "noise no longer holds")
+                "the null sd now falls outside the interval on the single-ligand "
+                "repeat-run sd, so section 3.3b's comparison of the two no longer holds")
 
         # What would move the boundary: averaging m seeds per member.
         if MARGIN:
