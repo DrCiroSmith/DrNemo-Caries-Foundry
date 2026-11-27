@@ -34,9 +34,10 @@ can be read directly.
 | 20:36 | `f8dc497` | three files stated a literal count of the provenance suite, which had gone stale twice | the count is gone from all three and a test bans the phrasing; `--check-naming` keeps its eighteen because that number is derived from the list it runs |
 | 20:40 | `0b4db3e` | 4.1b guessed that its r.m.s.d. figures differed from the manuscript's "most likely in mode choice or superposition" | that **guess is withdrawn**. Sweeping the plausible selections reproduces the manuscript's 9.24 and 12.19 exactly on one of them: mode 1, hydrogens removed, the two `G0` glue markers kept. Those figures therefore count two pseudo-atoms as heavy atoms; the correct values are 9.04 and 11.80. Reported to the manuscript work and pinned by a test that recomputes both of its figures from the pose files |
 | 20:48 | `c2a2bd1` | this package's own analyser carried the same defect it had just reported in the manuscript: `analyze.py` read the type as `line[76:79]`, truncating `CG0` to `CG`, and excluded only hydrogens, so the two `G0` markers entered every r.m.s.d. as element G | the type is read as the last whitespace token in one function, `atom_type_of`, and glue is excluded there rather than at three call sites. **No pre-registered threshold moves.** Rule 1 is acarbose, which carries no glue (59 records, 44 heavy atoms, verified on the file); rule 10 selects by atom name `SG`; `heavy_atoms` comes from RDKit before Meeko writes the pdbqt, 84 for the lead, matching the corrected reader exactly. Only the derived `pose_rmsd_across_seeds_A` changes, so no docking needs rerunning |
-| 21:33 | `d8ccf7f` | 4.1b called seed 42 non-independent "on both sides of the calculation", counting the identical input conformer as evidence alongside the identical pose | **that half is withdrawn.** Every `ETKDGv3` path here embeds at seed 42, `build_macrocycle_3d` hardcoding it and the sweep parameterising it, so an identical conformer is expected by construction. The manuscript work reached this independently and is right. Added as a caveat the files cannot settle: a third path, the campaign script, embeds by the default method at 300 MMFF iterations, which should not match, so the identity shows both files came from the `ETKDGv3` path and nothing records which script wrote either. The docked pose remains the evidence, the campaign having docked unseeded. Also destaled: the manuscript now publishes the four-run 9.11 and 11.80 over 84 real heavy atoms, matching this package to the digit |
+| 21:33 | `d8ccf7f` | 4.1b called seed 42 non-independent "on both sides of the calculation", counting the identical input conformer as evidence alongside the identical pose | **that half is withdrawn.** Every `ETKDGv3` path here embeds at seed 42, `build_macrocycle_3d` hardcoding it and the sweep parameterising it, so an identical conformer is expected by construction. The manuscript work reached this independently and is right. Added as a caveat the files cannot settle: a third path, the campaign script, embeds by the default method under a 300-iteration MMFF cap rather than 500, which should not match, so the identity shows both files came from the `ETKDGv3` path and nothing records which script wrote either. The docked pose remains the evidence, the campaign having docked unseeded. Also destaled: the manuscript now publishes the four-run 9.11 and 11.80 over 84 real heavy atoms, matching this package to the digit |
 | 21:52 | `396983f` | defect 2 was stated as a property of the function, that `biophysics_engine.py` contains no `--seed`, and pinned by a test asserting the string's absence. The manuscript branch has since given the function an optional `seed` parameter, so that sentence and that test were both about to fail for a reason that does not touch the finding | restated as a property of the call sites: no production call passes a seed, so every docking run the repository has produced was stochastic. The test now walks the call graph instead of matching a string, reads the seed's positional index from the function's own signature, excludes `tests/`, and reports a file that will not parse rather than treating it as clean. Verified against a simulated post-merge tree and against three controls, one of which exposed the parse-swallowing hole. No result moves; this is a claim and a test being narrowed to what the evidence is about |
 | 22:3x | `adf5643` | nothing recorded whether a docked conformer had been minimised, and five guards had not been shown to fail when their property was violated | defect 2b added: the production builder's MMFF and UFF failures are both silent and its embedding return is discarded, so no published number can say which happened, and the repository cannot settle it. Recorded from now on per ligand, with the seed-42 path marked `unrecorded` rather than assumed. Four guards added and the analyser loader narrowed so a broken `analyze.py` fails instead of skipping; a fixture-presence guard added so that the eighteen conditional skips in the suite cannot silently subtract evidence from a green run. All five mutation-verified: the embed raise removed, the silent `pass` restored, seed 42 claiming `mmff94`, the analyser catch broadened, and `data/poses` moved away each make the matching guard fail. No threshold moves |
+| 22:5x | `PENDING` | `minimisation` was recorded as `mmff94` on any non-exception, although `maxIters` is a ceiling and the call returns 1 when it was reached first, so a conformer that stopped at the cap would have been recorded as minimised | the return code is read: `mmff94_converged` or `mmff94_hit_iteration_cap`, the UFF equivalents, the boolean and the cap itself, all per ligand. No number here may be called iterations performed. Defect 2c added: `scripts/run_campaign.py:130` assigns `openmm_kj = -950.0` in an `except` clause, inside the ledger's real -5985.78 to -173.64 range, so a failed minimisation would have been indistinguishable from a reading. Checked in the ledger itself: 260 rows, 260 distinct values, no blanks, no -950.0, and `-950` matches no artefact in the tree, so it never fired and no published energy is fabricated. A guard now fails on any bare number assigned to a measurement-like name in an `except` handler. Both new guards mutation-verified. No threshold moves |
 
 Six of these entries withdraw a claim of mine rather than refine one. That record is
 kept deliberately: a protocol whose amendment log contains only improvements is a
@@ -182,6 +183,38 @@ numbers independently of which protein was used.
    the pre-registered rules are stated over scores and distances rather than over
    the force field. It is a provenance gap, and it is the kind this document
    exists to close.
+
+   **A cap is not a count, so convergence is recorded separately.**
+   `MMFFOptimizeMolecule` and `UFFOptimizeMolecule` take `maxIters` as a ceiling
+   and return 0 on convergence, 1 when the ceiling was reached first. Running the
+   field and converging are therefore different claims, and the upstream call
+   discards the return value, so neither can be distinguished anywhere in the
+   published work. `build_local` reads it and records
+   `mmff94_converged` or `mmff94_hit_iteration_cap`, the UFF equivalents, the
+   boolean, and the cap itself. No number in this package may be described as
+   iterations performed.
+
+2c. **A failed energy minimisation could have entered the ledger as a
+   measurement.** `scripts/run_campaign.py` line 130 assigns
+   `openmm_kj = -950.0` inside an `except` clause. The ledger's real relaxed
+   energies run from -5985.78 to -173.64, so -950.0 falls inside the
+   distribution and would have been indistinguishable from a reading.
+
+   **It never fired, and no published energy is fabricated.** Checked directly in
+   `data/contenders_ledger.csv`: 260 rows, column `openmm_relaxed_kj`, 260
+   distinct values, zero blanks, zero occurrences of -950.0, and a search for
+   `-950` across every `json`, `jsonl`, `csv`, `py` and `html` file in the tree
+   matches only that one source line. This is a latent defect that was removed,
+   not a correction to published data, and it must be stated in that order.
+   Three of the four OpenMM call sites already recorded `None` on failure; one of
+   four did not, which is the same one-in-N pattern as the atom selections and
+   the angle labels.
+
+   A guard now fails if any `except` handler in this package assigns a bare
+   number, negated literals included, to a name containing `openmm`, `vina`,
+   `vinardo`, `kcal`, `_kj`, `rmsd`, `drift`, `energy`, `affinity`, `score`,
+   `angstrom` or `margin`. A skip hides a measurement; a sentinel invents one,
+   and the invented one is worse because it survives into a figure.
 
 3. **Every score rests on a single starting conformer, and two of Vina's own
    applicability limits are exceeded.** An earlier revision of this document
@@ -384,7 +417,10 @@ which reached it independently, and it is correct.
 One caveat on it, which the files cannot resolve. A third path,
 `scripts/run_falsification_campaign.py` line 56, embeds with a plain
 `EmbedMolecule(mol, randomSeed=42)`, which is the default method and not `ETKDGv3`,
-followed by `MMFFOptimizeMolecule(maxIters=300)` rather than 500. That recipe should
+followed by `MMFFOptimizeMolecule(maxIters=300)`, a 300-iteration cap rather than
+500. A cap is not a count: these functions return 0 on convergence and 1 when the
+cap was reached first, so neither number may be reported as iterations performed.
+That recipe should
 not produce byte-identical coordinates to the other two. So the identity is evidence
 that both files came from the `ETKDGv3` path rather than from the campaign script, and
 nothing in either file records which script wrote it.

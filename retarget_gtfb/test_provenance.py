@@ -1229,3 +1229,84 @@ def test_no_skip_in_this_file_can_hide_a_broken_analyser():
             "_load_analyze never re-raises, so an unexpected failure is swallowed")
         return
     raise AssertionError("_load_analyze no longer exists")
+
+
+# Measurement-like identifiers. A skip hides a measurement; a sentinel invents
+# one, and the invented one is worse because it survives into a figure. This
+# repository already held exactly that: scripts/run_campaign.py assigned
+# openmm_kj = -950.0 in an except clause, and -950.0 sits inside the ledger's
+# real range of -5985.78 to -173.64, so a failed minimisation would have entered
+# the data as an ordinary measurement. Verified it never fired: 260 ledger rows,
+# 260 distinct values, no blanks, no -950.0, and "-950" appears in no artefact.
+# Latent, not a corrupted result. This guard is so that no such line can appear
+# in this package, whose runs have not happened yet.
+_MEASUREMENT_WORDS = ("openmm", "vina", "vinardo", "kcal", "_kj", "rmsd", "drift",
+                      "energy", "affinity", "score", "angstrom", "margin")
+
+
+def _numeric_sentinels_in_except_handlers():
+    import ast
+    found = []
+    for path in sorted(HERE.glob("*.py")):
+        tree = ast.parse(path.read_text(), filename=str(path))
+        for handler in [n for n in ast.walk(tree) if isinstance(n, ast.ExceptHandler)]:
+            for st in ast.walk(handler):
+                if not isinstance(st, (ast.Assign, ast.AnnAssign)):
+                    continue
+                targets = st.targets if isinstance(st, ast.Assign) else [st.target]
+                names = []
+                for t in targets:
+                    names += [n.id for n in ast.walk(t) if isinstance(n, ast.Name)]
+                    if isinstance(t, ast.Subscript):
+                        try:
+                            names.append(ast.unparse(t.slice).strip("'\""))
+                        except Exception:
+                            pass
+                value = st.value
+                bare = (isinstance(value, ast.Constant)
+                        and isinstance(value.value, (int, float))
+                        and not isinstance(value.value, bool))
+                negated = (isinstance(value, ast.UnaryOp)
+                           and isinstance(value.op, ast.USub)
+                           and isinstance(value.operand, ast.Constant))
+                if not (bare or negated):
+                    continue
+                if any(w in n.lower() for n in names for w in _MEASUREMENT_WORDS):
+                    found.append(f"{path.name}:{st.lineno} {names} = "
+                                 f"{ast.unparse(value)}")
+    return found
+
+
+def test_no_except_handler_invents_a_measurement():
+    """A failed measurement must propagate or be recorded absent, never guessed."""
+    sentinels = _numeric_sentinels_in_except_handlers()
+    assert sentinels == [], (
+        "an except handler assigns a number to a measurement-like name, which is "
+        f"how a failure becomes a datum: {sentinels}")
+
+
+def test_the_force_field_return_code_is_read_not_discarded():
+    """maxIters is a cap, so running MMFF is not the same as converging.
+
+    RDKit returns 0 on convergence and 1 when the cap was reached first. A
+    conformer that stopped at the cap is partially minimised, and recording it
+    as minimised would be a claim one step stronger than the evidence.
+    """
+    import ast
+    fn = _build_local_ast()
+    src = ast.get_source_segment((HERE / "run_docking.py").read_text(), fn) or ""
+    assert "hit_iteration_cap" in src, (
+        "a conformer that stopped at the iteration cap is recorded as if converged")
+    calls_whose_value_is_dropped = []
+    for node in ast.walk(fn):
+        if not isinstance(node, ast.Expr) or not isinstance(node.value, ast.Call):
+            continue
+        name = getattr(node.value.func, "attr", None) or ""
+        if name in ("MMFFOptimizeMolecule", "UFFOptimizeMolecule"):
+            calls_whose_value_is_dropped.append(f"line {node.lineno}: {name}")
+    assert calls_whose_value_is_dropped == [], (
+        "a force-field call's return value is discarded, so convergence is "
+        f"unknown and would be reported as success: {calls_whose_value_is_dropped}")
+    assert "minimisation_iteration_cap" in (HERE / "run_docking.py").read_text(), (
+        "the cap itself is not recorded beside the outcome")
+

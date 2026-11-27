@@ -207,20 +207,38 @@ def build_local(seq: str, out_pdbqt: str, out_pdb: str | None,
     # repository: no run records it. This records it from now on.
     mmff_typed = AllChem.MMFFGetMoleculeProperties(mol) is not None
     minimisation = "none"
+    converged = None
+    # maxIters is a CAP, and these functions return 0 on convergence and 1 when
+    # the cap was reached first, so "minimised with MMFF" and "ran MMFF up to 500
+    # iterations" are different claims. The return code is read rather than
+    # discarded, so a conformer that stopped at the cap is not recorded as
+    # converged. Reading it changes nothing about which field runs.
     try:
-        AllChem.MMFFOptimizeMolecule(mol, maxIters=500)
-        minimisation = "mmff94"
+        rc = AllChem.MMFFOptimizeMolecule(mol, maxIters=500)
+        converged = (rc == 0)
+        minimisation = "mmff94_converged" if rc == 0 else "mmff94_hit_iteration_cap"
+        if rc != 0:
+            print(f"  NOTE: MMFF94 reached its 500-iteration cap without converging "
+                  f"for {seq} at seed {conf_seed} (return {rc}). The conformer is "
+                  f"partially minimised, which is recorded, not assumed away.")
     except Exception as mmff_exc:
         try:
-            AllChem.UFFOptimizeMolecule(mol, maxIters=500)
-            minimisation = "uff_after_mmff_failed"
+            rc = AllChem.UFFOptimizeMolecule(mol, maxIters=500)
+            converged = (rc == 0)
+            minimisation = ("uff_converged_after_mmff_failed" if rc == 0
+                            else "uff_hit_iteration_cap_after_mmff_failed")
+            print(f"  NOTE: MMFF94 could not run for {seq} at seed {conf_seed} "
+                  f"({mmff_exc}); UFF was used instead, return {rc}.")
         except Exception as uff_exc:
             minimisation = "none"
+            converged = False
             print(f"  WARNING: neither MMFF nor UFF minimised {seq} at seed "
                   f"{conf_seed}. MMFF: {mmff_exc}. UFF: {uff_exc}. The conformer "
                   f"is raw ETKDG output and every score from it is affected.")
     build_report["mmff_typed"] = mmff_typed
     build_report["minimisation"] = minimisation
+    build_report["minimisation_converged"] = converged
+    build_report["minimisation_iteration_cap"] = 500
     build_report["embed_return"] = embed_res
 
     if target_center is not None:
@@ -355,6 +373,8 @@ def ligand_for(seq: str, centre, conf_seed: int) -> tuple[Path, dict]:
         # package does not own. It is left unknown, not assumed to have worked.
         build_report = {
             "minimisation": "unrecorded",
+            "minimisation_converged": None,
+            "minimisation_iteration_cap": None,
             "mmff_typed": None,
             "embed_return": None,
             "why_unrecorded": "the imported builder does not report either, and its "
@@ -369,6 +389,8 @@ def ligand_for(seq: str, centre, conf_seed: int) -> tuple[Path, dict]:
     meta = {"sequence": seq, "conformer_seed": conf_seed, "heavy_atoms": heavy,
             "builder": builder,
             "minimisation": build_report.get("minimisation", "unrecorded"),
+            "minimisation_converged": build_report.get("minimisation_converged"),
+            "minimisation_iteration_cap": build_report.get("minimisation_iteration_cap"),
             "mmff_typed": build_report.get("mmff_typed"),
             "etkdg_embed_return": build_report.get("embed_return"),
             "pdbqt_sha256": hashlib.sha256(pdbqt.read_bytes()).hexdigest(),
