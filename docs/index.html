@@ -1760,11 +1760,11 @@
               <div class="matrix-row">
                 <div>
                   <div class="matrix-row-title">Angle 2: Multi-Seed Reproducibility</div>
-                  <div class="matrix-row-desc">4 independent conformer and Vina seeds (101, 202, 303, 404). This angle was published as N=5, including seed 42. Seed 42 is excluded here because its docked pose is byte-identical to the campaign pose across all nine output modes, so it is not an independent replicate; its own input conformer is distinct, and the origin of its docked file is not established. Figures below are recomputed on the four remaining runs, with the spread given as a population SD, the same convention the earlier N=5 figure used.</div>
+                  <div class="matrix-row-desc">4 independent conformer and Vina seeds (101, 202, 303, 404). This angle was published as N=5, including seed 42. Seed 42 is excluded here because its docked pose is byte-identical to the campaign pose across all nine output modes, so it is not an independent replicate; its own input conformer is distinct, and the origin of its docked file is not established. Figures below are recomputed on the four remaining runs, with the spread given as a population SD, the same convention the earlier N=5 figure used. Pose distances are over the 84 real heavy atoms: the earlier 9.24 Å counted Meeko's two macrocycle glue pseudo-atoms as atoms, and on the same selection these four runs give 9.34 Å.</div>
                 </div>
                 <div class="matrix-row-stat">
                   <span class="status-tag fail">POSE NOT REPRODUCIBLE</span>
-                  <span class="matrix-row-metric">Score -8.08 ± 0.41 | pose RMSD 9.34 Å</span>
+                  <span class="matrix-row-metric">Score -8.08 ± 0.41 | pose RMSD 9.11 Å</span>
                 </div>
               </div>
 
@@ -1775,7 +1775,7 @@
                 </div>
                 <div class="matrix-row-stat">
                   <span class="status-tag warn">INCONCLUSIVE</span>
-                  <span class="matrix-row-metric">ΔE +0.10 kcal/mol | 1.74 Å</span>
+                  <span class="matrix-row-metric">ΔE +0.10 kcal/mol | 1.78 Å</span>
                 </div>
               </div>
 

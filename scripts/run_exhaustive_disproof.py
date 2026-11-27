@@ -153,8 +153,20 @@ def compute_heavy_atom_rmsd(coords1: np.ndarray, coords2: np.ndarray) -> float:
     return float(np.sqrt(np.mean(np.sum(diff ** 2, axis=1))))
 
 
+# Meeko opens a macrocycle for docking and closes it with glue pseudo-atoms,
+# typed G, G0, G1 and so on. They are bookkeeping, not atoms, and 1183 of the
+# 1244 committed pose files carry a pair of them, so a selection that keeps
+# them inflates every distance computed from a macrocyclic ligand. The results
+# committed in data/exhaustive_disproof_report.json predate this exclusion;
+# the manuscript states the recomputed values and names both.
+GLUE_TYPES = {"G", "G0", "G1", "G2", "G3"}
+
+
 def extract_heavy_atom_coords_from_pdbqt(pdbqt_path: str, model_idx: int = 1) -> Tuple[List[str], np.ndarray]:
-    """Extracts heavy-atom symbols and coordinates for a specific model from PDBQT file."""
+    """Extracts heavy-atom symbols and coordinates for a specific model from PDBQT file.
+
+    Hydrogens and Meeko glue pseudo-atoms are excluded; see GLUE_TYPES above.
+    """
     coords = []
     symbols = []
     current_model = 1
@@ -171,11 +183,18 @@ def extract_heavy_atom_coords_from_pdbqt(pdbqt_path: str, model_idx: int = 1) ->
                 if in_target_model:
                     break
             elif in_target_model and (line.startswith("ATOM") or line.startswith("HETATM")):
+                # The AutoDock type sits in columns 78 and 79, so a two-column
+                # read of 76:78 yields "H" for both H and HD, which is how
+                # hydrogens were already being dropped. That read is kept
+                # exactly as it was: widening it to catch the glue type would
+                # turn HD into "HD" and silently stop excluding hydrogens.
                 element = line[76:78].strip().upper()
                 if not element:
                     atom_name = line[12:16].strip()
                     element = atom_name[0] if atom_name else "C"
                 if element == "H":
+                    continue
+                if line[76:79].strip().upper() in GLUE_TYPES:
                     continue
                 try:
                     x = float(line[30:38])

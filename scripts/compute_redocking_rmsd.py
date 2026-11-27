@@ -65,6 +65,13 @@ def read_atoms(path: Path) -> Tuple[np.ndarray, List[str]]:
         el = _element(line)
         if el == "H":
             continue
+        # Meeko glue pseudo-atoms (type G, G0, G1) close an opened macrocycle
+        # and are not atoms. Acarbose is not a macrocycle, so neither file in
+        # this comparison carries one and the reported figure is unchanged by
+        # this line; it is here so the routine stays correct if it is ever
+        # pointed at a macrocyclic ligand.
+        if line[76:79].strip().upper() in ("G", "G0", "G1", "G2", "G3"):
+            continue
         coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
         elements.append(el)
     if not coords:

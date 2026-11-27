@@ -56,8 +56,17 @@ def _coordinate_digest(path):
     return digest.hexdigest()
 
 
+# Meeko glue pseudo-atoms close an opened macrocycle. They are not atoms, and
+# counting them inflates every distance: it is the difference between the
+# published 9.24 A and the 9.11 A this project now reports.
+GLUE_TYPES = {"G", "G0", "G1", "G2", "G3"}
+
+
 def _mode_one_heavy_atoms(path):
-    """Heavy-atom coordinates of the first output mode, in file order."""
+    """Real heavy atoms of the first output mode, in file order.
+
+    Hydrogens out, glue pseudo-atoms out.
+    """
     coords, started = [], False
     for line in Path(path).read_text().splitlines():
         if line.startswith("MODEL"):
@@ -65,8 +74,11 @@ def _mode_one_heavy_atoms(path):
                 break
             started = True
         if line.startswith(("ATOM", "HETATM")):
-            element = line[77:79].strip() or line[12:16].strip()[0]
+            autodock_type = line[76:79].strip().upper()
+            element = autodock_type[:2].strip() or line[12:16].strip()[0]
             if element.upper().startswith("H"):
+                continue
+            if autodock_type in GLUE_TYPES:
                 continue
             coords.append((float(line[30:38]), float(line[38:46]),
                            float(line[46:54])))
@@ -228,6 +240,25 @@ def test_the_published_four_run_pose_spread_matches_the_artefacts():
     assert f"{centroid_sd:.2f}" in readme, (
         f"README.md does not carry the recomputed four-run centroid SD "
         f"{centroid_sd:.2f} A")
+
+
+def test_the_published_pose_figures_are_over_real_heavy_atoms_only():
+    """The selection has to be stated, because two selections are in play.
+
+    Both appear in the README on purpose: the figure this project reports and
+    the figure the earlier runs reported. A reader can only tell them apart if
+    the page says which atoms each counts.
+    """
+    poses = [r["pose"] for r in _independent_runs()]
+    heavy = len(_mode_one_heavy_atoms(poses[0]))
+    readme = (REPO / "README.md").read_text()
+    page = (REPO / "docs" / "index.html").read_text()
+    assert f"{heavy} real heavy atoms" in readme, (
+        f"README.md does not say the pose distances are over the {heavy} real "
+        f"heavy atoms")
+    assert "glue pseudo-atoms" in readme and "glue pseudo-atoms" in page, (
+        "neither page explains that the earlier distances counted Meeko's glue "
+        "pseudo-atoms, so the change in the figures looks unexplained")
 
 
 def test_the_correction_did_not_silently_improve_the_result():

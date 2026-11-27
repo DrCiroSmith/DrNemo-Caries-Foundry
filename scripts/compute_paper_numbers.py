@@ -334,6 +334,41 @@ def pdbqt_best_mode(path, keep_glue=False):
     return out
 
 
+def pdbqt_mode(path, mode=1, keep_glue=False):
+    """Heavy atoms of the nth output mode, in file order, as (name, x, y, z).
+
+    Same selection as pdbqt_best_mode, which is this with mode=1: hydrogens
+    out, and Meeko's glue pseudo-atoms out unless asked for. Needed because the
+    mode 1 against mode 2 comparison was passed through from the recorded run,
+    where it counts the glue atoms.
+    """
+    out, seen = [], 0
+    for l in Path(path).read_text().splitlines():
+        if l.startswith("MODEL"):
+            seen += 1
+            continue
+        if seen != mode:
+            if seen > mode:
+                break
+            continue
+        if l.startswith("ENDMDL"):
+            break
+        if l.startswith(("ATOM", "HETATM")):
+            t = l[77:79].strip()
+            if t in ("H", "HD"):
+                continue
+            if t in ("G", "G0") and not keep_glue:
+                continue
+            out.append((l[12:16].strip(), float(l[30:38]), float(l[38:46]),
+                        float(l[46:54])))
+    return out
+
+
+def centroid_of(atoms):
+    n = len(atoms)
+    return [sum(a[i + 1] for a in atoms) / n for i in range(3)]
+
+
 def pdbqt_score(path):
     for l in Path(path).read_text().splitlines():
         if l.startswith("REMARK VINA RESULT:"):
@@ -430,7 +465,10 @@ def main():
         stored = r["selectivity_ddg"]
         if abs(recomputed_ddg - stored) > 0.011:
             note(f"{seq}: stored selectivity_ddg {stored} but 3AIC minus 1SMD is {recomputed_ddg}")
-        emit("R", f"{label} {seq}: heavy atoms", r["heavy_atoms"], "vault.heavy_atoms")
+        # Recorded, not recomputed: the count comes from RDKit at build time and
+        # this script has no RDKit. Section 13 checks it against the deposited
+        # complex, where the heavy atoms can be counted.
+        emit("D", f"{label} {seq}: heavy atoms", r["heavy_atoms"], "vault.heavy_atoms")
         le = round(abs(r["vina_3aic_kcal"]) / r["heavy_atoms"], 4)
         emit("R", f"{label} {seq}: ligand efficiency recomputed", le,
              "|affinity| / heavy atoms, this script")
@@ -522,10 +560,33 @@ def main():
          round(modes[1]["affinity_kcal"] - modes[0]["affinity_kcal"], 3), "this script")
     emit("R", "spread over all modes, kcal/mol",
          round(modes[-1]["affinity_kcal"] - modes[0]["affinity_kcal"], 3), "this script")
-    emit("D", "mode 1 to mode 2 heavy-atom RMSD, A", a3["heavy_atom_rmsd_mode1_mode2_angstrom"],
-         "disproof angle 3")
-    emit("D", "mode 1 to mode 2 centroid distance, A",
+    emit("D", "mode 1 to mode 2 RMSD the report states, A",
+         a3["heavy_atom_rmsd_mode1_mode2_angstrom"], "disproof angle 3")
+    emit("D", "mode 1 to mode 2 centroid distance the report states, A",
          a3["centroid_distance_mode1_mode2_angstrom"], "disproof angle 3")
+    mode_pose = REPO / a3.get("pose_file", "data/poses/contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt")
+    if mode_pose.exists():
+        for keep_glue, label in ((False, "real heavy atoms"),
+                                 (True, "including glue pseudo-atoms")):
+            m1 = pdbqt_mode(mode_pose, 1, keep_glue=keep_glue)
+            m2 = pdbqt_mode(mode_pose, 2, keep_glue=keep_glue)
+            if not m1 or len(m1) != len(m2):
+                note(f"mode 1 and mode 2 of {mode_pose.name} do not have matching "
+                     f"atom counts over {label}, so no RMSD is reported")
+                continue
+            gap = in_order_rmsd(m1, m2)
+            c1, c2 = centroid_of(m1), centroid_of(m2)
+            shift = math.sqrt(sum((a - b) ** 2 for a, b in zip(c1, c2)))
+            emit("R", f"mode 1 to mode 2 over {label} / atoms / RMSD / centroid shift, A",
+                 f"{len(m1)} / {gap:.2f} / {shift:.2f}", "this script")
+            if not keep_glue:
+                recomputed_gap, recomputed_shift = gap, shift
+        stated = float(a3["heavy_atom_rmsd_mode1_mode2_angstrom"])
+        if abs(stated - recomputed_gap) > 0.005:
+            note(f"disproof angle 3 calls {stated} A a heavy-atom RMSD, but over the "
+                 f"real heavy atoms it is {recomputed_gap:.2f} A: the stated figure "
+                 f"counts Meeko's glue pseudo-atoms as atoms. The paper uses the "
+                 f"recomputed value")
     if "distinct primary binding basin" in a3.get("scientific_summary", ""):
         note("disproof angle 3 summary calls a 0.101 kcal/mol gap with a 5.58 A pose "
              "difference a distinct primary binding basin")

@@ -62,6 +62,11 @@ def parse_heavy_atoms_pdbqt(pdbqt_path: str):
                 name = line[12:16].strip()
                 if name.startswith("H") or atom_type in ("H", "HD"):
                     continue
+                # Meeko glue pseudo-atoms close an opened macrocycle and are not
+                # atoms; keeping them inflates any distance computed from a
+                # macrocyclic ligand.
+                if atom_type in ("G", "G0", "G1", "G2", "G3"):
+                    continue
                 x = float(line[30:38])
                 y = float(line[38:46])
                 z = float(line[46:54])
