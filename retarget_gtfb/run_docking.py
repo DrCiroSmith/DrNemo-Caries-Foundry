@@ -41,6 +41,7 @@ import shutil
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
 
 HERE = Path(__file__).parent.resolve()
@@ -53,6 +54,23 @@ CONFIG = json.loads((HERE / "config.json").read_text())
 SEQUENCES = json.loads((HERE / "sequences.json").read_text())
 
 sys.path.insert(0, str(REPO_ROOT))
+
+
+def md5_of(path) -> str:
+    return hashlib.md5(Path(path).read_bytes()).hexdigest()
+
+
+def sha256_of(path) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def file_tag(path, n: int = 8) -> str:
+    """Short content tag for a file, for use inside a deterministic output path.
+
+    Two different receptor or ligand files can therefore never write to the same
+    pose path, whatever they are called.
+    """
+    return sha256_of(path)[:n]
 
 
 def die(msg: str) -> None:
@@ -231,14 +249,24 @@ def torsion_count(pdbqt: Path) -> int:
     return sum(1 for l in pdbqt.read_text().splitlines() if l.startswith("BRANCH"))
 
 
+GLUE_TYPES = {"CG0", "CG1", "CG2", "CG3", "G0", "G1", "G2", "G3"}
+
+
 def has_glue_atoms(pdbqt: Path) -> bool:
-    """Meeko opens a macrocycle by inserting CG/G pseudo-atoms. Absence means a rigid ring."""
-    for l in pdbqt.read_text().splitlines():
-        if l.startswith(("ATOM", "HETATM")) and l[77:79].strip() in ("CG", "G"):
-            return True
-        if l.startswith(("ATOM", "HETATM")) and l[12:16].strip().startswith(("CG", "G")) \
-                and l[17:20].strip() == "UNL":
-            return True
+    """True when Meeko opened a macrocycle ring for sampling.
+
+    Meeko marks an opened ring by inserting a pair of pseudo-atoms whose AutoDock
+    types are CGn and Gn. Read that type as the last whitespace-separated token on
+    the ATOM line, not by a fixed column slice: the type sits at the end of the
+    record after the partial charge, its column varies between Meeko versions, and
+    a two-character slice silently truncates CG0 to CG. An earlier version of this
+    function used a [77:79] slice and I reported the opposite of the truth from it.
+    """
+    for l in pdbqt.read_text(errors="replace").splitlines():
+        if l.startswith(("ATOM", "HETATM")):
+            tokens = l.split()
+            if tokens and tokens[-1].upper() in GLUE_TYPES:
+                return True
     return False
 
 
@@ -322,10 +350,23 @@ def parse_vina_modes(pose: Path) -> list[dict]:
 
 
 def dock_one(ligand_pdbqt: Path, receptor: str, centre, size,
-             dock_seed: int, tag: str, cpu: int, exhaustiveness: int) -> dict:
+             dock_seed: int, tag: str, cpu: int, exhaustiveness: int,
+             vina_version_text: str = "", allow_overwrite: bool = False) -> dict:
     POSE_DIR.mkdir(parents=True, exist_ok=True)
     pose = POSE_DIR / f"{tag}.pdbqt"
     log = POSE_DIR / f"{tag}.vina.log"
+
+    # A pose file already sitting at a deterministic path, with no recorded result to
+    # match it, is an orphan from an interrupted or edited run. Overwriting it silently
+    # is how one result ends up standing in for another.
+    if pose.exists() and not allow_overwrite:
+        return {"ok": False, "seconds": 0.0,
+                "error": f"refusing to overwrite an existing result at {pose.name}. "
+                         f"Nothing in out/results.jsonl claims it, so it cannot be "
+                         f"attributed to a run. Delete it, or re-run with --overwrite.",
+                "overwrite_refused": True}
+
+    run_id = uuid.uuid4().hex
     cx, cy, cz = centre
     sx, sy, sz = size
 
@@ -334,18 +375,43 @@ def dock_one(ligand_pdbqt: Path, receptor: str, centre, size,
            "--size_x", str(sx), "--size_y", str(sy), "--size_z", str(sz),
            "--cpu", str(cpu), "--exhaustiveness", str(exhaustiveness),
            "--seed", str(dock_seed), "--out", str(pose)]
+    # Provenance travels inside the result record, because the two files he sends back
+    # are all I will have. A record that cannot be traced to a command line, a seed and
+    # a pair of input hashes is not evidence of anything.
+    prov = {
+        "run_id": run_id,
+        "vina_command": cmd,
+        "vina_command_string": " ".join(cmd),
+        "vina_version_text": vina_version_text,
+        "exhaustiveness": exhaustiveness,
+        "dock_seed": dock_seed,
+        "cpu": cpu,
+        "box_centre": [cx, cy, cz],
+        "box_size": [sx, sy, sz],
+        "receptor_path": str(receptor),
+        "receptor_md5": md5_of(receptor),
+        "receptor_sha256": sha256_of(receptor),
+        "ligand_path": str(ligand_pdbqt),
+        "ligand_md5": md5_of(ligand_pdbqt),
+        "ligand_sha256": sha256_of(ligand_pdbqt),
+        "pose_path_planned": str(pose),
+        "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+
     t0 = time.time()
     res = subprocess.run(cmd, capture_output=True, text=True)
     elapsed = time.time() - t0
-    log.write_text(res.stdout + "\n--- stderr ---\n" + res.stderr)
+    prov["finished_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    log.write_text(" ".join(cmd) + f"\n# run_id {run_id}\n\n"
+                   + res.stdout + "\n--- stderr ---\n" + res.stderr)
     if res.returncode != 0:
         return {"ok": False, "error": f"vina exit {res.returncode}: {res.stderr.strip()[:400]}",
-                "seconds": round(elapsed, 1)}
+                "seconds": round(elapsed, 1), **prov}
 
     modes = parse_vina_modes(pose)
     if not modes:
         return {"ok": False, "error": "no REMARK VINA RESULT lines in output",
-                "seconds": round(elapsed, 1)}
+                "seconds": round(elapsed, 1), **prov}
 
     # split to rescore mode 1 with Vinardo, same as the existing pipeline
     split_prefix = str(pose).replace(".pdbqt", "_split_")
@@ -384,6 +450,8 @@ def dock_one(ligand_pdbqt: Path, receptor: str, centre, size,
     from biophysics_engine import measure_disulfide_bond
     return {
         "ok": True,
+        **prov,
+        "vinardo_command_string": " ".join(fixed) if mode1.exists() else None,
         "seconds": round(elapsed, 1),
         "vina_kcal": modes[0]["affinity_kcal"],
         "vina_modes": modes,
@@ -417,41 +485,59 @@ def build_jobs(boxes: dict, tiers: list[int]) -> list[dict]:
 
     jobs: list[dict] = []
 
+    exhaustiveness = d["exhaustiveness"]
+    receptor_tags: dict[str, str] = {}
+
     def add(kind, ident, seq, receptor_id, receptor, rcentre, box_id, size, dseed, cseed,
-            prebuilt=None):
-        jobs.append({"kind": kind, "id": ident, "sequence": seq,
+            prebuilt=None, tier=None):
+        # Protonation is named explicitly rather than left implicit. There is exactly one
+        # state in this package and this is what it actually is: build_macrocycle_3d goes
+        # through Chem.MolFromSequence and AddHs, which applies no pH model at all and
+        # leaves the termini free. Naming it means a second state added later cannot
+        # collide with this one in a path.
+        protonation = ("native_cocrystal_as_deposited" if prebuilt
+                       else "as_built_no_pH_model_free_termini")
+        if receptor not in receptor_tags:
+            try:
+                receptor_tags[receptor] = file_tag(receptor)
+            except OSError:
+                receptor_tags[receptor] = "nofile00"
+        jobs.append({"tier": tier, "kind": kind, "id": ident, "sequence": seq,
                      "receptor_id": receptor_id, "receptor": receptor,
+                     "receptor_tag": receptor_tags[receptor],
                      "centre": list(rcentre), "box_id": box_id, "size": list(size),
-                     "dock_seed": dseed, "conformer_seed": cseed, "prebuilt_ligand": prebuilt})
+                     "dock_seed": dseed, "conformer_seed": cseed,
+                     "exhaustiveness": exhaustiveness, "protonation": protonation,
+                     "prebuilt_ligand": prebuilt})
 
     if 1 in tiers:
         for s in d["seeds"]:
             add("calibration", "acarbose_native", None, "8FJC", gtfb, centre,
-                "wide_28", wide, s, None, prebuilt=native)
+                "wide_28", wide, s, None, prebuilt=native, tier=1)
             for c in contenders:
                 add("contender", c["id"], c["sequence"], "8FJC", gtfb, centre,
-                    "wide_28", wide, s, 42)
+                    "wide_28", wide, s, 42, tier=1)
     if 2 in tiers:
         for s in d["seeds_for_null_sets"]:
             for n in null_a:
                 add("null_a", n["id"], n["sequence"], "8FJC", gtfb, centre,
-                    "wide_28", wide, s, 42)
+                    "wide_28", wide, s, 42, tier=2)
             for n in null_b:
                 add("null_b", n["id"], n["sequence"], "8FJC", gtfb, centre,
-                    "wide_28", wide, s, 42)
+                    "wide_28", wide, s, 42, tier=2)
     if 3 in tiers:
         for s in d["seeds_for_null_sets"]:
             add("calibration", "acarbose_native", None, "8FJC", gtfb, centre,
-                "tight_auto", tight, s, None, prebuilt=native)
+                "tight_auto", tight, s, None, prebuilt=native, tier=3)
             for c in contenders:
                 add("contender", c["id"], c["sequence"], "8FJC", gtfb, centre,
-                    "tight_auto", tight, s, 42)
+                    "tight_auto", tight, s, 42, tier=3)
             for n in null_a[:12]:
                 add("null_a", n["id"], n["sequence"], "8FJC", gtfb, centre,
-                    "tight_auto", tight, s, 42)
+                    "tight_auto", tight, s, 42, tier=3)
             for n in null_b[:12]:
                 add("null_b", n["id"], n["sequence"], "8FJC", gtfb, centre,
-                    "tight_auto", tight, s, 42)
+                    "tight_auto", tight, s, 42, tier=3)
     if 4 in tiers:
         subset = [c for c in contenders if c["role"] in
                   ("reference_scaffold_P2A", "wild_type_lead")]
@@ -460,13 +546,13 @@ def build_jobs(boxes: dict, tiers: list[int]) -> list[dict]:
                 continue
             for c in subset:
                 add("contender", c["id"], c["sequence"], "8FJC", gtfb, centre,
-                    "wide_28", wide, 1, cseed)
+                    "wide_28", wide, 1, cseed, tier=4)
             for n in null_a[:10]:
                 add("null_a", n["id"], n["sequence"], "8FJC", gtfb, centre,
-                    "wide_28", wide, 1, cseed)
+                    "wide_28", wide, 1, cseed, tier=4)
             for n in null_b[:10]:
                 add("null_b", n["id"], n["sequence"], "8FJC", gtfb, centre,
-                    "wide_28", wide, 1, cseed)
+                    "wide_28", wide, 1, cseed, tier=4)
     if 6 in tiers:
         # The calcium control. Same ligands, same box, same seeds as tier 3, but against
         # the receptor that keeps the conserved structural Ca2+ instead of stripping it.
@@ -477,16 +563,16 @@ def build_jobs(boxes: dict, tiers: list[int]) -> list[dict]:
             gtfb_ca = ca["receptor_pdbqt"]
             for s in d["seeds_for_null_sets"]:
                 add("calibration", "acarbose_native", None, "8FJC_CA", gtfb_ca, centre,
-                    "wide_28", wide, s, None, prebuilt=native)
+                    "wide_28", wide, s, None, prebuilt=native, tier=6)
                 for c in contenders:
                     add("contender", c["id"], c["sequence"], "8FJC_CA", gtfb_ca, centre,
-                        "wide_28", wide, s, 42)
+                        "wide_28", wide, s, 42, tier=6)
                 for n in null_a[:12]:
                     add("null_a", n["id"], n["sequence"], "8FJC_CA", gtfb_ca, centre,
-                        "wide_28", wide, s, 42)
+                        "wide_28", wide, s, 42, tier=6)
                 for n in null_b[:12]:
                     add("null_b", n["id"], n["sequence"], "8FJC_CA", gtfb_ca, centre,
-                        "wide_28", wide, s, 42)
+                        "wide_28", wide, s, 42, tier=6)
     if 5 in tiers:
         for s in d["seeds_for_null_sets"]:
             for rid, rpath in off.items():
@@ -494,13 +580,155 @@ def build_jobs(boxes: dict, tiers: list[int]) -> list[dict]:
                     continue
                 for c in contenders:
                     add("off_target", c["id"], c["sequence"], rid, rpath,
-                        off_centres[rid], "wide_28", wide, s, 42)
+                        off_centres[rid], "wide_28", wide, s, 42, tier=5)
     return jobs
 
 
+# --------------------------------------------------------------------------- #
+# Naming
+#
+# The repository this package corrects holds one docking result under three
+# filenames at GTF-SI, a second under three at 3AIC and a third under two at
+# alpha-amylase: eight names over five distinct results, with nothing inside any
+# of the files to say which run produced it. The two functions below are why that
+# cannot happen here.
+#
+# identity()  the scientific identity of a run: every parameter that can change
+#             the number. Resume and deduplication both key on this, so the same
+#             run requested by two tiers is docked once, not twice.
+# job_key()   identity plus the tier that first asked for it. This is the stem of
+#             every file the run writes. Nothing is hand-labelled.
+#
+# The pose path additionally carries a short content tag of the ligand file, which
+# is only known once the ligand is built, so two different ligand files cannot
+# land on one pose path even under identical parameters.
+# --------------------------------------------------------------------------- #
+IDENTITY_FIELDS = ("kind", "id", "receptor_id", "protonation", "box_id",
+                   "dock_seed", "conformer_seed", "exhaustiveness", "receptor_tag")
+
+
+def identity(j: dict) -> str:
+    return "|".join([str(j["kind"]), str(j["id"]), str(j["receptor_id"]),
+                     str(j["protonation"]), str(j["box_id"]),
+                     f"d{j['dock_seed']}", f"c{j['conformer_seed']}",
+                     f"ex{j['exhaustiveness']}", f"r{j['receptor_tag']}"])
+
+
 def job_key(j: dict) -> str:
-    return "|".join([j["kind"], j["id"], j["receptor_id"], j["box_id"],
-                     f"d{j['dock_seed']}", f"c{j['conformer_seed']}"])
+    return f"t{j['tier']}|" + identity(j)
+
+
+def path_stem(j: dict, ligand_tag: str) -> str:
+    """Deterministic filesystem stem for one run. Same parameters, same stem, always."""
+    stem = (job_key(j) + f"|L{ligand_tag}").replace("|", "__")
+    stem = "".join(ch if (ch.isalnum() or ch in "_-.") else "-" for ch in stem)
+    if len(stem) > 150:  # keep it deterministic and inside every filesystem limit
+        stem = stem[:120] + "__" + hashlib.sha256(stem.encode()).hexdigest()[:16]
+    return stem
+
+
+def dedupe_jobs(jobs: list[dict]) -> list[dict]:
+    """One run per scientific identity, tagged with every tier that asked for it."""
+    seen: dict[str, dict] = {}
+    for j in jobs:
+        ident = identity(j)
+        if ident in seen:
+            seen[ident]["also_requested_by_tiers"].append(j["tier"])
+        else:
+            j = dict(j)
+            j["also_requested_by_tiers"] = []
+            seen[ident] = j
+    return list(seen.values())
+
+
+# --------------------------------------------------------------------------- #
+# Naming self-check, with no test-runner dependency
+#
+# The full suite is test_provenance.py and needs pytest. This is the subset that
+# gates the docking, written so that a machine without pytest still cannot start a
+# nine-hour run on a naming scheme that has not been checked.
+# --------------------------------------------------------------------------- #
+def naming_self_check() -> int:
+    checks: list[tuple[str, bool, str]] = []
+
+    def base(**over):
+        j = {"tier": 2, "kind": "contender", "id": "mutant_P2A_CAHWRPWHC",
+             "receptor_id": "8FJC", "receptor": "/r/8FJC.pdbqt",
+             "receptor_tag": "1111aaaa", "centre": [1.0, 2.0, 3.0], "box_id": "wide_28",
+             "size": [28.0] * 3, "dock_seed": 1, "conformer_seed": 42,
+             "exhaustiveness": 16, "protonation": "as_built_no_pH_model_free_termini",
+             "prebuilt_ligand": None}
+        j.update(over)
+        return j
+
+    checks.append(("the same parameters always give the same path",
+                   path_stem(base(), "lig1") == path_stem(base(), "lig1"), ""))
+
+    for field, value in (("tier", 3), ("id", "wild_type"), ("receptor_id", "8FJC_CA"),
+                         ("protonation", "explicit_pH_5_2"), ("box_id", "tight_auto"),
+                         ("dock_seed", 2), ("conformer_seed", 101),
+                         ("exhaustiveness", 32), ("receptor_tag", "2222bbbb")):
+        changed = path_stem(base(**{field: value}), "lig1") != path_stem(base(), "lig1")
+        checks.append((f"changing {field} changes the output path", changed, ""))
+
+    checks.append(("changing the ligand file changes the output path",
+                   path_stem(base(), "lig1") != path_stem(base(), "lig2"), ""))
+    checks.append(("the path is bounded and filesystem safe",
+                   len(path_stem(base(id="X" * 400), "lig1")) <= 150
+                   and all(c.isalnum() or c in "_-." for c in path_stem(base(), "lig1")),
+                   ""))
+    checks.append(("long names still give distinct paths",
+                   path_stem(base(id="Y" * 400), "lig1")
+                   != path_stem(base(id="Y" * 399 + "Z"), "lig1"), ""))
+    checks.append(("identity ignores the tier, so resume works across tiers",
+                   identity(base(tier=2)) == identity(base(tier=6))
+                   and job_key(base(tier=2)) != job_key(base(tier=6)), ""))
+    deduped = dedupe_jobs([base(tier=2), base(tier=6),
+                           base(tier=3, box_id="tight_auto")])
+    checks.append(("one run requested by two tiers is docked once",
+                   len(deduped) == 2
+                   and any(j["also_requested_by_tiers"] == [6] for j in deduped), ""))
+
+    # the glue-atom read, which an earlier version of this file got wrong
+    tmp = OUT / ".naming_self_check"
+    tmp.mkdir(parents=True, exist_ok=True)
+    opened = tmp / "opened.pdbqt"
+    opened.write_text("ATOM      1  N   CYS A   1       0.0  0.0  0.0  0.00  0.00  -0.3 N\n"
+                      "ATOM      2  CG  UNL     1       1.0  1.0  1.0  0.00  0.00  +0.0 CG0\n")
+    rigid = tmp / "rigid.pdbqt"
+    rigid.write_text("ATOM      1  N   CYS A   1       0.0  0.0  0.0  0.00  0.00  -0.3 N\n"
+                     "ATOM      5  CG  LEU A   2       1.0  1.0  1.0  0.00  0.00  +0.0 C\n")
+    checks.append(("an opened macrocycle ring is detected", has_glue_atoms(opened), ""))
+    checks.append(("a side-chain CG atom is not mistaken for ring glue",
+                   not has_glue_atoms(rigid), ""))
+    for f in (opened, rigid):
+        f.unlink()
+    tmp.rmdir()
+
+    # the failure this is all for: one content under several names
+    poses = REPO_ROOT / "data" / "poses"
+    if poses.is_dir():
+        by: dict[str, list[str]] = {}
+        for f in sorted(poses.glob("*.pdbqt")):
+            by.setdefault(hashlib.sha256(f.read_bytes()).hexdigest(), []).append(f.name)
+        dups = {h: v for h, v in by.items() if len(v) > 1}
+        note = (f"{len(dups)} contents under more than one name in data/poses, "
+                f"worst case {max((len(v) for v in dups.values()), default=0)} names "
+                f"for one result" if dups else "data/poses holds no duplicates")
+        checks.append(("the duplicate-content check runs on the existing repository",
+                       True, note))
+
+    print("Naming and provenance self-check")
+    failed = 0
+    for name, ok, note in checks:
+        print(f"  {'PASS' if ok else 'FAIL'}  {name}" + (f"  [{note}]" if note else ""))
+        failed += 0 if ok else 1
+    if failed:
+        print(f"\n{failed} naming checks failed. Not docking.")
+        return 1
+    print(f"\nAll {len(checks)} naming checks passed. "
+          f"Run test_provenance.py for the full set of 38 if pytest is available.")
+    return 0
 
 
 def main() -> int:
@@ -512,9 +740,20 @@ def main() -> int:
                          "Ca-retained receptor could not be built or this Vina build "
                          "refused it; out/boxes.json records why.")
     ap.add_argument("--cpu", type=int, default=CONFIG["docking"]["cpu"])
+    ap.add_argument("--check-naming", action="store_true",
+                    help="run the naming and provenance checks and stop. No Vina, no "
+                         "pytest, about a second. RUN_ME.sh runs this before docking.")
     ap.add_argument("--dry-run", action="store_true",
                     help="list the work and stop without docking")
+    ap.add_argument("--overwrite", action="store_true",
+                    help="allow a run to overwrite an existing pose file that no recorded "
+                         "result claims. Off by default: an unclaimed file at a "
+                         "deterministic path means an interrupted or edited run, and "
+                         "overwriting it silently is how one result comes to stand in for "
+                         "another. Nothing in the analysis needs this flag.")
     args = ap.parse_args()
+    if args.check_naming:
+        return naming_self_check()
     tiers = [int(t) for t in args.tiers.split(",") if t.strip()]
 
     print("Preflight")
@@ -523,19 +762,33 @@ def main() -> int:
     print(f"  receptor: {pre['env']['receptor_title']}")
     print(f"  receptor sha256: {pre['env']['receptor_sha256'][:16]}")
 
-    jobs = build_jobs(pre["boxes"], tiers)
+    raw_jobs = build_jobs(pre["boxes"], tiers)
+    jobs = dedupe_jobs(raw_jobs)
+    shared = sum(1 for j in jobs if j["also_requested_by_tiers"])
+    if len(raw_jobs) != len(jobs):
+        print(f"\n  {len(raw_jobs) - len(jobs)} requested runs are the same run under "
+              f"two tiers; each is docked once and reported in both.")
+
     done = set()
     if RESULTS.exists():
         for line in RESULTS.read_text().splitlines():
             if line.strip():
                 try:
-                    done.add(json.loads(line)["key"])
-                except (json.JSONDecodeError, KeyError):
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
                     continue
-    todo = [j for j in jobs if job_key(j) not in done]
+                # Resume keys on scientific identity, not on the tier label, so a run
+                # already done under one tier is not repeated under another.
+                if "identity" in rec:
+                    done.add(rec["identity"])
+                elif "key" in rec:  # a file written before identity existed
+                    done.add(rec["key"].split("|", 1)[-1])
+    todo = [j for j in jobs if identity(j) not in done]
 
-    print(f"\n{len(jobs)} docking runs in tiers {tiers}; "
+    print(f"\n{len(jobs)} distinct docking runs in tiers {tiers}; "
           f"{len(done)} already recorded; {len(todo)} to run.")
+    if shared:
+        print(f"  {shared} of them serve more than one tier.")
     if args.dry_run:
         for j in todo[:20]:
             print("  " + job_key(j))
@@ -552,10 +805,21 @@ def main() -> int:
         "config": CONFIG, "environment": pre["env"], "boxes": pre["boxes"],
         "sequence_provenance": SEQUENCES["provenance"],
         "tiers_requested": tiers, "total_runs_planned": len(jobs),
+        "requested_runs_before_deduplication": len(raw_jobs),
+        "naming": {
+            "identity_fields": list(IDENTITY_FIELDS),
+            "path_stem_rule": "t<tier>__<identity fields>__L<ligand content tag>, "
+                              "non-alphanumerics replaced, hashed past 150 characters",
+            "why": "The repository this package corrects holds eight pose filenames over "
+                   "five distinct results, with nothing inside the files to attribute "
+                   "them. Every path here is derived from the run's own parameters and "
+                   "the content of its two input files, so no two runs can share one.",
+        },
     }, indent=2) + "\n")
 
     t_start = time.time()
     completed = failed = 0
+    paths_written: dict[str, str] = {}
     with RESULTS.open("a") as fh:
         for i, j in enumerate(todo, 1):
             key = job_key(j)
@@ -566,17 +830,30 @@ def main() -> int:
                     lig, lmeta = ligand_for(j["sequence"], pre["boxes"]["centre"],
                                             j["conformer_seed"])
                 except Exception as exc:
-                    rec = {"key": key, **j, "ok": False, "error": f"ligand build failed: {exc}"}
+                    rec = {"key": key, "identity": identity(j), **j,
+                           "ok": False, "error": f"ligand build failed: {exc}"}
                     fh.write(json.dumps(rec) + "\n")
                     fh.flush()
                     failed += 1
                     print(f"[{i}/{len(todo)}] {key} LIGAND FAILED: {exc}")
                     continue
 
+            ligand_tag = file_tag(lig)
+            stem = path_stem(j, ligand_tag)
+            if stem in paths_written:
+                die(f"two distinct runs derived the same output path {stem}.\n"
+                    f"  first:  {paths_written[stem]}\n  second: {key}\n"
+                    f"This is a bug in the naming scheme, not in your machine. Stopping "
+                    f"rather than letting one run overwrite another.")
+            paths_written[stem] = key
+
             out = dock_one(lig, j["receptor"], j["centre"], j["size"], j["dock_seed"],
-                           tag=key.replace("|", "__"), cpu=args.cpu,
-                           exhaustiveness=CONFIG["docking"]["exhaustiveness"])
-            rec = {"key": key, **j, "ligand_meta": lmeta,
+                           tag=stem, cpu=args.cpu,
+                           exhaustiveness=j["exhaustiveness"],
+                           vina_version_text=pre["env"]["vina_version_text"],
+                           allow_overwrite=args.overwrite)
+            rec = {"key": key, "identity": identity(j), "path_stem": stem,
+                   "ligand_tag": ligand_tag, **j, "ligand_meta": lmeta,
                    "recorded_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), **out}
             fh.write(json.dumps(rec) + "\n")
             fh.flush()

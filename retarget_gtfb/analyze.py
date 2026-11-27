@@ -17,6 +17,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import sys
@@ -189,6 +190,121 @@ def permutation_p_one_sided(observed: float, null: list[float]) -> dict:
                             "least as well as the candidate; exact and distribution-free"}
 
 
+def spearman(x: list[float], y: list[float]) -> float | None:
+    """Rank correlation, implemented here because scipy is not a dependency."""
+    if len(x) < 3 or len(x) != len(y):
+        return None
+
+    def ranks(v):
+        order = np.argsort(np.asarray(v, dtype=float))
+        r = np.empty(len(v), dtype=float)
+        r[order] = np.arange(1, len(v) + 1, dtype=float)
+        # average ties
+        vals = np.asarray(v, dtype=float)
+        for u in np.unique(vals):
+            m = vals == u
+            if m.sum() > 1:
+                r[m] = r[m].mean()
+        return r
+
+    rx, ry = ranks(x), ranks(y)
+    if rx.std() == 0 or ry.std() == 0:
+        return None
+    return round(float(np.corrcoef(rx, ry)[0, 1]), 4)
+
+
+def minimum_detectable_effect(null: list[float], alpha: float = 0.05) -> dict:
+    """What size of advantage this null could have detected at all.
+
+    An exact one-sided permutation test on n nulls returns p = (k+1)/(n+1), where k
+    is the number of nulls at least as good as the observation. The smallest p it can
+    return is 1/(n+1), so n bounds the question before any score is computed. This is
+    the measurement that says whether a null result means "no effect" or "no power",
+    and the existing campaign reports a p value without it.
+    """
+    n = len(null)
+    if n < 2:
+        return {"n_null": n, "reason": "too few null members to characterise"}
+    arr = np.sort(np.asarray(null, dtype=float))  # ascending: more negative is better
+    smallest_p = 1.0 / (n + 1)
+    # largest k with (k+1)/(n+1) < alpha
+    k_max = -1
+    for k in range(n + 1):
+        if (k + 1) / (n + 1) < alpha:
+            k_max = k
+        else:
+            break
+    out = {
+        "n_null": n,
+        "alpha": alpha,
+        "smallest_attainable_p": round(smallest_p, 4),
+        "null_mean_kcal": round(float(arr.mean()), 3),
+        "null_sd_kcal": round(float(arr.std(ddof=1)), 3),
+        "null_best_kcal": round(float(arr[0]), 3),
+    }
+    if smallest_p >= alpha:
+        out["verdict"] = (f"no observation could reach p < {alpha} with n = {n}. The test "
+                          f"cannot return a significant result whatever the lead scores.")
+        return out
+    # the observation must beat all but k_max of the nulls
+    threshold = float(arr[k_max]) if k_max >= 0 else float(arr[0])
+    out["nulls_the_observation_may_not_beat"] = max(k_max, 0)
+    out["score_threshold_kcal"] = round(threshold, 3)
+    out["minimum_detectable_effect_kcal"] = round(float(arr.mean()) - threshold, 3)
+    out["minimum_detectable_effect_in_null_sd"] = (
+        round((float(arr.mean()) - threshold) / float(arr.std(ddof=1)), 2)
+        if arr.std(ddof=1) > 0 else None)
+    out["verdict"] = (
+        f"with n = {n} at alpha = {alpha}, the observation must score at or below "
+        f"{threshold:.3f} kcal/mol, which is {float(arr.mean()) - threshold:.3f} kcal/mol "
+        f"better than the null mean. An advantage smaller than that cannot be detected "
+        f"by this test at this n, however real it is.")
+    return out
+
+
+def size_confound(entries: list[dict]) -> dict:
+    """Regress score on heavy-atom count, because Vina's score grows with ligand size.
+
+    Relevant here because the existing campaign's 39-member null is built from
+    permutations of the wild type at 86 heavy atoms while the lead has 84, so the
+    comparison carries a size difference as well as a sequence difference.
+    """
+    pts = [(e["heavy_atoms"], e["score"]) for e in entries
+           if e.get("heavy_atoms") and e.get("score") is not None]
+    if len(pts) < 5:
+        return {"reason": f"only {len(pts)} entries carry both a score and an atom count"}
+    ha = np.asarray([a for a, _ in pts], dtype=float)
+    sc = np.asarray([b for _, b in pts], dtype=float)
+    span = float(ha.max() - ha.min())
+    if span < 5.0:
+        # A slope fitted over a two-atom span is a number that looks authoritative and
+        # is not. Refuse it rather than print it.
+        return {"n": len(pts), "heavy_atom_range": [float(ha.min()), float(ha.max())],
+                "heavy_atom_span": span,
+                "reason": f"the heavy-atom counts in this set span only {span:g} atoms, "
+                          f"which is too narrow to fit a slope worth reporting. Size "
+                          f"cannot be ruled out as a confound from within a set whose "
+                          f"members are all nearly one size. Use the slope measured over "
+                          f"the full 260-contender ledger instead, recorded in "
+                          f"PROTOCOL.md section 4.",
+                "slope_withheld": True}
+    A = np.vstack([ha, np.ones_like(ha)]).T
+    slope, intercept = np.linalg.lstsq(A, sc, rcond=None)[0]
+    r = float(np.corrcoef(ha, sc)[0, 1])
+    return {
+        "n": len(pts),
+        "heavy_atom_range": [float(ha.min()), float(ha.max())],
+        "slope_kcal_per_heavy_atom": round(float(slope), 4),
+        "intercept_kcal": round(float(intercept), 3),
+        "pearson_r": round(r, 3),
+        "r_squared": round(r * r, 3),
+        "interpretation":
+            "Multiply the slope by the heavy-atom difference between two molecules to get "
+            "the score difference attributable to size alone, before any sequence effect. "
+            "Compare that with the difference being claimed.",
+    }
+
+
 def agg(values: list[float]) -> dict:
     a = np.asarray(values, dtype=float)
     return {"n": int(a.size), "mean": round(float(a.mean()), 3),
@@ -250,6 +366,131 @@ def self_test() -> int:
 # --------------------------------------------------------------------------- #
 # Main analysis
 # --------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
+# Provenance audit
+#
+# The repository this package corrects holds eight pose filenames over five
+# distinct results: one GTF-SI result under three names, one 3AIC result under
+# three, one alpha-amylase result under two. Nothing inside any of those files
+# records a seed, a command line, a run id or a time, so there is no way to tell
+# from the files whether that was one run saved three times or three runs that
+# collapsed onto one. This audit exists so that the same question can always be
+# answered here, from the two files he sends back and nothing else.
+# --------------------------------------------------------------------------- #
+REQUIRED_PROVENANCE = ("run_id", "identity", "path_stem", "vina_command_string",
+                       "dock_seed", "exhaustiveness", "box_centre", "box_size",
+                       "vina_version_text", "receptor_md5", "ligand_md5",
+                       "started_utc", "finished_utc", "pose_sha256")
+
+
+def provenance_audit(rows: list[dict]) -> dict:
+    """Return findings on whether every recorded result can be attributed to one run.
+
+    Hard failures are the ones that mean two results cannot be told apart. They are
+    reported and they make the analysis exit non-zero; they do not stop the rest of
+    the report being written, because a nine-hour run should not be thrown away over
+    a check that can be read afterwards.
+    """
+    ok = [r for r in rows if r.get("ok")]
+    out: dict = {"records_audited": len(ok), "hard_failures": [], "notes": []}
+
+    missing: dict[str, list[str]] = {}
+    for r in ok:
+        absent = [f for f in REQUIRED_PROVENANCE if r.get(f) in (None, "", [])]
+        if absent:
+            missing[r.get("identity") or r.get("key") or "<unkeyed record>"] = absent
+    out["records_missing_provenance_fields"] = len(missing)
+    if missing:
+        out["records_missing_provenance_detail"] = dict(list(missing.items())[:10])
+        out["notes"].append(
+            f"{len(missing)} of {len(ok)} records lack at least one provenance field. "
+            f"Those rows can be read but not independently attributed.")
+
+    # 1. one content under more than one name: the failure in the existing repository
+    by_content: dict[str, list[dict]] = {}
+    for r in ok:
+        h = r.get("pose_sha256")
+        if h:
+            by_content.setdefault(h, []).append(r)
+    shared = []
+    for h, group in by_content.items():
+        idents = {r.get("identity") or r.get("key") for r in group}
+        if len(idents) > 1:
+            shared.append({
+                "pose_sha256": h,
+                "distinct_runs_sharing_this_content": len(idents),
+                "identities": sorted(str(i) for i in idents),
+                "path_stems": sorted({str(r.get("path_stem")) for r in group}),
+                "run_ids": sorted({str(r.get("run_id")) for r in group}),
+                "scores_kcal": sorted({r.get("vina_kcal") for r in group
+                                       if r.get("vina_kcal") is not None}),
+            })
+    out["identical_pose_content_under_distinct_runs"] = shared or "none"
+    if shared:
+        out["hard_failures"].append(
+            f"{len(shared)} pose file contents each appear under more than one distinct "
+            f"run. Byte-identical coordinates from runs that differ in seed, box, "
+            f"receptor or ligand mean the runs were not independent, whatever the record "
+            f"says. This is the failure pattern already present in data/poses/ in this "
+            f"repository and it must be resolved before any of these rows is used.")
+
+    # 2. one name under more than one content: the resume logic failed
+    by_stem: dict[str, set] = {}
+    for r in ok:
+        st = r.get("path_stem")
+        if st:
+            by_stem.setdefault(st, set()).add(r.get("pose_sha256"))
+    stem_conflicts = {k: sorted(str(x) for x in v) for k, v in by_stem.items() if len(v) > 1}
+    out["one_path_holding_more_than_one_result"] = stem_conflicts or "none"
+    if stem_conflicts:
+        out["hard_failures"].append(
+            f"{len(stem_conflicts)} output paths were written with more than one distinct "
+            f"content, so an earlier result at that path was overwritten by a later one.")
+
+    # 3. a run id reused
+    run_ids = [r.get("run_id") for r in ok if r.get("run_id")]
+    dup_ids = sorted({i for i in run_ids if run_ids.count(i) > 1})
+    out["reused_run_ids"] = dup_ids or "none"
+    if dup_ids:
+        out["hard_failures"].append(
+            f"{len(dup_ids)} run ids appear on more than one record, so those records "
+            f"cannot be separated.")
+
+    # 4. an identity recorded twice
+    idents = [r.get("identity") for r in ok if r.get("identity")]
+    dup_idents = sorted({i for i in idents if idents.count(i) > 1})
+    out["identities_recorded_more_than_once"] = dup_idents[:20] or "none"
+    if dup_idents:
+        out["notes"].append(
+            f"{len(dup_idents)} run identities appear on more than one record. Resume is "
+            f"meant to prevent this. Later rows are duplicates of earlier ones and "
+            f"inflate every count they enter.")
+
+    out["passed"] = not out["hard_failures"]
+    return out
+
+
+def audit_pose_directory(directory: Path) -> dict:
+    """Content audit of any directory of pose files, by content alone.
+
+    This is what catches the failure in the existing repository, where the files
+    carry no provenance at all and only their bytes can be compared.
+    """
+    by: dict[str, list[str]] = {}
+    for f in sorted(Path(directory).rglob("*.pdbqt")):
+        if f.is_file():
+            by.setdefault(hashlib.sha256(f.read_bytes()).hexdigest(), []).append(f.name)
+    dups = {h: names for h, names in by.items() if len(names) > 1}
+    return {
+        "directory": str(directory),
+        "files_hashed": sum(len(v) for v in by.values()),
+        "distinct_contents": len(by),
+        "contents_under_more_than_one_name": len(dups),
+        "detail": {h[:16]: names for h, names in sorted(dups.items())},
+        "passed": not dups,
+    }
+
+
 def load() -> list[dict]:
     if not RESULTS.exists():
         print(f"STOP: {RESULTS} does not exist. Run run_docking.py first.", file=sys.stderr)
@@ -281,6 +522,10 @@ def main() -> int:
         if (OUT / "receptor_validation.json").exists() else None,
         "caveats": [],
     }
+
+    report["provenance_audit"] = provenance_audit(rows)
+    if not report["provenance_audit"]["passed"]:
+        report["caveats"].extend(report["provenance_audit"]["hard_failures"])
 
     autobox = [r["key"] for r in good if r.get("vinardo_scoring_context") == "autobox_fallback"]
     if autobox:
@@ -330,6 +575,10 @@ def main() -> int:
     report["per_entity_wide_box_conformer42"] = primary
 
     # ---- redocking calibration ----
+    # boxes is initialised here because later blocks read it. He is told that partial
+    # output is useful, so the analysis has to survive a results file written before
+    # boxes.json exists rather than crash on it.
+    boxes = None
     boxes_path = OUT / "boxes.json"
     if boxes_path.exists():
         boxes = json.loads(boxes_path.read_text())
@@ -427,6 +676,30 @@ def main() -> int:
                 entry[f"by_{stat}_across_shared_seeds"] = {
                     "status": "not run",
                     "reason": f"candidate present: {ident in c}; null members: {len(null)}"}
+        # What this null could have detected at all. Without it a p value above 0.05
+        # cannot be read, because "no effect" and "no power" look identical.
+        for stat in ("best", "mean"):
+            null = null_by_stat[stat]
+            if len(null) >= 2:
+                entry[f"power_by_{stat}"] = minimum_detectable_effect(list(null.values()))
+        obs_mde = entry.get("power_by_best", {})
+        obs = entry.get("by_best_across_shared_seeds", {}).get("observed")
+        if obs is not None and "minimum_detectable_effect_kcal" in obs_mde:
+            observed_effect = obs_mde["null_mean_kcal"] - obs
+            entry["observed_effect_kcal"] = round(observed_effect, 3)
+            entry["observed_effect_against_minimum_detectable"] = {
+                "observed_advantage_over_null_mean_kcal": round(observed_effect, 3),
+                "minimum_detectable_at_this_n_kcal":
+                    obs_mde["minimum_detectable_effect_kcal"],
+                "ratio": (round(observed_effect / obs_mde["minimum_detectable_effect_kcal"], 2)
+                          if obs_mde["minimum_detectable_effect_kcal"] else None),
+                "reading":
+                    "If the observed advantage is well below the minimum detectable effect, "
+                    "a non-significant p value says the test was too small to see an effect "
+                    "of that size, not that no effect exists. Neither direction is then "
+                    "supportable from this test and the honest word is uninformative.",
+            }
+
         bests = [entry[f"by_{s}_across_shared_seeds"].get("rejects_null_at_0.05")
                  for s in ("best", "mean")]
         if None not in bests:
@@ -580,10 +853,15 @@ def main() -> int:
                            for k, v in sorted(multi.items())},
             "spread": agg(spreads),
             "interpretation":
-                "Meeko leaves the disulfide ring rigid, so each conformer seed gives one fixed "
-                "backbone. If the spread across conformer seeds is comparable to the lead-minus-"
-                "null difference, then that difference is substantially conformer-generation "
-                "luck and no claim about sequence-specific binding survives it.",
+                "Meeko opens the disulfide macrocycle at one bond, so Vina samples the "
+                "torsions that opening exposes, but bond lengths, bond angles and the "
+                "ring-closure geometry are fixed by the ETKDGv3 embedding and Vina varies "
+                "none of them. Each embedding seed therefore gives one fixed reference "
+                "geometry. If the spread across embedding seeds is comparable to the "
+                "lead-minus-null difference, that difference is substantially "
+                "conformer-generation luck and no claim about sequence-specific binding "
+                "survives it. An earlier revision of this file said the ring was held "
+                "rigid; that was wrong and is corrected in PROTOCOL.md section 2.3.",
         }
     else:
         report["conformer_seed_effect"] = {"status": "not run", "reason": "tier 4 rows absent"}
@@ -635,6 +913,142 @@ def main() -> int:
                  if v.get("disulfide_SS_A") and not (2.00 <= v["disulfide_SS_A"]["mean"] <= 2.15)}
     report["disulfide_integrity_failures"] = broken_ss or "none outside 2.00 to 2.15 A"
 
+    # ---- size confound, ligand efficiency, and scoring-function agreement ----
+    # None of these costs a docking run. All three are measurements the existing
+    # campaign could have made on data it already had and did not.
+    ha_of: dict[str, int] = {}
+    for r in good:
+        lm = r.get("ligand_meta") or {}
+        if lm.get("heavy_atoms"):
+            ha_of.setdefault(r["id"], lm["heavy_atoms"])
+
+    entries = []
+    for ident, e in primary.items():
+        if e["kind"] == "calibration":
+            continue
+        best = (e.get("vina") or {}).get("best")
+        if best is None:
+            continue
+        entries.append({"id": ident, "kind": e["kind"], "heavy_atoms": ha_of.get(ident),
+                        "score": best})
+
+    report["size_confound"] = {
+        "all_docked_entities": size_confound(entries),
+        "within_null_a": size_confound([e for e in entries if e["kind"] == "null_a"]),
+        "within_null_b": size_confound([e for e in entries if e["kind"] == "null_b"]),
+        "why_this_is_here":
+            "Vina's score grows with ligand size. The null distribution the existing "
+            "campaign reports is built from permutations of the wild type at 86 heavy "
+            "atoms, while the lead it is compared against has 84, so that comparison "
+            "carries a size difference as well as a sequence difference. Null B in this "
+            "package fixes the pairing; the slope is reported so the residual size term "
+            "can be subtracted rather than assumed away.",
+    }
+
+    le = {}
+    for e in entries:
+        if e["heavy_atoms"]:
+            le[e["id"]] = {"vina_kcal": round(e["score"], 3),
+                           "heavy_atoms": e["heavy_atoms"],
+                           "kcal_per_heavy_atom": round(e["score"] / e["heavy_atoms"], 4)}
+    report["ligand_efficiency"] = {
+        "per_entity": dict(sorted(le.items())),
+        "note": "Score divided by heavy-atom count, reported beside the raw score rather "
+                "than instead of it. A ranking that reverses between the two is a ranking "
+                "by molecular weight.",
+    }
+    if le:
+        by_raw = sorted(le, key=lambda k: le[k]["vina_kcal"])
+        by_eff = sorted(le, key=lambda k: le[k]["kcal_per_heavy_atom"])
+        report["ligand_efficiency"]["rank_agreement_raw_vs_efficiency"] = {
+            "spearman": spearman([le[k]["vina_kcal"] for k in by_raw],
+                                 [le[k]["kcal_per_heavy_atom"] for k in by_raw]),
+            "best_by_raw_score": by_raw[0],
+            "best_by_efficiency": by_eff[0],
+            "same_winner": by_raw[0] == by_eff[0],
+        }
+
+    pairs = [(e["vina"]["best"], e["vinardo"]["best"]) for e in primary.values()
+             if e.get("vina") and e.get("vinardo")
+             and e["vina"].get("best") is not None and e["vinardo"].get("best") is not None]
+    report["vina_vinardo_agreement"] = {
+        "n_entities": len(pairs),
+        "spearman_rank_correlation": spearman([a for a, _ in pairs], [b for _, b in pairs]),
+        "mean_absolute_difference_kcal": (round(float(np.mean([abs(a - b) for a, b in pairs])), 3)
+                                          if pairs else None),
+        "what_it_is_not":
+            "Vinardo is a reparameterisation of the same functional form as Vina, scored "
+            "on the same pose by the same program. High agreement between them is not "
+            "independent confirmation of anything; it is one method agreeing with itself. "
+            "Reported because disagreement would be informative, not because agreement is.",
+    }
+
+    # ---- the noise floor, in one place ----
+    # Tests 4, 5 and 6 in section 5 of PROTOCOL.md cannot be adjudicated unless the
+    # claimed difference and every measured source of spread are set side by side.
+    seed_ranges = [e["vina"]["range"] for e in primary.values()
+                   if e.get("vina") and e["vina"].get("range") is not None
+                   and e["kind"] != "calibration"]
+    pose_spreads = [e["pose_rmsd_across_seeds_A"]["mean"] for e in primary.values()
+                    if e.get("pose_rmsd_across_seeds_A")]
+    conf_block = report.get("conformer_seed_effect") or {}
+    conf_spread = conf_block.get("spread") if isinstance(conf_block, dict) else None
+    primary_test = report["null_tests"].get(
+        "reference_scaffold_vs_null_B_composition_matched", {})
+    claimed = primary_test.get("observed_effect_kcal")
+    floor = {
+        "claimed_advantage_of_lead_over_null_mean_kcal": claimed,
+        "median_score_range_across_docking_seeds_kcal":
+            round(float(np.median(seed_ranges)), 3) if seed_ranges else None,
+        "max_score_range_across_docking_seeds_kcal":
+            round(max(seed_ranges), 3) if seed_ranges else None,
+        "median_pose_rmsd_across_docking_seeds_A":
+            round(float(np.median(pose_spreads)), 3) if pose_spreads else None,
+        "conformer_seed_spread_kcal": (conf_spread.get("worst")
+                                       if isinstance(conf_spread, dict) else None),
+        "vina_reference_standard_error_kcal": VINA_SE_KCAL,
+        "vina_reference_standard_error_source": VINA_SE_SOURCE,
+        "minimum_detectable_effect_kcal":
+            (primary_test.get("power_by_best") or {}).get("minimum_detectable_effect_kcal"),
+    }
+    exceeded = []
+    if claimed is not None and claimed <= 0:
+        floor["claimed_advantage_is_smaller_than"] = (
+            "not applicable: the candidate did not score better than the null mean at all, "
+            "so there is no advantage to compare against the noise.")
+        floor["reading"] = (
+            "The candidate scored no better than the mean of its own matched permutations. "
+            "Read together with the minimum detectable effect, which bounds what this test "
+            "could have found, the test is uninformative rather than negative: it supports "
+            "neither the candidate nor its absence.")
+        report["noise_floor"] = floor
+        exceeded = None
+    if claimed is not None and exceeded is not None:
+        for label, key in (("docking-seed spread", "max_score_range_across_docking_seeds_kcal"),
+                           ("conformer-seed spread", "conformer_seed_spread_kcal"),
+                           ("the test's minimum detectable effect",
+                            "minimum_detectable_effect_kcal")):
+            v = floor.get(key)
+            if v is not None and claimed < v:
+                exceeded.append(f"{label} ({v} kcal/mol)")
+    if exceeded is None:
+        exceeded = []
+    else:
+        floor["claimed_advantage_is_smaller_than"] = (
+            exceeded or "none of the measured sources")
+        floor["reading"] = (
+            "A score difference smaller than any one of these is not a finding. Where "
+            "the claimed advantage is smaller than the minimum detectable effect, the "
+            "test is uninformative in both directions: it supports neither the lead nor "
+            "its absence."
+            if exceeded else
+            "The claimed advantage exceeds every measured source of spread listed here, "
+            "which is a necessary condition for reporting it and not a sufficient one.")
+    floor["sign_convention"] = ("a more negative Vina score is better, so an advantage is "
+                                "null mean minus candidate score and a negative advantage "
+                                "means the candidate scored worse than its own null")
+    report["noise_floor"] = floor
+
     path = OUT / "analysis.json"
     path.write_text(json.dumps(report, indent=2) + "\n")
 
@@ -661,6 +1075,20 @@ def main() -> int:
         if t.get("disagreement_warning"):
             print(f"      WARNING: {t['disagreement_warning']}")
     print(f"\nFull report: {path}")
+
+    pa = report["provenance_audit"]
+    if not pa["passed"]:
+        print("\n" + "=" * 72)
+        print("PROVENANCE CHECK FAILED. The report above is written but must not be used")
+        print("until this is resolved, because two or more results cannot be told apart.")
+        for f in pa["hard_failures"]:
+            print(f"\n  {f}")
+        print("\nDetail is under provenance_audit in " + str(path))
+        print("=" * 72)
+        return 2
+    if pa.get("records_missing_provenance_fields"):
+        print(f"  note: {pa['records_missing_provenance_fields']} records lack a "
+              f"provenance field; see provenance_audit in the report.")
     return 0
 
 

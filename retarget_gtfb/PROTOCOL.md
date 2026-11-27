@@ -79,12 +79,31 @@ numbers independently of which protein was used.
    builds its command line without `--seed`, so the search is stochastic and the
    pipeline the README describes as deterministic is not. The spread this hides has
    never been measured.
-3. **The macrocycle ring is rigid.** The committed pose files contain no CG or G
-   glue pseudo-atoms, which is how Meeko marks a ring it has opened for sampling.
-   Every score therefore rests on one arbitrary ETKDGv3 seed-42 backbone conformer
-   per sequence, and different sequences receive conformers of differing quality.
-   That is a confound easily large enough to dominate the 0.15 kcal/mol difference
-   between lead and null that the campaign reports.
+3. **Every score rests on a single starting conformer, and two of Vina's own
+   applicability limits are exceeded.** An earlier revision of this document
+   asserted here that Meeko had left the macrocycle ring rigid, on the strength of
+   finding no glue pseudo-atoms in the committed poses. That was wrong, and the
+   error was mine: the detector read the AutoDock atom type with a two-column slice,
+   which truncates `CG0` to `CG` and matches nothing. Read correctly, 1183 of the
+   1244 committed pose files carry a `CG0`/`G0` pair, which is Meeko's mark for a
+   macrocycle opened at one bond for sampling. Every cyclic nine-mer pose is in that
+   set. The 61 without are acarbose and the linear and eleven-residue ligands, none
+   of which has a macrocycle to open. The ring was sampled. The claim is withdrawn
+   and `retarget_gtfb/test_provenance.py` now asserts the opposite against the files
+   themselves, so it cannot be reasserted by accident.
+
+   What survives the correction is narrower and still worth stating. Opening a ring
+   at one bond gives Vina the resulting torsions, not the ring's conformational
+   freedom: bond lengths, bond angles and the closure reference geometry are all
+   fixed by one ETKDGv3 embedding at seed 42 per sequence, and Vina varies none of
+   them. So conformer luck is reduced rather than removed, which is what tier 4
+   measures, and tier 4 is a starting-conformer sensitivity test rather than a
+   workaround for a rigid ring. Separately, the eleven-residue ligands are written
+   at `TORSDOF 35`, above the 0 to 32 range over which Vina's affinity normalisation
+   was fitted, while the nine-mers at `TORSDOF 15` are inside it, so those two
+   groups are not scored on the same footing. Neither point is large enough on its
+   own to account for the 0.15 kcal/mol lead-against-null difference the campaign
+   reports; section 4 gives the measurement that settles what is.
 4. **Two mutually inconsistent linear controls exist.** The cyclization benefit is
    reported twice from two different molecules.
    `demo_data/results/falsification_benchmark.json` gives the linear control as
@@ -208,6 +227,97 @@ invalidates the comparison, so there is none.
   receptor and not an independent significance test: with 12 null members the smallest
   attainable exact p is 0.077.
 
+### 4.1 Naming and provenance of every result
+
+The repository this package corrects holds eight pose filenames over five distinct
+results: one GTF-SI result saved under three names, one 3AIC result under three, and
+one alpha-amylase result under two. The lead CAHWRPWHC appears in all three groups.
+Nothing inside any of those files records a seed, a command line, a run identifier or
+a time, so from the files alone there is no way to tell whether that was one run
+written three times or three runs that collapsed onto one. That ambiguity is not
+recoverable after the fact, which is why it is designed out here rather than audited
+for afterwards.
+
+- **Every output path is derived, never chosen.** The stem of every file a run writes
+  is `t<tier>` followed by the run's kind, ligand identifier, receptor identifier,
+  protonation state, box, docking seed, conformer seed, exhaustiveness, a short
+  content hash of the receptor file and a short content hash of the ligand file. No
+  label is supplied by hand anywhere in the package. Two runs that differ in any one
+  of those parameters cannot write to the same path, and two different receptor or
+  ligand files cannot either, whatever they are called.
+- **The protonation state is named rather than implied.** There is one state in this
+  package and it is `as_built_no_pH_model_free_termini`, because the builder goes
+  through `Chem.MolFromSequence` and `AddHs`, which applies no pH model and leaves the
+  termini free. Naming it means a second state added later cannot silently collide
+  with this one.
+- **Resume keys on scientific identity, not on the tier label,** so a run requested by
+  two tiers is docked once and reported in both, and re-running after an interruption
+  cannot duplicate or skip work. The record carries both.
+- **Every result record carries its own provenance:** the full Vina command line, the
+  seed, exhaustiveness, box centre and size, the Vina version string, the MD5 and
+  SHA-256 of both the receptor and the ligand file, a run identifier unique to that
+  invocation, start and finish times in UTC, and the SHA-256 of the pose file written.
+  The two files sent back are therefore self-describing; nothing has to be taken on
+  trust from a filename.
+- **An existing result is never overwritten silently.** A pose file sitting at a
+  deterministic path that no recorded result claims is an orphan from an interrupted
+  or edited run. The run refuses it and says so, and `--overwrite` is the only way
+  past. Nothing in the analysis needs that flag.
+- **The analysis fails loudly on the failure described above.** `provenance_audit`
+  reports it and the analysis exits non-zero if one pose content appears under more
+  than one distinct run, if one path was written with more than one content, or if a
+  run identifier is reused. The report is written first, so a nine-hour run is never
+  discarded over a check that can be read afterwards.
+- **It is tested against the real failure, not only against a fixture.**
+  `retarget_gtfb/test_provenance.py` takes the duplicated files out of `data/poses/`
+  and shows the check catching them, asserts that each of the ten run parameters
+  changes the output path, and asserts that a reused run identifier and a path holding
+  two contents are both caught. Thirty-eight checks, all passing, run in under a
+  second. They are a precondition of the docking rather than a tier of it.
+
+### 4.2 Measurements made from the results, costing no docking runs
+
+Four things are computed from data the run already produces. Each is here because a
+claim in the existing campaign cannot be adjudicated without it.
+
+1. **Minimum detectable effect.** An exact one-sided permutation test on *n* nulls
+   returns p = (k+1)/(n+1), so *n* bounds the question before any score exists. On
+   the existing 39-member null the smallest attainable p is 0.025, and to reach
+   p < 0.05 the candidate must beat every null member, which means scoring at or
+   below the best of them. On the ledger's own numbers that threshold is
+   -9.378 kcal/mol, which is **1.035 kcal/mol better than the null mean** of
+   -8.343 kcal/mol. The difference the campaign reports is 0.15 kcal/mol, roughly
+   one seventh of the floor. **This is what gates the wording of the conclusion.**
+   Without it, a p value above 0.05 reads as "no effect" when what it means is "no
+   power", and those are different claims. Reported for every null test, both
+   pairings, both summary statistics.
+2. **Score against ligand size.** Vina's reported affinity grows with heavy-atom
+   count. Regressed over all 260 contenders in the existing ledger, which span 60 to
+   118 heavy atoms, the slope is **-0.0234 kcal/mol per heavy atom**
+   (Pearson r = -0.282, r-squared = 0.08). The existing null is built from
+   permutations of the wild type at 86 heavy atoms while the lead it is compared
+   against has 84, so the published comparison carries a 2-atom size difference worth
+   about **-0.047 kcal/mol**, roughly a third of the 0.15 kcal/mol it reports. Null B
+   fixes the pairing; the slope is reported so that the residual size term can be
+   subtracted rather than assumed away. Where a subset spans fewer than five heavy
+   atoms the slope is withheld rather than printed, because a slope fitted over a
+   two-atom span looks authoritative and is not.
+3. **Ligand efficiency beside the raw score.** Score divided by heavy-atom count, with
+   the rank correlation between the two orderings and whether they pick the same
+   winner. A ranking that reverses between them is a ranking by molecular weight.
+4. **Vina against Vinardo, with what that is not.** Rank correlation and mean absolute
+   difference. Vinardo is a reparameterisation of the same functional form, scored on
+   the same pose by the same program, so agreement between them is one method agreeing
+   with itself and is not independent confirmation. It is reported because
+   disagreement would be informative, not because agreement is.
+
+These feed a single `noise_floor` block that puts the claimed advantage beside the
+docking-seed spread, the embedding-seed spread, the pose spread across seeds, Vina's
+reference standard error and the minimum detectable effect, so that decision rules 4,
+5 and 6 below can actually be adjudicated instead of discussed. A more negative score
+is better, so an advantage is the null mean minus the candidate's score, and a
+negative advantage means the candidate scored worse than its own null.
+
 ## 5. Decision rules, fixed in advance
 
 Each is stated with what the outcome would mean, so no result can be reinterpreted
@@ -219,12 +329,14 @@ after it arrives.
 | 2 | **Primary null test.** Lead CAHWRPWHC against null B, composition matched. | Exact one-sided empirical p below 0.05 | At or above 0.05 the lead is indistinguishable from a random ordering of its own residues, and the campaign has no sequence-specific signal. That is the declared negative outcome and it is an acceptable result. |
 | 3 | **Secondary null test.** Wild type CPHWRPWHC against null A. | Same | Same. Reported whatever it shows. |
 | 4 | **Seed sensitivity.** Spread of Vina scores across docking seeds for a single molecule. | Any score difference claimed between molecules must exceed this spread | If seed spread exceeds the lead-minus-null difference, that difference is search noise and no ranking is reportable. |
-| 5 | **Conformer sensitivity.** Spread across five ETKDGv3 conformer seeds with the ring held rigid. | Same | If conformer spread exceeds the lead-minus-null difference, the campaign measured conformer-generation luck. |
+| 5 | **Starting-conformer sensitivity.** Spread across five ETKDGv3 embedding seeds. Meeko opens the macrocycle at one bond, so Vina samples the resulting torsions, but bond lengths, bond angles and the ring-closure geometry stay as the embedding set them. | Same | If conformer spread exceeds the lead-minus-null difference, the campaign measured conformer-generation luck. |
 | 6 | **Pose convergence.** Heavy-atom RMSD between the top poses from different docking seeds. | Reported separately from score convergence, never conflated with it | Converged scores with divergent poses means the scoring function is reaching the same number by different arrangements, which is a known failure mode of large boxes and is not evidence of a binding mode. |
 | 7 | **Mode gap.** Energy difference between pose modes 1 and 2. | Reported, no threshold | A gap under about 0.3 kcal/mol means the top pose is not meaningfully preferred over the runner-up. |
 | 8 | **Box-size effect.** Score and rank change between the 28 A and tight boxes. | Reported, no threshold | A reordering of lead against controls between boxes means the original ranking was an artefact of box size. |
 | 9 | **Off-target selectivity.** Delta delta G against 1SMD and 1LZ1. | Must exceed about 1 kcal/mol to be discussed at all | Vina's own standard error on its reference set is around 2.85 kcal/mol. Differences well inside that are not selectivity. |
 | 10 | **Geometry integrity.** Cys1 SG to CysN SG distance in every built ligand. | 2.00 to 2.15 A | Outside that range the disulfide is not a disulfide and the molecule docked was not the molecule intended. |
+| 11 | **Provenance integrity.** No pose content under more than one run, no path holding more than one content, no reused run identifier. | Zero of each | Any one of them means two results cannot be told apart, so no number in the set can be attributed. This gate runs before any other is read and the analysis exits non-zero when it fails. It is the gate the existing campaign has already failed: eight pose filenames over five distinct results. |
+| 12 | **Power.** Minimum detectable effect from the null's own size and spread, against the difference being claimed. | The claimed difference must exceed the minimum detectable effect before any verdict is read | Where the claimed difference is below the floor, the correct word is uninformative, not negative. A test that could not have found an effect of the claimed size has not ruled one out. On the existing 39-member null the floor is 1.035 kcal/mol against a claimed 0.15, so this gate decides how the result is written up whichever way the p value falls. |
 
 ### What a positive result would and would not establish
 
@@ -232,8 +344,9 @@ If tests 1 through 5 all pass, the correct claim is: *in this docking protocol, 
 this structure, the lead scores better than permutations of its own sequence, with
 a converged pose, beyond seed and conformer noise.* That is a hypothesis worth
 testing at the bench. It is not evidence of inhibition. Docking scores are not
-binding affinities, and this is a rigid-receptor, rigid-ring calculation on a
-macrocycle, which is close to the worst case for the method. No claim about
+binding affinities, and this is a rigid-receptor calculation on a macrocycle whose
+ring is opened at one bond from a single embedded conformer, which is close to the
+worst case for the method. No claim about
 activity, potency or selectivity follows from any outcome here.
 
 ### What a negative result would establish
@@ -243,17 +356,30 @@ would say the computational screen does not support its lead, which is a publish
 negative finding about the method and the screen, and is the honest endpoint if that
 is what the numbers show.
 
+### How a difference below the floor is to be reported
+
+If the primary test returns p above 0.05 while the claimed difference sits below the
+minimum detectable effect, the supportable sentence is that **the screen does not
+discriminate the lead from matched permutations of its own residues, and is not
+powered to, so it supports neither the molecule nor its absence.** It is not "the
+peptide does not bind", which docking cannot establish, and it is not "the peptide
+binds weakly", which the scores do not support either. A larger null would be needed
+to make the test informative, and the number required follows from the floor rather
+than from preference.
+
 ## 6. Known limitations, stated now rather than discovered later
 
 1. **Docking alone establishes neither activity nor inactivity.** Both directions
    are unsupported. A score is not an affinity.
 2. **The receptor is rigid.** GH70 glucansucrases have a mobile cleft; a single
    crystal conformer cannot represent it.
-3. **The macrocycle ring is rigid.** Meeko did not open it. Ring conformation is
-   fixed by ETKDG before docking begins, and tier 4 measures how much that matters
-   rather than fixing it. Fixing it properly would require rebuilding the ligand
-   preparation with explicit macrocycle sampling, which would break comparability
-   with the existing numbers and is a separate exercise.
+3. **Ring sampling is partial, not absent.** Meeko opens the macrocycle at one
+   bond, so Vina samples the torsions that opening exposes. It does not sample bond
+   lengths, bond angles or the ring-closure geometry, all of which are fixed by a
+   single ETKDGv3 embedding per sequence. Tier 4 measures how much the choice of
+   embedding matters; it does not remove the dependence. An earlier revision of this
+   document stated that the ring was rigid and that no ring sampling occurred at
+   all. That was wrong and is corrected in section 2.3, defect 3.
 4. **One receptor conformation, one protonation state.** pH 7.4 Gasteiger charges,
    though the relevant environment in dental plaque is acidic. The existing campaign
    has the same limitation.

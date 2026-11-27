@@ -55,12 +55,14 @@ cd retarget_gtfb
 bash fetch_receptor.sh          # downloads 8FJC.pdb, about 1 MB, a few seconds
 python3 validate_receptor.py    # checks it really is GtfB, instant
 python3 prepare_receptor.py     # builds the docking receptor and the boxes, seconds
+python3 run_docking.py --check-naming     # 18 naming checks, no Vina, no pytest, 1 second
 python3 analyze.py --self-test  # checks the statistics code, seconds
 python3 run_docking.py          # the long one
 python3 analyze.py              # writes out/analysis.json
 ```
 
 Or just `bash RUN_ME.sh`, which runs those in order and stops at the first failure.
+The naming checks are part of that sequence, before anything is docked.
 
 ## How long the docking takes
 
@@ -107,6 +109,46 @@ merely qualify it, because it changes the receptor rather than the search.
 
 Other switches: `--cpu 16` if you have more cores, `--dry-run` to list the jobs
 without running anything.
+
+## Why you cannot end up with one result under three names
+
+Your repository currently holds eight pose filenames over five distinct results: one
+GTF-SI result saved under three names, one 3AIC result under three, and one
+alpha-amylase result under two. The lead CAHWRPWHC is in all three groups. None of
+those files records a seed, a command line or a time, so there is no way to tell from
+them whether that was one run saved three times or three runs that collapsed onto one.
+
+Nothing in this package can do that, and the reason is worth a paragraph because it is
+the part you cannot check by reading the output.
+
+Every file a run writes is named from the run's own parameters: the tier, what kind of
+run it is, the ligand, the receptor, the protonation state, the box, the docking seed,
+the conformer seed, the exhaustiveness, and a short content hash of both the receptor
+file and the ligand file. Nothing is labelled by hand. Change any one of those and the
+filename changes with it. Use a different receptor file under the same name and the
+filename still changes, because the hash is of the contents.
+
+Every line in `out/results.jsonl` carries the full Vina command line that produced it,
+the seed, the exhaustiveness, the box, the Vina version string, the MD5 and SHA-256 of
+both input files, a run identifier unique to that invocation, start and finish times,
+and the hash of the pose file. That matters because the two files you send back are
+all I will have. A number I cannot trace to a command line is not evidence.
+
+If a pose file already exists at a path and no recorded result claims it, the run
+stops rather than overwriting it, and tells you which file. That is an orphan from an
+interrupted or edited run, and overwriting it silently is exactly how one result comes
+to stand in for another. `--overwrite` is there if you ever genuinely want it.
+
+Finally, `analyze.py` checks for the failure itself: if one pose content turns up under
+more than one run, or one path was written with more than one content, or a run
+identifier is reused, it writes the report and then exits non-zero with a banner you
+cannot miss. `python3 run_docking.py --check-naming` proves the scheme works:
+eighteen checks, about a second, no Vina and no pytest, and its last line reports what
+the duplicate-content check finds in your existing `data/poses/`. The full suite of
+thirty-eight is `python3 -m pytest test_provenance.py -q`, which additionally takes
+the duplicated files out of `data/poses/` and shows the check catching them; it needs
+pytest, so `RUN_ME.sh` runs it only if you have it and never blocks the docking on it.
+Either way the gate runs before the overnight job, not after.
 
 ## What to send back
 

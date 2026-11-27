@@ -2,16 +2,18 @@
   "package": "retarget_gtfb",
   "purpose": "Re-run the macrocycle docking campaign against an experimental Streptococcus mutans GtfB structure instead of the GtfC structure 3AIC.",
   "prepared_on": "2026-11-27",
-
   "receptor": {
     "pdb_id": "8FJC",
     "gene": "gtfB",
     "uniprot": "P08987",
     "protein_name_in_pdb_header": "GLUCOSYLTRANSFERASE-I",
     "construct_residues": "191-1051 (catalytic domain, S. mutans UA159)",
-    "resolution_angstrom": 2.50,
+    "resolution_angstrom": 2.5,
     "space_group": "P4(3)22",
-    "chains_in_asymmetric_unit": ["A", "B"],
+    "chains_in_asymmetric_unit": [
+      "A",
+      "B"
+    ],
     "bound_inhibitor": "acarbose, deposited as two GLC moieties plus one AC1 moiety",
     "chain_to_use": "A",
     "source_publication": {
@@ -24,21 +26,34 @@
     },
     "why_this_one_and_not_the_others": "8FJ9 is the same crystal form and resolution but apo, so it gives no native ligand for a redocking calibration control. 8FK4 is the acarbose co-crystal in which the inhibitor fits the density better, but it is 3.25 A with eight copies in the asymmetric unit. 8FKL is the highest resolution at 1.48 A but it was truncated by proteolysis and is missing domains B and IV, which flank the active-site cleft, so it is the wrong model for docking. 8FJC is the only deposited structure that is GtfB, intact, inhibitor-bound, and better than 3 A."
   },
-
   "catalytic_residues_gtfb_numbering": {
     "nucleophile": "Asp451",
     "acid_base": "Glu489",
     "transition_state_stabiliser": "Asp562",
     "acceptor_platform_tryptophan": "Trp491",
-    "other_acarbose_contacts": ["Arg449", "Asn455", "Asn511", "Arg514", "His561", "Asp883", "Gln934"],
+    "other_acarbose_contacts": [
+      "Arg449",
+      "Asn455",
+      "Asn511",
+      "Arg514",
+      "His561",
+      "Asp883",
+      "Gln934"
+    ],
     "gtfc_equivalents_used_by_the_old_pipeline": {
-      "Asp451": "Asp477", "Glu489": "Glu515", "Asp562": "Asp588", "Trp491": "Trp517",
-      "Arg449": "Arg475", "Asn455": "Asn481", "Arg514": "Arg540", "His561": "His587",
-      "Asp883": "Asp909", "Gln934": "Gln960"
+      "Asp451": "Asp477",
+      "Glu489": "Glu515",
+      "Asp562": "Asp588",
+      "Trp491": "Trp517",
+      "Arg449": "Arg475",
+      "Asn455": "Asn481",
+      "Arg514": "Arg540",
+      "His561": "His587",
+      "Asp883": "Asp909",
+      "Gln934": "Gln960"
     },
     "provenance": "Residue correspondence and the acarbose hydrogen-bond table are taken from Schormann et al. 2023 (DOI 10.1107/S2053230X23003199), Table 4 and Section 3.2. Not inferred by alignment here."
   },
-
   "docking": {
     "engine": "AutoDock Vina",
     "required_version_substring": "1.2.7",
@@ -46,11 +61,25 @@
     "cpu": 8,
     "scoring_primary": "vina",
     "scoring_rescore": "vinardo",
-    "seeds": [1, 2, 3, 4, 5],
-    "seeds_for_null_sets": [1, 2, 3],
+    "seeds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "seeds_for_null_sets": [
+      1,
+      2,
+      3
+    ],
     "boxes": {
       "wide_28": {
-        "size": [28.0, 28.0, 28.0],
+        "size": [
+          28.0,
+          28.0,
+          28.0
+        ],
         "rationale": "Identical to the box edge used in the existing campaign on 3AIC, so the new numbers are directly comparable with the old ones."
       },
       "tight_auto": {
@@ -60,20 +89,31 @@
     },
     "box_centre_rule": "Primary centre is the centroid of the heavy atoms of the bound acarbose in chain A. The centroid of the catalytic triad carboxylate oxygens (Asp451, Glu489, Asp562) is computed as a cross-check and the distance between the two centres is recorded. If they differ by more than 4.0 A the run stops, because that would mean the site has been identified wrongly."
   },
-
   "ligand_preparation": {
     "builder": "biophysics_engine.build_macrocycle_3d, imported unchanged from the repository root",
     "why_imported_rather_than_reimplemented": "The comparison with the existing 3AIC numbers is only meaningful if the ligands are built by exactly the same code path.",
-    "conformer_seeds": [42, 101, 202, 303, 404],
-    "conformer_seed_note": "The existing pipeline builds one conformer per sequence with ETKDGv3 seed 42 and Meeko leaves the disulfide macrocycle ring rigid, confirmed by the absence of CG/G glue pseudo-atoms in the committed poses. Every published score therefore rests on a single arbitrary backbone conformer per molecule. Seed 42 is kept as the primary for comparability and the other four are run on a subset to measure how much of the lead-versus-null difference is conformer-generation luck rather than binding."
+    "conformer_seeds": [
+      42,
+      101,
+      202,
+      303,
+      404
+    ],
+    "conformer_seed_note": "The existing pipeline builds one conformer per sequence with ETKDGv3 at seed 42. Meeko then opens the disulfide macrocycle at one bond, confirmed by the CG0/G0 glue pseudo-atom pair present in 1183 of the 1244 committed pose files, every cyclic nine-mer among them, so Vina does sample the torsions that opening exposes. An earlier revision of this file said the opposite, on the strength of a detector that read the atom type with a two-column slice and so truncated CG0 to CG. What remains true is narrower: bond lengths, bond angles and the ring-closure geometry are fixed by that single embedding and Vina varies none of them, so every published score still rests on one starting conformer per molecule. Seed 42 is kept as the primary for comparability with the existing numbers, and the other four are run on a subset to measure how much of the lead-versus-null difference is embedding luck.",
+    "ring_sampling_evidence": {
+      "pose_files_examined": 1244,
+      "with_cg0_g0_glue_pair": 1183,
+      "without": 61,
+      "the_61_are": "acarbose and the linear and eleven-residue ligands, none of which has a macrocycle to open",
+      "detector": "retarget_gtfb/run_docking.py has_glue_atoms, which reads the AutoDock type as the last whitespace-separated token on the ATOM line",
+      "regression_test": "retarget_gtfb/test_provenance.py"
+    }
   },
-
   "off_target_receptors": {
     "1SMD": "human salivary alpha-amylase, reused from demo_data/receptors as already prepared",
     "1LZ1": "human lysozyme, reused from demo_data/receptors as already prepared",
     "note": "These two are reused unchanged. Only the on-target receptor changes in this package."
   },
-
   "tiers": {
     "1": "Primary. Wide box, 5 docking seeds, conformer seed 42: the four named contenders plus acarbose redocking calibration.",
     "2": "Null distributions. Wide box, 3 docking seeds, conformer seed 42: null A (39 wild-type permutations, the existing set) and null B (39 reference-scaffold permutations, newly generated because the existing set is not composition-matched to the reference scaffold).",
@@ -81,7 +121,6 @@
     "4": "Conformer-ensemble test. Wide box, docking seed 1, conformer seeds 101 to 404: reference scaffold, wild type, and the first 10 members of each null set.",
     "5": "Off-target counter-screens on 1SMD and 1LZ1. Wide box, 3 docking seeds: the four contenders."
   },
-
   "output": {
     "directory": "retarget_gtfb/out",
     "results_file": "retarget_gtfb/out/results.jsonl",

@@ -1,0 +1,392 @@
+#!/usr/bin/env python3
+"""
+Tests for result naming and provenance.
+
+Why this file exists
+--------------------
+The repository this package corrects holds eight pose filenames over five distinct
+results: one GTF-SI result saved under three names, one 3AIC result under three, and
+one alpha-amylase result under two. The files carry no seed, no command line, no run
+id and no timestamp, so nothing inside them can say whether that was one run written
+three times or three runs that silently collapsed onto one.
+
+These tests are the guarantee that the same thing cannot happen in this package. The
+central one, test_real_repository_duplicates_are_caught, takes the actual duplicated
+files out of the repository and shows the check catching them.
+
+Run with: python3 -m pytest retarget_gtfb/test_provenance.py -q
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.util
+import shutil
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).parent.resolve()
+REPO_ROOT = HERE.parent
+
+
+def _load(name: str, filename: str):
+    spec = importlib.util.spec_from_file_location(name, HERE / filename)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+rd = _load("rd_under_test", "run_docking.py")
+an = _load("an_under_test", "analyze.py")
+
+
+# --------------------------------------------------------------------------- #
+# The real failure
+# --------------------------------------------------------------------------- #
+def test_real_repository_duplicates_are_caught(tmp_path):
+    """Copy the repository's own duplicated pose files out and show the audit catch them.
+
+    Skips once data/poses has been cleaned up, which is the intended end state. While
+    the duplicates are still there, this test is the proof that the check works on the
+    real failure and not only on a fixture I wrote to be caught.
+    """
+    poses = REPO_ROOT / "data" / "poses"
+    if not poses.is_dir():
+        pytest.skip("data/poses is not present in this checkout")
+
+    by: dict[str, list[Path]] = {}
+    for f in sorted(poses.glob("*.pdbqt")):
+        by.setdefault(hashlib.sha256(f.read_bytes()).hexdigest(), []).append(f)
+    duplicated = {h: v for h, v in by.items() if len(v) > 1}
+    if not duplicated:
+        pytest.skip("data/poses no longer holds one content under several names")
+
+    staged = tmp_path / "staged"
+    staged.mkdir()
+    for group in duplicated.values():
+        for f in group:
+            shutil.copy2(f, staged / f.name)
+
+    res = an.audit_pose_directory(staged)
+    assert res["passed"] is False
+    assert res["contents_under_more_than_one_name"] == len(duplicated)
+    # at least one of them is the three-names-one-content case
+    assert max(len(v) for v in res["detail"].values()) >= 3
+    # and every staged file is accounted for
+    assert res["files_hashed"] == sum(len(v) for v in duplicated.values())
+
+
+def test_clean_pose_directory_passes(tmp_path):
+    for i in range(4):
+        (tmp_path / f"pose_{i}.pdbqt").write_text(f"ATOM  {i}\nREMARK unique {i}\n")
+    res = an.audit_pose_directory(tmp_path)
+    assert res["passed"] is True
+    assert res["contents_under_more_than_one_name"] == 0
+    assert res["files_hashed"] == 4
+
+
+# --------------------------------------------------------------------------- #
+# The same failure expressed as result records
+# --------------------------------------------------------------------------- #
+def _record(identity: str, stem: str, run_id: str, pose_sha: str, **over) -> dict:
+    rec = {
+        "ok": True, "identity": identity, "path_stem": stem, "run_id": run_id,
+        "pose_sha256": pose_sha, "vina_command_string": "vina --receptor r --ligand l",
+        "dock_seed": 1, "exhaustiveness": 16, "box_centre": [1.0, 2.0, 3.0],
+        "box_size": [28.0, 28.0, 28.0], "vina_version_text": "AutoDock Vina v1.2.7",
+        "receptor_md5": "a" * 32, "ligand_md5": "b" * 32,
+        "started_utc": "2026-11-27T00:00:00Z", "finished_utc": "2026-11-27T00:01:00Z",
+        "vina_kcal": -8.1,
+    }
+    rec.update(over)
+    return rec
+
+
+def test_three_runs_one_content_is_a_hard_failure():
+    """The exact shape of the existing repository's failure, as result records."""
+    same = "c" * 64
+    rows = [
+        _record("contender|LEAD|8FJC|p|wide_28|d1|c42|ex16|rAAA", "stem_a", "run1", same),
+        _record("contender|LEAD|8FJC|p|wide_28|d2|c42|ex16|rAAA", "stem_b", "run2", same),
+        _record("contender|LEAD|8FJC|p|wide_28|d3|c42|ex16|rAAA", "stem_c", "run3", same),
+    ]
+    res = an.provenance_audit(rows)
+    assert res["passed"] is False
+    assert res["hard_failures"], "a shared content across three runs must be a hard failure"
+    shared = res["identical_pose_content_under_distinct_runs"]
+    assert isinstance(shared, list) and len(shared) == 1
+    assert shared[0]["distinct_runs_sharing_this_content"] == 3
+    assert sorted(shared[0]["run_ids"]) == ["run1", "run2", "run3"]
+    assert sorted(shared[0]["path_stems"]) == ["stem_a", "stem_b", "stem_c"]
+
+
+def test_distinct_runs_with_distinct_content_pass():
+    rows = [_record(f"id{i}", f"stem{i}", f"run{i}", f"{i:064d}") for i in range(5)]
+    res = an.provenance_audit(rows)
+    assert res["passed"] is True
+    assert res["hard_failures"] == []
+    assert res["identical_pose_content_under_distinct_runs"] == "none"
+    assert res["records_missing_provenance_fields"] == 0
+
+
+def test_one_path_holding_two_results_is_a_hard_failure():
+    rows = [_record("id1", "same_stem", "run1", "d" * 64),
+            _record("id2", "same_stem", "run2", "e" * 64)]
+    res = an.provenance_audit(rows)
+    assert res["passed"] is False
+    assert "same_stem" in res["one_path_holding_more_than_one_result"]
+
+
+def test_reused_run_id_is_a_hard_failure():
+    rows = [_record("id1", "stem1", "shared_run", "d" * 64),
+            _record("id2", "stem2", "shared_run", "e" * 64)]
+    res = an.provenance_audit(rows)
+    assert res["passed"] is False
+    assert "shared_run" in res["reused_run_ids"]
+
+
+def test_identity_recorded_twice_is_noted_but_not_fatal():
+    rows = [_record("id1", "stem1", "run1", "d" * 64),
+            _record("id1", "stem1b", "run2", "e" * 64)]
+    res = an.provenance_audit(rows)
+    assert res["passed"] is True
+    assert "id1" in res["identities_recorded_more_than_once"]
+    assert any("more than one record" in n for n in res["notes"])
+
+
+def test_missing_provenance_is_reported_and_not_fatal():
+    rows = [_record("id1", "stem1", "run1", "d" * 64, vina_command_string=None,
+                    receptor_md5=None)]
+    res = an.provenance_audit(rows)
+    assert res["records_missing_provenance_fields"] == 1
+    assert "vina_command_string" in res["records_missing_provenance_detail"]["id1"]
+    assert res["passed"] is True, "an unattributable row is a caveat, not a stop"
+
+
+def test_failed_rows_are_not_audited():
+    rows = [{"ok": False, "error": "vina exit 1"}]
+    res = an.provenance_audit(rows)
+    assert res["records_audited"] == 0
+    assert res["passed"] is True
+
+
+# --------------------------------------------------------------------------- #
+# Deterministic naming
+# --------------------------------------------------------------------------- #
+def _job(**over) -> dict:
+    j = {"tier": 2, "kind": "contender", "id": "mutant_P2A_CAHWRPWHC",
+         "receptor_id": "8FJC", "receptor": "/r/8FJC.pdbqt", "receptor_tag": "1111aaaa",
+         "centre": [1.0, 2.0, 3.0], "box_id": "wide_28", "size": [28.0, 28.0, 28.0],
+         "dock_seed": 1, "conformer_seed": 42, "exhaustiveness": 16,
+         "protonation": "as_built_no_pH_model_free_termini", "prebuilt_ligand": None}
+    j.update(over)
+    return j
+
+
+def test_path_is_deterministic():
+    assert rd.path_stem(_job(), "ligtag01") == rd.path_stem(_job(), "ligtag01")
+
+
+@pytest.mark.parametrize("field,value", [
+    ("tier", 3),
+    ("id", "wild_type_CPHWRPWHC"),
+    ("receptor_id", "8FJC_CA"),
+    ("protonation", "explicit_pH_5_2"),
+    ("box_id", "tight_auto"),
+    ("dock_seed", 2),
+    ("conformer_seed", 101),
+    ("exhaustiveness", 32),
+    ("receptor_tag", "2222bbbb"),
+])
+def test_every_run_parameter_changes_the_path(field, value):
+    """Each parameter he named must be visible in the path, or two runs can collide."""
+    base = rd.path_stem(_job(), "ligtag01")
+    changed = rd.path_stem(_job(**{field: value}), "ligtag01")
+    assert base != changed, f"changing {field} left the output path unchanged"
+
+
+def test_ligand_content_changes_the_path():
+    assert rd.path_stem(_job(), "ligtag01") != rd.path_stem(_job(), "ligtag02")
+
+
+def test_path_has_no_hand_chosen_label():
+    stem = rd.path_stem(_job(), "ligtag01")
+    for part in ("t2", "contender", "mutant_P2A_CAHWRPWHC", "8FJC", "wide_28",
+                 "d1", "c42", "ex16", "r1111aaaa", "Lligtag01"):
+        assert part in stem, f"{part} is missing from the path"
+
+
+def test_path_is_filesystem_safe_and_bounded():
+    stem = rd.path_stem(_job(id="X" * 400), "ligtag01")
+    assert len(stem) <= 150
+    assert all(ch.isalnum() or ch in "_-." for ch in stem)
+
+
+def test_long_names_still_give_distinct_paths():
+    a = rd.path_stem(_job(id="Y" * 400), "ligtag01")
+    b = rd.path_stem(_job(id="Y" * 399 + "Z"), "ligtag01")
+    assert a != b, "the hash fallback must preserve distinctness past the length cap"
+
+
+def test_identity_excludes_the_tier_so_resume_works_across_tiers():
+    assert rd.identity(_job(tier=2)) == rd.identity(_job(tier=6))
+    assert rd.job_key(_job(tier=2)) != rd.job_key(_job(tier=6))
+
+
+def test_identical_runs_requested_by_two_tiers_are_docked_once():
+    jobs = [_job(tier=2), _job(tier=6), _job(tier=3, box_id="tight_auto")]
+    deduped = rd.dedupe_jobs(jobs)
+    assert len(deduped) == 2
+    shared = [j for j in deduped if j["also_requested_by_tiers"]][0]
+    assert shared["also_requested_by_tiers"] == [6]
+
+
+# --------------------------------------------------------------------------- #
+# Regression: the macrocycle glue-atom read
+#
+# An earlier version of has_glue_atoms() read the AutoDock type with a two-column
+# slice, which truncates CG0 to CG, and on the strength of it I told Dr Roi that
+# Meeko had left the ring rigid. It had not. The type is the last token on the line.
+# --------------------------------------------------------------------------- #
+GLUE_LINE = ("ATOM      9  G   UNL     1       1.000   2.000   3.000  "
+             "0.00  0.00    +0.000 G0\n")
+CG_LINE = ("ATOM     10  CG  UNL     1       4.000   5.000   6.000  "
+           "0.00  0.00    +0.000 CG0\n")
+PLAIN_LINE = ("ATOM      1  N   CYS A   1       0.000   0.000   0.000  "
+              "0.00  0.00    -0.300 N\n")
+
+
+def test_glue_atoms_are_detected_whatever_the_column(tmp_path):
+    f = tmp_path / "open_ring.pdbqt"
+    f.write_text(PLAIN_LINE + CG_LINE + GLUE_LINE)
+    assert rd.has_glue_atoms(f) is True
+
+
+def test_glue_atoms_detected_when_the_type_column_is_shifted(tmp_path):
+    f = tmp_path / "shifted.pdbqt"
+    f.write_text(PLAIN_LINE + CG_LINE.replace("    +0.000 CG0", "  +0.000 CG0"))
+    assert rd.has_glue_atoms(f) is True
+
+
+def test_a_rigid_ring_reads_as_rigid(tmp_path):
+    f = tmp_path / "rigid.pdbqt"
+    f.write_text(PLAIN_LINE * 3 + "TORSDOF 14\n")
+    assert rd.has_glue_atoms(f) is False
+
+
+def test_a_cg_named_atom_is_not_mistaken_for_glue(tmp_path):
+    """A side-chain CG carbon is named CG and typed C. It is not a glue pseudo-atom."""
+    f = tmp_path / "sidechain.pdbqt"
+    f.write_text("ATOM      5  CG  LEU A   2       1.000   1.000   1.000  "
+                 "0.00  0.00    +0.020 C\n")
+    assert rd.has_glue_atoms(f) is False
+
+
+def test_the_committed_poses_do_have_an_opened_ring():
+    """The claim I got wrong, now asserted against the files themselves."""
+    poses = sorted((REPO_ROOT / "data" / "poses").glob("*.pdbqt"))
+    if not poses:
+        pytest.skip("data/poses is not present in this checkout")
+    nine_mers = [p for p in poses if rd.has_glue_atoms(p)]
+    assert nine_mers, ("Meeko did open the macrocycle in the committed poses. If this "
+                       "assertion ever fails, check the detector before the conclusion.")
+
+
+# --------------------------------------------------------------------------- #
+# Refusing to overwrite
+# --------------------------------------------------------------------------- #
+def test_docking_refuses_to_overwrite_an_unclaimed_result(tmp_path, monkeypatch):
+    """An existing pose file at a deterministic path is not quietly replaced.
+
+    The check runs before Vina is invoked, so this test needs no Vina.
+    """
+    monkeypatch.setattr(rd, "POSE_DIR", tmp_path)
+    (tmp_path / "already_here.pdbqt").write_text("ATOM      1  C   UNL     1\n")
+    out = rd.dock_one(ligand_pdbqt=tmp_path / "lig.pdbqt", receptor="r.pdbqt",
+                      centre=(1, 2, 3), size=(28, 28, 28), dock_seed=1,
+                      tag="already_here", cpu=1, exhaustiveness=16)
+    assert out["ok"] is False
+    assert out.get("overwrite_refused") is True
+    assert "--overwrite" in out["error"]
+
+
+def test_overwrite_flag_lets_it_through(tmp_path, monkeypatch):
+    """With the flag set the run proceeds past the check and fails on the absent Vina.
+
+    Reaching a Vina failure is the proof that the overwrite guard was passed, which is
+    all this test is for.
+    """
+    monkeypatch.setattr(rd, "POSE_DIR", tmp_path)
+    (tmp_path / "already_here.pdbqt").write_text("ATOM      1  C   UNL     1\n")
+    (tmp_path / "lig.pdbqt").write_text("ATOM      1  C   UNL     1\n")
+    (tmp_path / "r.pdbqt").write_text("ATOM      1  N   ALA A   1\n")
+    try:
+        out = rd.dock_one(ligand_pdbqt=tmp_path / "lig.pdbqt",
+                          receptor=str(tmp_path / "r.pdbqt"),
+                          centre=(1, 2, 3), size=(28, 28, 28), dock_seed=1,
+                          tag="already_here", cpu=1, exhaustiveness=16,
+                          allow_overwrite=True)
+    except FileNotFoundError:
+        return  # vina is not installed here; the guard was still passed
+    assert out.get("overwrite_refused") is not True
+
+
+# --------------------------------------------------------------------------- #
+# The measurements that cost no docking runs
+# --------------------------------------------------------------------------- #
+def test_minimum_detectable_effect_is_bounded_by_the_null_size():
+    null = [-8.0 - 0.1 * i for i in range(39)]  # 39 members, best is -11.8
+    res = an.minimum_detectable_effect(null, alpha=0.05)
+    assert res["n_null"] == 39
+    assert res["smallest_attainable_p"] == round(1 / 40, 4)
+    # at n = 39 and alpha = 0.05 the observation must beat every null member
+    assert res["nulls_the_observation_may_not_beat"] == 0
+    assert res["score_threshold_kcal"] == min(null)
+    assert res["minimum_detectable_effect_kcal"] > 0
+
+
+def test_a_null_too_small_to_ever_reach_significance_says_so():
+    res = an.minimum_detectable_effect([-8.0, -8.1, -8.2], alpha=0.05)
+    assert res["smallest_attainable_p"] == 0.25
+    assert "cannot return a significant result" in res["verdict"]
+    assert "minimum_detectable_effect_kcal" not in res
+
+
+def test_size_slope_is_withheld_when_the_range_is_too_narrow():
+    entries = [{"heavy_atoms": 84 + (i % 3), "score": -8.0 - 0.01 * i} for i in range(40)]
+    res = an.size_confound(entries)
+    assert res.get("slope_withheld") is True
+    assert "slope_kcal_per_heavy_atom" not in res
+
+
+def test_size_slope_is_reported_over_a_real_range():
+    # a deliberate 0.05 kcal/mol per heavy atom relationship over 60 atoms of span
+    entries = [{"heavy_atoms": 60 + i, "score": -(5.0 + 0.05 * (60 + i))} for i in range(60)]
+    res = an.size_confound(entries)
+    assert res["slope_kcal_per_heavy_atom"] == pytest.approx(-0.05, abs=0.001)
+    assert res["r_squared"] > 0.99
+
+
+def test_spearman_matches_known_cases():
+    assert an.spearman([1, 2, 3, 4], [1, 2, 3, 4]) == 1.0
+    assert an.spearman([1, 2, 3, 4], [4, 3, 2, 1]) == -1.0
+    assert an.spearman([1, 1, 1], [1, 2, 3]) is None  # no variance to correlate
+    assert an.spearman([1, 2], [1, 2]) is None  # too few points
+
+
+def test_the_real_ledger_size_slope_is_small_but_not_zero():
+    """His own 260-contender ledger, as the reference the narrow-range guard points to."""
+    import csv
+    ledger = REPO_ROOT / "data" / "contenders_ledger.csv"
+    if not ledger.exists():
+        pytest.skip("contenders_ledger.csv is not present in this checkout")
+    rows = list(csv.DictReader(ledger.open()))
+    entries = [{"heavy_atoms": int(float(r["heavy_atoms"])),
+                "score": float(r["vina_3aic_kcal"])} for r in rows]
+    res = an.size_confound(entries)
+    assert res["n"] == len(rows)
+    assert res["heavy_atom_range"][1] - res["heavy_atom_range"][0] >= 5
+    assert res["slope_kcal_per_heavy_atom"] < 0, "a bigger ligand scores better in Vina"
+    # the 2-heavy-atom mismatch between the lead and null A is worth this much
+    assert abs(2 * res["slope_kcal_per_heavy_atom"]) < 0.15, (
+        "if this ever exceeds the claimed lead-null gap, size alone explains the gap")
