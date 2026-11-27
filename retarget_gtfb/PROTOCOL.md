@@ -96,6 +96,17 @@ numbers independently of which protein was used.
    hydrogen-bond typing, which Vina's scoring function does use, so that comparison
    varies two things at once. The AHWRPWH comparison is the more honest of the two and
    it is the one that goes against the project's thesis.
+
+   The clean control was never run. It is the lead's own sequence, CAHWRPWHC, with the
+   Cys1-Cys9 disulfide reduced to free thiols: identical residues, identical heavy-atom
+   count, one bond changed. This package does not carry it either, for a stated reason
+   rather than an oversight. Vina's reported affinity includes a normalisation on the
+   number of rotatable branches, and the reduced form has more of them than the
+   macrocycle, so a score difference between the two would not be attributable to the
+   constraint. Running it would produce a number that cannot answer the question it
+   appears to answer. The honest position is that the cyclization benefit this project
+   rests on has not been tested by any control in the repository, and grid docking is
+   not the method that can test it.
 5. **A gate's label is unconditional while its verdict is not.** In
    `falsification_engine.py`, `gate4_alanine_hotspot_scan` and
    `gate6_chitosan_donnan_stephan` write the literal string
