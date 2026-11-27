@@ -835,3 +835,60 @@ def test_the_withdrawal_count_in_the_log_is_derived_from_the_log():
     assert not re.search(r"of (?:those|these) (?:\w+) entries\b(?!\s+withdraw)", text), (
         "do not restate the log's total length in prose; it goes stale on every "
         "amendment")
+
+
+def test_the_manuscripts_rmsd_figures_reproduce_under_a_glue_inclusive_selection():
+    """4.1b claims the manuscript's 9.24 and 12.19 come from counting glue as heavy.
+
+    This is an accusation about someone else's number, so it is recomputed here rather
+    than asserted. If the reproduction ever stops holding, 4.1b's table is wrong and
+    the paragraph that names a cause must come out.
+    """
+    import itertools
+    import math
+
+    poses_dir = REPO_ROOT / "data" / "poses"
+    if not poses_dir.exists():
+        pytest.skip("data/poses is not present in this checkout")
+    files = {
+        s: poses_dir / f"disproof_seed_{s}_CAHWRPWHC_3AIC_docked.pdbqt"
+        for s in (42, 101, 202, 303, 404)
+    }
+    for f in files.values():
+        if not f.exists():
+            pytest.skip(f"{f.name} is not present in this checkout")
+
+    def mode1_drop_h_keep_glue(path: Path):
+        out, started = [], False
+        for line in path.read_text().splitlines():
+            if line.startswith("MODEL"):
+                if started:
+                    break
+                started = True
+                continue
+            if line.startswith("ENDMDL") and started:
+                break
+            if line.startswith(("ATOM", "HETATM")):
+                if line[77:79].strip().startswith("H"):
+                    continue
+                out.append((float(line[30:38]), float(line[38:46]), float(line[46:54])))
+        return out
+
+    sel = {s: mode1_drop_h_keep_glue(f) for s, f in files.items()}
+    assert len(sel[42]) == 86, (
+        f"the glue-inclusive heavy selection should hold 86 records, got {len(sel[42])}")
+
+    vals = []
+    for a, b in itertools.combinations(sorted(sel), 2):
+        pa, pb = sel[a], sel[b]
+        total = sum((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2
+                    for (x1, y1, z1), (x2, y2, z2) in zip(pa, pb))
+        vals.append(math.sqrt(total / len(pa)))
+    mean, worst = sum(vals) / len(vals), max(vals)
+
+    assert f"{mean:.2f}" == "9.24", f"expected the manuscript's 9.24, got {mean:.2f}"
+    assert f"{worst:.2f}" == "12.19", f"expected the manuscript's 12.19, got {worst:.2f}"
+
+    text = (HERE / "PROTOCOL.md").read_text()
+    assert "9.04" in text and "11.80" in text, (
+        "4.1b must state the corrected heavy-atom values beside the reproduced ones")

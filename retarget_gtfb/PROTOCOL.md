@@ -370,12 +370,25 @@ seeds 101 and 404, both independent. Over the 84 heavy atoms it rises from 9.04 
 reproduces and the pose does not strengthens very slightly when the non-independent
 member is removed, rather than depending on it.
 
-These are not the manuscript's figures and are not offered as a reproduction of them.
-The manuscript reports 9.24 A mean and 12.19 A worst over five; the mean agrees to
-0.01 A but the worst pair does not, so the two selections differ somewhere, most
-likely in mode choice or superposition. Neither set of numbers is asserted here to be
-the other's, and the direction of the effect, which is the only load-bearing part, is
-the same on both of the selections computed above.
+The manuscript's own figures for this sweep, 9.24 A mean and 12.19 A worst over five,
+reproduce exactly, and the selection that produces them can be named. It is mode 1
+with the eighteen hydrogens removed and the two `G0` glue markers kept, 86 records:
+
+| Selection | n | Mean over five | Worst pair |
+|---|---|---|---|
+| all records | 104 | 9.41 | 12.16 |
+| real atoms, glue excluded | 102 | 9.25 | 11.84 |
+| **hydrogens removed, glue kept** | **86** | **9.24** | **12.19** |
+| heavy atoms, glue excluded | 84 | 9.04 | 11.80 |
+
+So the manuscript's figures count two pseudo-atoms as heavy atoms. The glue markers
+sit at the macrocycle closure and move with it, which is why including them inflates
+both figures rather than leaving them alone. The correct heavy-atom values are 9.04 A
+mean and 11.80 A worst. Both remain far above the 2.0 A convention, so the
+manuscript's conclusion does not change, but the published worst-pair figure would be
+0.39 A too large and the cause would be a pseudo-atom. This has been reported to the
+manuscript work; it is recorded here because the finding came out of this package's
+atom-selection fix and because the same table shows why that fix was needed.
 
 So the correction needed is to the label and to the score summary, not to the finding.
 
