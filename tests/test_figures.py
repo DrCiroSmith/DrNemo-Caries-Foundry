@@ -258,7 +258,15 @@ def test_the_acid_switch_figure_is_gone_and_its_removal_is_explained():
         "disappearance is unexplained")
 
 
-def test_no_superseded_png_figure_is_still_committed():
+def test_the_live_figure_directory_holds_no_handmade_png():
+    """Named for what it checks.
+
+    This was called test_no_superseded_png_figure_is_still_committed, which
+    claims more than it does: the superseded PNGs are still committed, on
+    purpose, under manuscript/superseded/, and the README says so. What this
+    checks is narrower and is the thing worth holding: the live figure
+    directory has exactly one source, the ledger.
+    """
     stale = sorted(p.name for p in FIGURES.glob("*.png"))
     assert not stale, (
         f"these figures are still committed but are not generated from the "

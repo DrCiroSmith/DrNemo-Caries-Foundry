@@ -278,6 +278,42 @@ def test_the_published_four_run_score_matches_the_artefacts():
         f"reader cannot tell which convention the headline figure uses")
 
 
+def test_the_two_spreads_that_collide_at_two_decimals_are_stated_at_three():
+    """The four-run population SD and the five-run sample SD both round to 0.41.
+
+    An earlier version of this file pinned the published spread at two decimals,
+    which cannot tell those two quantities apart: a document that quoted the
+    five-run sample SD, that is, one that had silently kept the duplicate run in
+    the dispersion while reporting the four-run mean, would have satisfied every
+    assertion in the suite. The guard was pinned to the figure's digits rather
+    than to its meaning, which is the same weakness that let "Across 5 seeds"
+    survive the five-seed check. Both quantities are now required at a precision
+    at which they differ.
+    """
+    four = [r["score"] for r in _independent_runs()]
+    five = [r["score"] for r in _seed_runs()]
+    assert len(four) == 4 and len(five) == 5, (
+        f"expected four independent runs out of five nominal seeds, got "
+        f"{len(four)} and {len(five)}")
+    pop_four = statistics.pstdev(four)
+    sam_five = statistics.stdev(five)
+
+    assert round(pop_four, 2) == round(sam_five, 2), (
+        "the premise of this test has changed: the two spreads no longer "
+        f"collide at two decimals ({pop_four:.4f} against {sam_five:.4f})")
+    assert round(pop_four, 3) != round(sam_five, 3), (
+        "the two spreads now agree at three decimals too, so three decimals no "
+        "longer separate them and this guard needs a new precision")
+
+    readme = (REPO / "README.md").read_text()
+    for value, what in ((pop_four, "four-run population SD"),
+                        (sam_five, "five-run sample SD")):
+        assert f"{value:.3f}" in readme, (
+            f"README.md does not state the {what} as {value:.3f}; at two "
+            f"decimals both read 0.41 and a reader cannot tell which run set a "
+            f"quoted spread was computed over")
+
+
 def test_the_published_four_run_pose_spread_matches_the_artefacts():
     poses = [r["pose"] for r in _independent_runs()]
     rmsds = _pairwise_rmsd(poses)
@@ -410,3 +446,114 @@ def test_the_battery_recomputes_p_from_its_own_counts():
     assert "(better_or_equal + 1) / (n_isomers + 1)" in source, (
         "angle 5 no longer computes (k+1)/(n+1)")
     assert round((k + 1) / (n + 1), 4) == 0.600
+
+
+# -------------------------------------------------- the compiled preprint
+
+PREPRINT_PDF = REPO / "manuscript" / "DrNemo_Preprint.pdf"
+PREPRINT_TEX = REPO / "manuscript" / "DrNemo_Preprint.tex"
+
+
+def _pdf_text(path):
+    """A PDF's decompressed text streams, squeezed two ways, stdlib only.
+
+    PDF text operators split words across show-text calls, so searching needs
+    the separators removed. The first version of this helper kept letters only,
+    which silently turned "Asp477" into "Asp" and would have made any search for
+    a token carrying a digit come back empty while still looking like a clean
+    negative. That is the same shape of mistake as a too-narrow column slice in
+    a PDBQT reader, so both forms are returned and the caller picks the one that
+    can represent what it is looking for.
+
+    Returns (letters, tokens) where letters is A-Za-z only and tokens keeps
+    digits and the decimal point as well.
+
+    One limit, measured rather than assumed: numerals set in LaTeX math mode do
+    not survive this probe at all. "0.5897" is in the PDF twice according to
+    pdftotext and zero times according to this helper, because math-mode digits
+    are drawn from a font whose glyph codes this crude scan does not decode. So
+    a negative result from this probe is only evidence for text-mode words, and
+    the positive controls below are text-mode words for that reason. Do not use
+    it to show that a number is absent from a PDF.
+    """
+    import re as _re
+    import zlib as _zlib
+    raw = path.read_bytes()
+    out = []
+    for m in _re.finditer(rb"stream\r?\n(.*?)\r?\nendstream", raw, _re.S):
+        try:
+            out.append(_zlib.decompress(m.group(1)))
+        except Exception:
+            pass
+    blob = b" ".join(out)
+    return (_re.sub(rb"[^A-Za-z]", b"", blob),
+            _re.sub(rb"[^A-Za-z0-9.]", b"", blob))
+
+
+def test_the_tex_source_carries_the_superseded_banner():
+    tex = PREPRINT_TEX.read_text()
+    assert "Superseded." in tex, (
+        "the earlier preprint's source no longer announces that it is "
+        "superseded, so a reader of it has no warning")
+    for claim in ("glucosyltransferase-SI and not GtfB",
+                  "does not separate from its"):
+        assert claim in tex, (
+            f"the banner no longer names {claim!r} among the unsupported claims")
+
+
+def test_the_readme_does_not_credit_the_compiled_pdf_with_a_banner_it_lacks():
+    """The source carries the banner. The committed PDF predates it.
+
+    README section 5 once described the .tex "and its compiled PDF" as kept
+    unaltered apart from that banner. The PDF was last compiled on 2026-11-21,
+    before the banner existed, and no LaTeX toolchain was available to rebuild
+    it, so someone who downloads the PDF on its own gets the earlier claims with
+    nothing marking them as withdrawn. The documentation and the binary are
+    compared here rather than one being trusted about the other.
+    """
+    if not PREPRINT_PDF.exists():
+        pytest.skip("the compiled preprint is no longer committed")
+
+    letters, _ = _pdf_text(PREPRINT_PDF)
+    # Positive controls. An extractor that reads nothing would make any claim
+    # of absence vacuous, so absence is only trusted once presence is shown.
+    assert letters.count(b"GtfB") >= 1, (
+        "the PDF text probe found no occurrence of GtfB, so it is not reading "
+        "the document and no conclusion about what the PDF lacks is safe")
+    assert b"Glucosyltransferase" in letters, (
+        "the PDF text probe is not reading the title page")
+
+    banner_in_pdf = b"Supersed" in letters
+    readme = (REPO / "README.md").read_text()
+    warned = "does **not** carry that banner" in readme
+
+    if banner_in_pdf:
+        assert not warned, (
+            "the PDF now carries a superseded banner, so the README's warning "
+            "that it does not is out of date and should be removed")
+    else:
+        assert warned, (
+            "the committed PDF carries no superseded banner and the README "
+            "does not say so, so the README credits the PDF with a warning a "
+            "reader who downloads it will not see")
+
+
+def test_the_readme_records_what_the_unbannered_pdf_still_asserts():
+    """Each figure in that warning is measured from the PDF, not recalled."""
+    if not PREPRINT_PDF.exists():
+        pytest.skip("the compiled preprint is no longer committed")
+    letters, tokens = _pdf_text(PREPRINT_PDF)
+    readme = (REPO / "README.md").read_text()
+    assert b"GtfB" in letters and b"Asp477" in tokens, (
+        "the PDF text probe is not reading the document, so nothing it reports "
+        "about the PDF's contents can be relied on")
+
+    gtfb = letters.count(b"GtfB")
+    assert f"{gtfb} times in its" in readme, (
+        f"the README does not state the measured count of GtfB in the PDF, "
+        f"which is {gtfb}")
+    for residue in ("Asp477", "Glu515", "Asp588"):
+        assert residue.encode() in tokens, (
+            f"{residue} is no longer in the PDF, so the README should not "
+            f"quote it among the claims the PDF still makes")
+        assert residue in readme
