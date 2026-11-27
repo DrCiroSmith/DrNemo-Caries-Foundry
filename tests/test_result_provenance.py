@@ -7,6 +7,7 @@ goes green without the fix, the fix has been removed.
 """
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -265,6 +266,30 @@ def test_the_checker_cli_fails_when_the_baseline_is_ignored():
                          cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=600)
     assert res.returncode == 1
     assert "Result: FAIL" in res.stdout
+
+
+def test_every_script_the_workflow_runs_is_tracked_by_git():
+    """A check that is not committed is not a check.
+
+    The first version of this work left scripts/check_result_provenance.py
+    untracked, because .gitignore excludes scripts/check_*.py for one-off
+    scripts. Everything passed locally, where the file exists, and the CI step
+    failed with "No such file or directory". git status said nothing, because
+    an ignored file is not reported. This test closes that gap for every script
+    the workflow invokes, not just that one.
+    """
+    workflow = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text()
+    referenced = sorted(set(re.findall(r"scripts/[A-Za-z0-9_./-]+\.py", workflow)))
+    assert referenced, "the workflow references no script, so this test proves nothing"
+    assert "scripts/check_result_provenance.py" in referenced
+
+    for rel in referenced:
+        assert (REPO_ROOT / rel).exists(), f"{rel} is referenced by CI but missing"
+        listed = subprocess.run(["git", "ls-files", "--", rel], cwd=str(REPO_ROOT),
+                                capture_output=True, text=True, timeout=60)
+        assert listed.stdout.strip() == rel, (
+            f"{rel} is run by CI but is not tracked by git. "
+            f"Check .gitignore for a pattern that swallows it.")
 
 
 # -------------------------------------------- the fix at the docking call site

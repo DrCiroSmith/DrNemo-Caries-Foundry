@@ -50,6 +50,8 @@ PLAN.md
 scripts/*_temp.py
 scripts/test_*.py
 scripts/check_*.py
+# Exception: this one is a permanent, CI-enforced check, not a one-off.
+!scripts/check_result_provenance.py
 scripts/audit_all_poses.py
 scripts/list_rank1.py
 scripts/compare_leads.py
