@@ -48,8 +48,10 @@ The Foundry designs **arginine-rich cyclic disulfide macrocycles** that dock int
 </p>
 
 The discovery engine executes a 4-stage Python screening pipeline (`gtfb_orchestrator.py`). It is not
-deterministic: `biophysics_engine.py` invokes AutoDock Vina without `--seed`, so Vina seeds itself and
-repeated runs of the same ligand need not return the same score or pose. That is what Angle 2 measures,
+deterministic: every call site of `run_docking_vina_and_vinardo` leaves its seed argument unset, so
+Vina seeds itself from the clock and repeated runs of the same ligand need not return the same score
+or pose. The engine gained an optional `--seed` pass-through during this review, in commit ce890a7,
+and nothing calls it with a seed, so no published score was produced with one. That is what Angle 2 measures,
 and it is why no figure here should be read as bit-reproducible:
 
 1. **Cycle Designer**: C-X-7-C scaffold with P2A hinge; evaluates 260 contenders across discovery and null controls.

@@ -156,3 +156,67 @@ def test_the_withdrawn_passes_say_what_was_actually_done(angle, substring):
     values = [v for a, v in _classification_nodes() if a == angle]
     assert any(substring in ast.unparse(v) for v in values), (
         f"angle {angle} no longer carries {substring}")
+
+
+# ---------------------------------------------------------------------------
+# The seed claim
+#
+# The paper and README say no published score can be regenerated because the
+# production pipeline leaves Vina's seed unset. That claim was written when
+# biophysics_engine.py had no seed argument at all. It has one now, added by
+# this review's provenance commit, so the claim had to narrow from "the engine
+# passes no seed" to "every call site leaves it unset". This test pins the
+# narrowed version, including the count the text prints.
+# ---------------------------------------------------------------------------
+
+ENGINE = REPO / "biophysics_engine.py"
+PAPER = REPO / "paper" / "negative_result_GTF-SI.md"
+
+
+def _docking_call_sites():
+    """Every call of run_docking_vina_and_vinardo outside the tests, with whether
+    it passes a seed."""
+    sites = []
+    for path in sorted(REPO.rglob("*.py")):
+        parts = path.relative_to(REPO).parts
+        if parts[0] in (".git", "tests", "retarget_gtfb"):
+            continue
+        try:
+            tree = ast.parse(path.read_text())
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            name = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+            if name != "run_docking_vina_and_vinardo":
+                continue
+            passes = any(k.arg == "seed" for k in node.keywords if k.arg)
+            sites.append((str(path.relative_to(REPO)), node.lineno, passes))
+    return sites
+
+
+def test_no_production_call_site_passes_a_seed():
+    seeded = [f"{f}:{n}" for f, n, passes in _docking_call_sites() if passes]
+    assert not seeded, (
+        "a production call site now passes a seed, so the claim that no published "
+        f"score can be regenerated needs rewriting: {seeded}")
+
+
+def test_the_paper_prints_the_right_number_of_call_sites():
+    """The text names the count, so the count has to be checked and not recalled."""
+    words = {10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen",
+             15: "fifteen", 16: "sixteen"}
+    n = len(_docking_call_sites())
+    assert n in words, f"{n} call sites, which this test cannot spell; extend the map"
+    assert f"all {words[n]} of its call sites leave it unset" in PAPER.read_text(), (
+        f"there are {n} call sites and the paper does not say {words[n]}")
+
+
+def test_the_engine_still_only_seeds_when_asked():
+    """The pass-through is conditional. If it ever becomes unconditional the
+    pipeline is deterministic and the paper's section 3.2 is wrong."""
+    source = ENGINE.read_text()
+    assert "if seed is not None:" in source, (
+        "biophysics_engine no longer guards its --seed pass-through, so either the "
+        "pipeline is now seeded or the seed is passed as None")

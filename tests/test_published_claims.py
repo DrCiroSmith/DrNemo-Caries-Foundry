@@ -157,10 +157,13 @@ def test_the_excluded_runs_input_conformer_is_the_campaigns():
     This pins the fact in both directions, because the one-directional version
     misleads. The five seeds' conformers are pairwise distinct, which is what an
     earlier version of this test checked, and that reads as though the seed 42
-    arm had a build of its own. It did not: the builder fixes RDKit's embedding
-    seed at 42, so asking for seed 42 reproduces the campaign's input exactly.
-    The input therefore says nothing either way, and the docked pose is what
-    rules the arm out as a replicate.
+    arm had a build of its own. It did not. Three of this repository's four
+    embedding call sites use ETKDGv3 with the seed fixed at 42, so asking for
+    seed 42 reproduces that input exactly. The fourth, in
+    run_falsification_campaign.py, uses the default embedding method and a lower
+    MMFF cap, so it is not the same recipe and the match also says the file did
+    not come from there. Either way the input says nothing about whether the
+    docking was independent, and the docked pose is what rules the arm out.
     """
     seeds = {seed: _coordinate_digest(POSES / f"disproof_seed_{seed}_CAHWRPWHC.pdbqt")
              for seed in (42, 101, 202, 303, 404)}
@@ -183,6 +186,34 @@ def test_the_embedding_seed_is_fixed_at_42_in_the_builder():
     assert "randomSeed = 42" in source or "randomSeed=42" in source, (
         "the builder no longer fixes RDKit's embedding seed at 42, so the page's "
         "explanation for seed 42 reproducing the campaign conformer is stale")
+
+
+def test_the_campaign_scripts_build_recipe_is_not_the_seeded_one():
+    """The page says the conformer match is expected for the ETKDGv3 paths and
+    not for the campaign script's own. Both halves have to hold in the source.
+
+    Three call sites build with ETKDGv3 and a fixed seed of 42. The fourth, in
+    run_falsification_campaign.py, calls EmbedMolecule with a bare randomSeed
+    and no parameter object, then optimises with a lower iteration cap. If that
+    ever becomes the same recipe, the page's second clause is wrong.
+    """
+    etkdg = REPO / "scripts" / "run_exhaustive_disproof.py"
+    engine = REPO / "biophysics_engine.py"
+    campaign = REPO / "scripts" / "run_falsification_campaign.py"
+
+    for path in (etkdg, engine):
+        text = path.read_text()
+        assert "AllChem.ETKDGv3()" in text, f"{path.name} no longer builds with ETKDGv3"
+
+    text = campaign.read_text()
+    assert "AllChem.EmbedMolecule(mol, randomSeed=42)" in text, (
+        "run_falsification_campaign no longer embeds with a bare randomSeed, so the "
+        "page's claim that its recipe differs needs checking again")
+    assert "ETKDGv3" not in text, (
+        "run_falsification_campaign now uses ETKDGv3, so it is the same recipe as the "
+        "seeded paths and the page's second clause is stale")
+    assert "maxIters=300" in text and "maxIters=500" in engine.read_text(), (
+        "the two paths no longer differ in their optimiser cap")
 
 
 def test_four_runs_remain_independent():
