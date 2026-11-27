@@ -859,7 +859,7 @@ with tab_popper:
         st.info("### 🏆 Evaluated Candidate: `CAHWRPWHC` (P2A Hinge Variant)")
         st.markdown("""
         * **Angle 1 (3AIC Redocking Calibration):** **-7.915 kcal/mol**, symmetry-corrected RMSD **4.51 Å** against the **2.0 Å** convention, so the scoring function is not calibrated for pose prediction in this box (`CALIBRATION_FAILED`).
-        * **Angle 2 (Multi-Seed N=5):** Score mean **-8.10 ± 0.37 kcal/mol** and centroid SD **0.46 Å** both reproduce, but mean pairwise pose RMSD is **9.24 Å** (worst pair 12.19 Å) against a 2.0 Å convention, so the seeds are not finding the same binding mode (`SCORE_REPRODUCIBLE_POSE_NOT`).
+        * **Angle 2 (Multi-Seed, 4 independent seeds):** Score mean **-8.08 ± 0.41 kcal/mol** (population SD) and centroid SD **0.38 Å** both reproduce, but mean pairwise pose RMSD is **9.34 Å** (worst pair 12.19 Å) against a 2.0 Å convention, so the seeds are not finding the same binding mode (`SCORE_REPRODUCIBLE_POSE_NOT`). Published earlier as N=5 at -8.10 ± 0.37; seed 42 is excluded because its docked pose is byte-identical to the campaign pose across all nine modes.
         * **Angle 3 (Pose Mode Clustering):** Mode 1-2 gap **+0.10 kcal/mol**, centroid shift **1.74 Å** (`INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 4 (1SMD Selectivity Reality Check):** ΔΔG = **-0.85 kcal/mol** vs Vina SE ~2.85 kcal/mol (`INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 5 (Null Permutation, N=39):** Z = **+0.32σ**, p = **0.5897** (null mean -8.343 ± 0.470 kcal/mol; static docking fails to reject H0; `INCONCLUSIVE_WITHIN_NOISE`).
