@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import re
 import shutil
 from pathlib import Path
 
@@ -777,3 +778,28 @@ def test_the_four_run_score_summary_is_recomputed_not_asserted():
         f"variance work uses; 4.1b must still state it so the two stay reconciled")
     # and the published five-run figures must still be what we are contrasting against
     assert "-8.10" in text and "0.37" in text
+
+
+def test_no_file_states_a_literal_count_of_the_provenance_suite():
+    """A hardcoded test count goes stale every time a test is added.
+
+    It had gone stale twice before this guard existed, so the phrasing that invites
+    one is banned outright rather than corrected again. `--check-naming` derives its
+    own count from the list it runs, which is why eighteen is still spelled there.
+    """
+    pattern = re.compile(r"\b(?:suite|set)\s+of\s+(?:\d+|"
+                         r"(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)"
+                         r"(?:[- ](?:one|two|three|four|five|six|seven|eight|nine))?)",
+                         re.IGNORECASE)
+    offenders = []
+    for path in sorted(HERE.glob("*")):
+        if path.is_dir() or path.suffix not in (".md", ".sh", ".py"):
+            continue
+        if path.name == "test_provenance.py":
+            continue
+        for n, line in enumerate(path.read_text().splitlines(), 1):
+            if pattern.search(line):
+                offenders.append(f"{path.name}:{n}: {line.strip()}")
+    assert not offenders, (
+        "these state a count of the provenance suite, which goes stale as soon as a "
+        "test is added; say 'the full provenance suite' instead:\n" + "\n".join(offenders))
