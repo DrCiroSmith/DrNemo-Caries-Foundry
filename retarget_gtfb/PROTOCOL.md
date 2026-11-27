@@ -30,10 +30,18 @@ can be read directly.
 | 20:00 | `28f8d07` | the gate was stated against a claimed advantage of 0.15 kcal/mol, and the conclusion read "outside this design's resolution at any sample size" | that 0.15 figure is **withdrawn**: it has no source anywhere in the repository and was mine, not the campaign's. Replaced by the ledger-derived 0.129 kcal/mol lead-against-parent margin, computed at run time rather than stored. The conclusion is narrowed to "however many control sequences are added", with the seed count that would move the boundary stated beside it |
 | 20:06 | `cd51c2c` | the document had no amendment log, and effect sizes were given without naming which comparison they measured | section 0 added, logging every amendment; section 0.1 added, fixing contrast A (lead against parent, +0.129) and contrast B (lead against the null, 0.152 the wrong way); rule 12 names both and states the seed price |
 | 20:25 | `42c5c21` | the unseeded finding could be read as covering the N=5 seed sweep, and "a larger null does not move the boundary" was true of the quantile but silent on what a larger null does relax | section 4.1b added: the sweep is explicitly seeded, defect 2 is scoped to the production engine, and seed 42 is shown non-independent on both its pose and its input conformer, so at most four of the five runs are independent. The n-dependence is quantified: the requirement relaxes from 2.203 to 1.645 null standard deviations, 1.035 to 0.773 kcal/mol, and no further |
+| 20:35 | `81b5197` | 4.1b showed seed 42 non-independent but did not say what that costs the two claims built on the sweep | both quantified from the files: the score summary moves to mean -8.078 with population spread 0.4116 over the four real runs, while the pose claim strengthens slightly, the mean pairwise r.m.s.d. rising from 9.25 to 9.33 A over 102 real atoms when seed 42 is dropped. My **first two attempts at that r.m.s.d. are withdrawn**: one counted the two `G0` glue markers as atoms, the other discarded the two real `CG0` carbons, both because columns 78 and 79 truncate `CG0` to `CG`. The selection is now stated in the text and recomputed by two tests |
+| 20:36 | `f8dc497` | three files stated a literal count of the provenance suite, which had gone stale twice | the count is gone from all three and a test bans the phrasing; `--check-naming` keeps its eighteen because that number is derived from the list it runs |
 
-Three of those seven entries withdraw a claim of mine rather than refine one. That
-record is kept deliberately: a protocol whose amendment log contains only improvements
-is a protocol whose author was not checking.
+Four of these entries withdraw a claim of mine rather than refine one. That record is
+kept deliberately: a protocol whose amendment log contains only improvements is a
+protocol whose author was not checking. Two of the four are the same mistake twice,
+a two-character slice of the atom-type field, which is why the atom selection is now
+spelled out wherever it matters and checked by a test rather than described in prose.
+
+This log does not carry a row for the commit that adds these rows, because that commit
+changes nothing but the log itself. Every row that records a change to the plan names
+the commit that made it.
 
 ---
 

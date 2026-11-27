@@ -803,3 +803,35 @@ def test_no_file_states_a_literal_count_of_the_provenance_suite():
     assert not offenders, (
         "these state a count of the provenance suite, which goes stale as soon as a "
         "test is added; say 'the full provenance suite' instead:\n" + "\n".join(offenders))
+
+
+def test_the_withdrawal_count_in_the_log_is_derived_from_the_log():
+    """The log's prose states how many entries withdraw a claim. Count them.
+
+    An earlier version of that sentence said "three of those seven entries" when the
+    table held nine rows. A pre-registered document whose own summary of itself is
+    stale is worse than one with no summary, so the number is now checked against the
+    rows rather than maintained by hand.
+    """
+    text = (HERE / "PROTOCOL.md").read_text()
+    rows = [l for l in text.splitlines()
+            if re.match(r"^\|\s*\d\d:\d\d\s*\|\s*`[0-9a-f]{7}`\s*\|", l)]
+    assert len(rows) >= 9, f"the amendment log has shrunk to {len(rows)} rows"
+
+    withdrawals = [l for l in rows if "withdraw" in l.lower()]
+    words = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six",
+             7: "seven", 8: "eight", 9: "nine", 10: "ten"}
+    expected = words.get(len(withdrawals), str(len(withdrawals)))
+    sentence = re.search(
+        r"(\w+) of these entries withdraw a claim of mine", text, re.IGNORECASE)
+    assert sentence, (
+        "the log must still state how many of its entries are withdrawals; that "
+        "sentence is the honest part of keeping a log at all")
+    assert sentence.group(1).lower() == expected, (
+        f"the log says '{sentence.group(1)}' withdrawals but {len(withdrawals)} rows "
+        f"contain one; the sentence has gone stale")
+
+    # and the log must not claim a total row count, which is the way it went stale
+    assert not re.search(r"of (?:those|these) (?:\w+) entries\b(?!\s+withdraw)", text), (
+        "do not restate the log's total length in prose; it goes stale on every "
+        "amendment")
