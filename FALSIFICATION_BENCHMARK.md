@@ -30,7 +30,7 @@ Early computational pipelines in the Foundry utilized surrogate heuristic functi
 **Operation Karl Popper** systematically eradicated all synthetic mock scoring in `DrNemo-Caries-Foundry`. Every candidate is now subjected to an orthogonal 6-angle biophysical falsification battery powered by:
 1. **AutoDock Vina v1.2.7 & Vinardo:** Empirical scoring functions on uncompressed $28.0\text{ \AA}$ search grids centered on catalytic triad oxygens (`Asp477`, `Glu515`, `Asp588` of RCSB PDB: `3AIC`).
 2. **All-Atom OpenMM Molecular Mechanics:** Amber14/GBn2 implicit solvent energy minimisation. No dynamics are run and no temperature is sampled: the integrator is constructed at $310.15\text{ K}$ and never stepped, so nothing here is a thermal measurement.
-3. **RDKit MMFF94:** Force-field energy minimization and distance-geometry 3D conformer generation with intact disulfide bonds ($2.06\text{ \AA}$).
+3. **RDKit, MMFF94 attempted:** Distance-geometry 3D conformer generation with intact disulfide bonds ($2.06\text{ \AA}$). The builder calls the MMFF94 optimiser and discards its return value, so whether MMFF94 ran, fell back to UFF or did neither is not recorded for any ligand. See section 6 of `paper/negative_result_GTF-SI.md`.
 4. **Physicochemical Oral Filters:** Henderson-Hasselbalch protonation states, Donnan potential compatibility ($Q_{\text{pH } 6.0} \le +4.0$), Stephan-curve electrostatic switches ($\Delta Q_{\text{Stephan}} \ge +1.0$), and mucosal enzymatic cleavage mapping.
 
 ---

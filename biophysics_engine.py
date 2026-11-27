@@ -85,7 +85,14 @@ def build_macrocycle_3d(
     target_center: Optional[Tuple[float, float, float]] = None
 ) -> int:
     """
-    Builds an all-atom 3D structure for a cyclic disulfide peptide with RDKit MMFF94 force field.
+    Builds an all-atom 3D structure for a cyclic disulfide peptide with RDKit.
+
+    MMFF94 minimisation is ATTEMPTED, not guaranteed. MMFFOptimizeMolecule reports
+    "forcefield could not be set up" by returning -1 and a hit iteration cap by
+    returning 1, per RDKit's documentation, so the try/except below reaches its UFF
+    fallback only on an exception and the return value is discarded either way.
+    Nothing here or downstream records which force field ran. Do not describe output
+    of this function as MMFF94-minimised without checking that first.
     If target_center is provided, translates the conformer centroid to target_center.
     Returns the count of heavy atoms.
     """
@@ -135,7 +142,9 @@ def build_macrocycle_3d(
 
     Chem.SanitizeMol(mol)
 
-    # 3D Distance Geometry embedding + MMFF94 energy minimization
+    # 3D Distance Geometry embedding, then an ATTEMPT at MMFF94 minimisation.
+    # The return value is discarded, so -1 (no force field) and 1 (cap reached) both
+    # pass silently and the except clause below sees no exception in those cases.
     params = AllChem.ETKDGv3()
     params.randomSeed = 42
     embed_res = AllChem.EmbedMolecule(mol, params)

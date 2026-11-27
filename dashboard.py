@@ -817,7 +817,7 @@ with tab1:
 with tab_popper:
     st.header("⚖️ Karl Popper Biophysical Falsification Suite")
     st.markdown("""
-    **Operation Karl Popper** systematically enforces a ruthless 12-angle biophysical falsification battery powered by **AutoDock Vina v1.2.7**, **RDKit MMFF94**, **OpenMM Amber14/GBn2**, and empirical oral chemistry gates. Each angle carries a classification. Read them with care: several were written into the code as literal strings rather than computed from the gate each angle declares, so a label states which branch of the script a result reached and not always which criterion it met.
+    **Operation Karl Popper** systematically enforces a ruthless 12-angle biophysical falsification battery powered by **AutoDock Vina v1.2.7**, **RDKit (MMFF94 attempted, outcome unrecorded)**, **OpenMM Amber14/GBn2**, and empirical oral chemistry gates. Each angle carries a classification. Read them with care: several were written into the code as literal strings rather than computed from the gate each angle declares, so a label states which branch of the script a result reached and not always which criterion it met.
     """)
 
     # Top Metrics Bar: synced to data/exhaustive_disproof_report.json

@@ -311,3 +311,87 @@ def test_the_engine_still_only_seeds_when_asked():
     assert "if seed is not None:" in source, (
         "biophysics_engine no longer guards its --seed pass-through, so either the "
         "pipeline is now seeded or the seed is passed as None")
+
+
+ENGINE = REPO / "biophysics_engine.py"
+BENCHMARK = REPO / "FALSIFICATION_BENCHMARK.md"
+
+
+def _mmff_call_uses_its_return_value():
+    """Whether the builder does anything with MMFFOptimizeMolecule's result.
+
+    RDKit documents the return as 0 converged, -1 force field could not be set
+    up, 1 more iterations required, so discarding it hides both failure modes.
+    A bare expression statement discards it; an assignment or a comparison does
+    not.
+    """
+    tree = _parse(ENGINE)
+    found = False
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        name = getattr(node.func, "attr", None) or getattr(node.func, "id", None)
+        if name != "MMFFOptimizeMolecule":
+            continue
+        found = True
+        for stmt in ast.walk(tree):
+            if isinstance(stmt, ast.Expr) and stmt.value is node:
+                break
+        else:
+            return True
+    assert found, (
+        "biophysics_engine.py no longer calls MMFFOptimizeMolecule, so the "
+        "paper's description of the minimisation step is stale")
+    return False
+
+
+def test_the_paper_matches_whether_the_minimisation_outcome_is_checked():
+    """The prose and the code have to move together.
+
+    If the builder is fixed to read the return value, this fails so that the
+    paper stops saying the outcome is unrecorded. If the builder still discards
+    it, this fails unless the paper says so. Today's lesson was a guard that
+    enforced what I meant rather than what the sentence claimed, so this one is
+    pinned to the code's actual shape.
+    """
+    paper = PAPER.read_text()
+    disclosure = "discards the optimiser's return value"
+    if _mmff_call_uses_its_return_value():
+        assert disclosure not in paper, (
+            "the builder now uses MMFFOptimizeMolecule's return value, so the "
+            "paper must stop saying it is discarded")
+    else:
+        assert disclosure in paper, (
+            "the builder still discards MMFFOptimizeMolecule's return value and "
+            "the paper no longer says so, which overstates the minimisation step")
+        assert "UFF" in paper, (
+            "the paper no longer mentions the UFF fallback that the code's "
+            "except clause contains")
+
+
+def test_no_document_states_mmff_minimisation_as_completed():
+    """Attempted is not done, and four surfaces used to say done."""
+    banned = ("minimised with MMFF94", "minimized with MMFF94",
+              "MMFF94-minimised", "MMFF94-minimized",
+              "ETKDG/MMFF94 conformer")
+    for path in (PAPER, REPO / "README.md", REPO / "docs" / "index.html",
+                 BENCHMARK, REPO / "dashboard.py"):
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for phrase in banned:
+            assert phrase not in text, (
+                f"{path.relative_to(REPO)} states MMFF94 minimisation as "
+                f"completed ({phrase!r}), but the builder discards the "
+                "optimiser's return value and nothing records which force "
+                "field ran")
+
+
+def test_the_benchmark_sheet_does_not_advertise_mmff94_as_a_component():
+    """It listed RDKit MMFF94 as a pipeline component that ran."""
+    text = BENCHMARK.read_text()
+    assert "**RDKit MMFF94:**" not in text, (
+        "FALSIFICATION_BENCHMARK.md again lists RDKit MMFF94 as a component "
+        "without saying the outcome is unrecorded")
+    assert "MMFF94 attempted" in text, (
+        "FALSIFICATION_BENCHMARK.md no longer says MMFF94 is only attempted")
