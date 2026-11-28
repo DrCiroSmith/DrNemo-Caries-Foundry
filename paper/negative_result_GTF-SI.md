@@ -298,6 +298,80 @@ would now emit is the correction, not a defect.
 
 One quantity remains inconsistent between two records. The relaxed potential energy of the lead is recorded as -1235.93 kJ/mol in the primary results database and -1234.68 kJ/mol in the benchmark file, for what is described as the same calculation. I have not been able to determine which run produced which value, and I report the disagreement rather than choosing. Neither value supports a claim about stability at any temperature, and neither supports a claim about binding. Reading the function that produces it: it takes one coordinate file, which the callers pass as the ligand alone, builds an Amber14 system with GBn2 implicit solvent, and calls energy minimisation with a 200-iteration cap. No integrator is ever stepped and the receptor is never present. The number is therefore the relaxed potential energy of an isolated macrocycle in implicit solvent. It is not a thermal measurement, it is not molecular dynamics, and it is not a biophysical validation of a complex, because no complex was ever built. The repository's own notebooks state the first of these correctly; nothing in the project should describe it as the third.
 
+## 3.12 Four of the cited references name papers that do not exist
+
+The manuscript bibliography in `manuscript/references.bib` held 22 entries.
+Checking each one field by field against PubMed on 27 November 2026, 12 carried
+at least one error, and 4 of those named a journal, volume, issue, page range
+and DOI that belong to no paper I could locate, while carrying the author list
+and very nearly the title of a real paper published somewhere else.
+
+| Key | What the file said | What the indexed record says | PMID |
+| :--- | :--- | :--- | :--- |
+| `Ramasubbu1996` | J Mol Biol 263(4):617-630, doi 10.1006/jmbi.1996.0603, 3 authors | Acta Crystallogr D 52(3):435-446, doi [10.1107/S0907444995014119](https://doi.org/10.1107/S0907444995014119), 5 authors, 2 of the 3 named are not on it | 15299664 |
+| `Bowen2018` | Curr Oral Health Rep 5(1):47-58, doi 10.1007/s40496-018-0168-3 | Trends Microbiol 26(3):229-242, doi [10.1016/j.tim.2017.09.008](https://doi.org/10.1016/j.tim.2017.09.008), title ends "in Microenvironments" and not "in Dental Caries" | 29097091 |
+| `Koo2013` | Nat Rev Microbiol 11(11):761-773, doi 10.1038/nrmicro3115 | J Dent Res 92(12):1065-1073, doi [10.1177/0022034513504218](https://doi.org/10.1177/0022034513504218) | 24045647 |
+| `Hopkins2004` | Nat Rev Drug Discov 3(9):811, doi 10.1038/nrd1546 | Drug Discov Today 9(10):430-431, doi [10.1016/S1359-6446(04)03069-7](https://doi.org/10.1016/S1359-6446(04)03069-7) | 15109945 |
+
+Two further entries attached a real paper to the wrong year, and the citation
+key carried that wrong year as well, so anyone citing them in prose would have
+printed it: `Marsh2006` is Caries Res 38(3):204-211 from 2004, doi
+[10.1159/000077756](https://doi.org/10.1159/000077756), not 40(4):279-287 from 2006 with doi 10.1159/000095697, and
+`Zero1999` is Caries Res 38(3):277-285 from 2004, doi [10.1159/000077767](https://doi.org/10.1159/000077767), not
+33(Suppl. 1):11-19 from 1999 with doi 10.1159/000016501. `Nguyen2013` gave doi
+10.1021/ct300962b where the paper carries
+[10.1021/ct3010485](https://doi.org/10.1021/ct3010485). Three titles were
+wrong in a way that changes what the paper claims to be about: `Quiroga2016`
+read "Improving Scoring, Ranking, and Pose Prediction" for "Improves Scoring,
+Docking, and Virtual Screening", `Maier2015` read "Backbone Torsion Parameters
+in Amber" for "Backbone Parameters from ff99SB", and `Xiao2012` read "the
+Microenvironment of a Pathogenic Biofilm" for "virulence of a mixed-species
+oral biofilm".
+
+Nine author names across five entries were not the names of the authors of the
+cited papers: Keisuke and Sohei Ito appeared as Kazuo and Shingo Ito, Hui Wu as
+Henny Wu, Bingwen Lu as Bob Lu, Arne Heydorn as Christopher Hey, Amber
+Scharnow as Anna Scharnow, and two of the three authors given for
+`Ramasubbu1996` are not authors of the paper that entry now cites. Eight of the
+nine keep the correct first initial, which is why a check on initials would
+have cleared them, and it is the reason the author lines read as plausible.
+
+A second bibliography, `paper/paper.bib`, held a separate copy of nine of these
+entries, and three of the nine were wrong there too. This is the sixth time in
+this review that a defect found in one file turned out to sit in others, and
+the second time that two copies of the same record disagreed while both were
+wrong.
+
+What this does and does not establish. It does not touch a docking score, a
+null distribution or any numeric claim in this paper: no result here rests on
+any of those references. It does mean the reference list of the preprint could
+not be used to find the work it cited, and four of its entries have the
+signature of a generated bibliography rather than a transcribed one. I have not
+done the larger check that each cited paper actually supports the sentence
+citing it, and I am not reporting that it does.
+
+Limits of the check itself. `doi.org` and Crossref were not reachable from the
+environment this review ran in, so resolution of each DOI against the registry
+could not be used as an independent test; the check rests on PubMed, with a
+third-party bibliographic index for the two entries outside PubMed's coverage
+(`Halgren1996`, in a journal PubMed does not index, and `Stephan1944`, from a
+year PubMed's coverage of that journal does not reach). Two entries are not
+journal articles and no index speaks to them: `Popper1959` is a book and
+`Landrum2020` is a software release. No source I consulted states the forename
+of the author of `Stephan1944`. Because PubMed records some older entries with
+initials only, author forenames in the corrected file are given in full only
+where a consulted source states them, which is why four entries now carry
+initials where they previously carried forenames that I could not source.
+
+Both files are corrected and `tests/test_bibliography.py` holds nine guards
+over them: the journal, volume, issue, pages and DOI of all 20 journal entries
+against the table that was checked, the PMID recorded in each entry's own
+comment block, agreement between the two files on every entry they share,
+resolution of every citation key used in either document, agreement between a
+citation key's year and the entry's year, and the absence of every withdrawn
+DOI and fabricated author name. Each of the nine was mutation-tested by
+restoring the defect it guards and confirming it fails.
+
 # 4. Discussion
 
 ## 4.1 What this result is
