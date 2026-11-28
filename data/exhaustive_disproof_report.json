@@ -7,14 +7,18 @@
     {
       "angle": 1,
       "name": "RCSB 3AIC Co-Crystal Redocking Calibration",
-      "target": "RCSB 3AIC (S. mutans GtfB catalytic cleft)",
+      "target": "RCSB 3AIC (S. mutans GTF-SI catalytic cleft)",
       "ligand": "Acarbose pseudo-tetrasaccharide (GLC-GLC-AC1)",
       "vina_3aic_kcal": -7.915,
       "vinardo_3aic_kcal": -5.186,
+      "assignment_rmsd_angstrom": 4.507,
       "hungarian_rmsd_angstrom": 4.51,
       "centroid_displacement_angstrom": 3.03,
-      "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "Re-docking crystallographic acarbose into uncompressed 28 A grid reproduces the active binding groove (4.51 A Hungarian RMSD, -7.915 kcal/mol). Cleft localized, but 4.51 A RMSD exceeds 2.0-4.0 A rigid redocking standard due to wide 28 A cleft and glycosidic torsion degeneracy."
+      "redocking_standard_angstrom": 2.0,
+      "passed": false,
+      "classification": "CALIBRATION_FAILED",
+      "provenance": "computed_this_run",
+      "scientific_summary": "Redocking the crystallographic acarbose of 3AIC into the uncompressed 28 A box places it in the correct cleft (centroid displacement 3.03 A) but does not reproduce the crystallographic binding mode: symmetry-corrected heavy-atom RMSD is 4.51 A, against the 2.0 A convention for a successful redocking. The scoring function is therefore not calibrated for pose prediction on this ligand in this box, and absolute affinities from the same protocol carry that limitation. Reproduce with: python3 scripts/compute_redocking_rmsd.py"
     },
     {
       "angle": 2,
@@ -32,8 +36,13 @@
       "mean_pairwise_rmsd_angstrom": 9.24,
       "max_pairwise_rmsd_angstrom": 12.19,
       "centroid_sd_angstrom": 0.46,
-      "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "Across N=5 independent conformer and docking seeds, CAHWRPWHC converged with score mean -8.10 +/- 0.37 kcal/mol and tight active cleft centroid SD of 0.46 A, demonstrating reproducible localization in the catalytic cleft."
+      "pose_agreement_threshold_angstrom": 2.0,
+      "score_reproducible": true,
+      "centroid_reproducible": true,
+      "pose_reproducible": false,
+      "provenance": "computed_this_run",
+      "classification": "SCORE_REPRODUCIBLE_POSE_NOT",
+      "scientific_summary": "Across N=5 independent conformer and docking seeds the score is reproducible (-8.10 +/- 0.37 kcal/mol) and the centre of mass lands in the same region (centroid SD 0.46 A), but the pose is not: mean pairwise heavy-atom RMSD between seeds is 9.24 A and the worst pair is 12.19 A, against a 2.0 A agreement convention. On a nonapeptide of roughly that span, the seeds are not finding the same binding mode, so nothing here supports a claim about which contacts are made. A reproducible score over irreproducible poses is what a shallow, non-specific scoring surface looks like, and it is consistent with the scrambled-null result in Angle 5."
     },
     {
       "angle": 3,
@@ -91,8 +100,10 @@
           "delta_e_mode1": 0.525
         }
       ],
+      "provenance": "computed_this_run",
+      "pose_file": "data/poses/contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt",
       "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "Mode 1 demonstrates an energetic gap of Delta E = +0.10 kcal/mol relative to Mode 2, with centroid displacement of 1.74 A, indicating a distinct primary binding basin."
+      "scientific_summary": "Mode 1 scores 0.10 kcal/mol better than Mode 2 while their centroids lie 1.74 A apart and their heavy atoms differ by 5.58 A. A gap that small between poses that different is degeneracy, not a basin: the ranking between them is not resolved by this scoring function, so no single pose can be called the binding mode."
     },
     {
       "angle": 4,
@@ -100,10 +111,13 @@
       "vina_3aic_kcal": -8.191,
       "vina_1smd_kcal": -7.343,
       "measured_selectivity_ddg_kcal": -0.848,
-      "vina_forcefield_standard_error_kcal": 2.85,
-      "ratio_delta_to_error": 0.3,
+      "assumed_forcefield_error_kcal": 2.85,
+      "assumed_forcefield_error_provenance": "unsourced_constant",
+      "ratio_delta_to_assumed_error": 0.3,
+      "score_provenance": "vault_query",
+      "provenance": "vault_query",
       "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "The measured DeltaDeltaG of -0.85 kcal/mol (-8.191 vs -7.343) is smaller than AutoDock Vina's published standard error of ~2.85 kcal/mol (11.9 kJ/mol). While meeting the -0.80 kcal/mol computational cutoff, this selectivity is strictly inconclusive within force-field noise and requires wet-lab enzymatic falsification."
+      "scientific_summary": "The measured DeltaDeltaG between the GTF-SI and the alpha-amylase receptor is -0.848 kcal/mol (-8.191 vs -7.343). Judged against an assumed scoring-function error of 2.85 kcal/mol it is well inside noise, so no selectivity can be claimed. That error figure is an assumption: it carries no citation in this repository and nothing here measures it, so the comparison is only as good as the assumption. Enzymatic selectivity has to be measured in vitro."
     },
     {
       "angle": 5,
@@ -113,69 +127,91 @@
       "null_distribution_mean_kcal": -8.343,
       "null_distribution_std_kcal": 0.47,
       "z_score": 0.32,
+      "scrambles_at_least_as_good_as_lead": 23,
       "p_value": 0.5897,
+      "p_value_kind": "one_sided_empirical_rank",
       "is_null_hypothesis_rejected": false,
+      "provenance": "vault_query",
       "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "Static docking of CAHWRPWHC (-8.191 kcal/mol) vs N=39 scrambled isomers (-8.343 +/- 0.470 kcal/mol) yields Z = +0.32, p = 0.5897, failing to reject H0. Rigid-receptor docking under-penalizes aqueous conformational entropy; sequence specificity cannot be claimed on static docking alone."
+      "scientific_summary": "CAHWRPWHC docks at -8.191 kcal/mol against GTF-SI. Its N=39 charge-matched scrambled isomers average -8.343 +/- 0.47 kcal/mol, and 23 of 39 of them dock at least as well as the lead (one-sided empirical rank p = 0.5897, Z = +0.32). H0 is not rejected: on this evidence the lead's sequence carries no detectable specificity, and the docking score is consistent with amino-acid composition alone. Reproduce with: sqlite3 data/foundry_contenders.sqlite"
     },
     {
       "angle": 6,
       "name": "In-Silico Alanine-Scanning Mutagenesis Hotspot Mapping",
+      "parent_sequence": "CPHWRPWHC",
+      "parent_affinity_kcal": -8.062,
       "mutants": {
         "P2A": {
           "sequence": "CAHWRPWHC",
           "vina_kcal": -8.191,
-          "delta_ddg": 0.0,
+          "vina_1smd_kcal": -7.343,
+          "delta_ddg": -0.129,
           "is_hotspot": false,
-          "role": "Hinge relaxation"
+          "provenance": "vault_query",
+          "trypsin_cleavage_sites": 0
         },
         "H3A": {
-          "sequence": "CAPWRPWHC",
+          "sequence": "CPAWRPWHC",
           "vina_kcal": -7.869,
-          "delta_ddg": 0.322,
+          "vina_1smd_kcal": -7.982,
+          "delta_ddg": 0.193,
           "is_hotspot": false,
-          "role": "Catalytic triad anchor (within noise)"
+          "provenance": "vault_query",
+          "trypsin_cleavage_sites": 0
         },
         "W4A": {
-          "sequence": "CAHARPWHC",
-          "vina_kcal": -8.214,
-          "delta_ddg": -0.023,
+          "sequence": "CPHARPWHC",
+          "vina_kcal": -8.269,
+          "vina_1smd_kcal": -7.537,
+          "delta_ddg": -0.207,
           "is_hotspot": false,
-          "role": "Aromatic core"
+          "provenance": "vault_query",
+          "trypsin_cleavage_sites": 0
         },
         "R5A": {
-          "sequence": "CAHWAPWHC",
-          "vina_kcal": -8.105,
-          "delta_ddg": 0.086,
+          "sequence": "CPHWAPWHC",
+          "vina_kcal": -8.531,
+          "vina_1smd_kcal": -8.105,
+          "delta_ddg": -0.469,
           "is_hotspot": false,
-          "role": "Salt-bridge partner (within noise)"
+          "provenance": "vault_query",
+          "trypsin_cleavage_sites": 0
         },
         "P6A": {
-          "sequence": "CAHWRAWHC",
+          "sequence": "CPHWRAWHC",
           "vina_kcal": -8.89,
-          "delta_ddg": -0.699,
+          "vina_1smd_kcal": -7.302,
+          "delta_ddg": -0.828,
           "is_hotspot": false,
-          "role": "Affinity trap / tryptic fail"
+          "provenance": "vault_query",
+          "trypsin_cleavage_sites": 1
         },
         "W7A": {
-          "sequence": "CAHWRPARC",
+          "sequence": "CPHWRPAHC",
           "vina_kcal": -7.805,
-          "delta_ddg": 0.386,
+          "vina_1smd_kcal": -6.846,
+          "delta_ddg": 0.257,
           "is_hotspot": false,
-          "role": "Aromatic stacking anchor (within noise)"
+          "provenance": "vault_query",
+          "trypsin_cleavage_sites": 0
         },
         "H8A": {
-          "sequence": "CAHWRPWAC",
+          "sequence": "CPHWRPWAC",
           "vina_kcal": -7.978,
-          "delta_ddg": 0.213,
+          "vina_1smd_kcal": -7.967,
+          "delta_ddg": 0.084,
           "is_hotspot": false,
-          "role": "Catalytic anchor (within noise)"
+          "provenance": "vault_query",
+          "trypsin_cleavage_sites": 0
         }
       },
-      "hotspot_cutoff_kcal": 0.70,
+      "hotspot_cutoff_kcal": 0.7,
       "identified_hotspots": [],
-      "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "Single-site alanine perturbations (+0.08 to +0.39 kcal/mol) remain within Vina force-field noise (threshold +0.70 kcal/mol); while P2A provides hinge relaxation, P6A is an affinity trap that destroys the proline shield and exposes Arg5 to tryptic cleavage."
+      "largest_affinity_loss_kcal": 0.257,
+      "mutants_not_in_vault": [],
+      "provenance": "vault_query",
+      "classification": "NO_HOTSPOT_IDENTIFIED",
+      "scientific_summary": "Alanine scan of the wild type CPHWRPWHC (-8.062 kcal/mol), 7 of 7 positions scored from the vault. No substitution reaches the +0.70 kcal/mol hotspot threshold: the largest affinity loss is +0.257 kcal/mol (W7A). On this evidence no residue is an energetic anchor, and the previously asserted His3, Trp7 and His8 anchors are withdrawn: those are simply the three substitutions that lose any affinity at all, all of them far inside any plausible scoring error. P6A opens a trypsin cleavage site that the wild-type proline turn shields, which is a liability rather than a hotspot. Reproduce with: sqlite3 data/foundry_contenders.sqlite"
     },
     {
       "angle": 7,
@@ -195,11 +231,13 @@
         "selectivity_ddg_kcal": 0.435
       },
       "affinity_shift_upon_protonation_kcal": 0.485,
-      "receptor_protonation_state": "Receptors 3AIC, 1SMD, and 1LZ1 were prepared at physiological pH 7.4; Angle 7 tests explicit diprotonation of the peptide ligand at plaque acidic pH 5.2 against the physiological receptor model.",
+      "receptor_protonation_state": "Receptors 3AIC, 1SMD, and 1LZ1 were prepared at physiological pH 7.4; Angle 7 tests explicit diprotonation of the peptide ligand at plaque acidic pH 5.2 against the physiological receptor model. The receptor is therefore at the wrong pH for the acidic case, which is a limitation of the comparison, not a property of the candidate.",
+      "provenance": "computed_this_run",
       "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "Explicit diprotonation at pH 5.2 shifts ligand formal charge from +1 to +3 (receptors prepared at physiological pH 7.4). GtfB binding free energy is -7.71 kcal/mol vs -8.19 kcal/mol at pH 7.2 (Delta = +0.48 kcal/mol). Explicit diprotonation weakens 3AIC score by 0.49 kcal/mol and slightly inverts raw 1SMD ranking within Vina's +/-2.85 kcal/mol error."
+      "scientific_summary": "Explicit diprotonation at pH 5.2 shifts the ligand's formal charge from +1 to +3, against receptors prepared at pH 7.4. The GTF-SI score moves from -8.19 to -7.71 kcal/mol (Delta = +0.48 kcal/mol), so protonation weakens rather than strengthens the predicted binding, which is the opposite of the acid-activation story the formulation angle tells. The 1SMD ranking inverts by a similar margin. Both shifts are small enough to be unresolved against an assumed scoring error of 2.85 kcal/mol, a figure this repository quotes without a source."
     },
     {
+      "provenance": "computed_this_run",
       "angle": 8,
       "name": "Broad Oral Protease and Peptidase Vulnerability Check",
       "trypsin_salivary_sites": [],
@@ -228,10 +266,13 @@
         25.96
       ],
       "vina_1lz1_affinity_kcal": -6.67,
-      "gtfb_3aic_affinity_kcal": -8.191,
+      "gtf_si_3aic_affinity_kcal": -8.191,
+      "provenance": "computed_this_run",
       "selectivity_ddg_kcal": -1.521,
-      "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "Counter-docking against the active cleft of human salivary lysozyme (1LZ1) yielded -6.67 kcal/mol (DeltaDeltaG = -1.52 kcal/mol vs 3AIC), demonstrating negligible off-target affinity against innate mucosal protective enzymes."
+      "classification": "INCONCLUSIVE_WITHIN_NOISE",
+      "scientific_summary": "Counter-docking against the active cleft of human salivary lysozyme (1LZ1) yielded -6.67 kcal/mol, a margin of -1.52 kcal/mol against 3AIC. Judged by the same test Angle 4 applies, that margin is 0.53 of the assumed 2.85 kcal/mol scoring error, so it does not resolve. Nothing here establishes low lysozyme affinity; the comparison is simply unresolved, and the error figure it is judged against is itself uncited in this work.",
+      "assumed_vina_error_kcal": 2.85,
+      "ratio_delta_to_assumed_error": 0.53
     },
     {
       "angle": 10,
@@ -239,22 +280,24 @@
       "linear_sequence": "AHWRPWH",
       "linear_vina_3aic_kcal": -9.25,
       "cyclic_vina_3aic_kcal": -8.191,
-      "cyclization_benefit_kcal": 1.059,
       "rotatable_bonds_linear": 28,
       "rotatable_bonds_cyclic": 14,
+      "provenance": "computed_this_run",
       "classification": "INCONCLUSIVE_WITHIN_NOISE",
-      "scientific_summary": "Linear non-cyclized peptide docked with -9.25 kcal/mol vs -8.19 kcal/mol for cyclic CAHWRPWHC (DeltaDeltaG = 1.06 kcal/mol). Raw Vina scores flexible linear peptide 1.06 kcal/mol stronger than macrocycle, demonstrating Vina's under-penalization of unfolded conformational entropy; requires wet-lab ITC Kd."
+      "scientific_summary": "The linear peptide docks at -9.25 kcal/mol against -8.19 kcal/mol for the cyclic lead, so cyclisation is worth +1.06 kcal/mol by this score, i.e. the floppier molecule scores 1.06 kcal/mol better. Vina under-penalises the conformational entropy that an unconstrained chain loses on binding, so this is a property of the scoring function rather than evidence against cyclisation. It also means the score cannot be used to argue that the macrocycle is the better binder. Only a measured Kd can settle that.",
+      "linear_advantage_kcal": 1.059
     },
     {
       "angle": 11,
       "name": "OpenMM Implicit-Solvent Unrestrained Relaxation Drift",
-      "forcefield": "Amber14 / GBn2 implicit solvent at 310.15 K",
-      "initial_potential_energy_kj_mol": 765.33,
-      "minimized_potential_energy_kj_mol": -1258.1,
-      "heavy_atom_drift_rmsd_angstrom": 0.92,
-      "simulation_disclaimer": "Implicit-solvent energy minimization confirms local geometric stability but is NOT an explicit-solvent 100-ns molecular dynamics residence-time simulation. OpenMM Amber14/GBn2 measures isolated macrocycle conformational strain relaxation (not cross-composition binding free energy).",
-      "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "OpenMM Amber14/GBn2 minimization at 310.15 K relaxed the macrocycle to -1258.1 kJ/mol with heavy-atom drift RMSD of 0.92 A, confirming isolated macrocycle conformational strain relaxation without ring collapse."
+      "classification": "NOT_COMPUTED",
+      "provenance": "not_computed",
+      "missing_dependencies": [
+        "rdkit",
+        "openmm",
+        "pdbfixer"
+      ],
+      "scientific_summary": "Not computed: rdkit, openmm and pdbfixer are not installed in this environment, so no relaxation was run and no drift figure exists. Install them and rerun to produce this angle."
     },
     {
       "angle": 12,
@@ -266,15 +309,25 @@
       "q_acidic_plaque_pH5_2": 2.747,
       "delta_q_stephan": 1.618,
       "is_ph_switch_active": true,
+      "histidine_count": 2,
+      "provenance": "computed_this_run",
       "classification": "PASSED_IN_SILICO",
-      "scientific_summary": "CAHWRPWHC clears the Donnan mucosal partition ceiling (net charge 2.05 <= +4.0 at pH 6.0) and delivers an electrostatic surge of Delta Q = +1.62 across the Stephan acidogenic transition (pH 7.2 -> 5.2)."
+      "scientific_summary": "The lead clears the Donnan partition ceiling (net charge +2.05 against a +4.0 limit at pH 6.0) and its charge rises by Delta Q = +1.62 between pH 7.2 and pH 5.2. Read the second criterion carefully: with one titratable pKa near 6.0, that shift is about +0.809 per histidine, so Delta Q >= 1.0 is arithmetically a threshold on histidine count, satisfied here by the two histidines and by nothing else. It is not independent of the charge criterion above it, and it is not evidence that the peptide does anything in acid. Both are composition arithmetic, not a measurement of binding or of delivery."
     }
   ],
   "classification_summary": {
-    "PASSED_IN_SILICO": 5,
-    "INCONCLUSIVE_WITHIN_NOISE": 6,
     "AT_RISK": 1,
-    "FALSIFIED": 0
+    "CALIBRATION_FAILED": 1,
+    "INCONCLUSIVE_WITHIN_NOISE": 6,
+    "NOT_COMPUTED": 1,
+    "NO_HOTSPOT_IDENTIFIED": 1,
+    "PASSED_IN_SILICO": 1,
+    "SCORE_REPRODUCIBLE_POSE_NOT": 1
+  },
+  "provenance_summary": {
+    "computed_this_run": 8,
+    "not_computed": 1,
+    "vault_query": 3
   },
   "formal_scientific_statement": "All findings are strictly in silico computational hypotheses requiring wet-lab enzymatic, whole-saliva, and cellular biofilm falsification."
 }

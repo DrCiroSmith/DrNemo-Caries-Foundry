@@ -80,28 +80,28 @@ def build_sop_00():
     cells = []
 
     m1 = r"""# SOP-00: Interactive Page and Platform Tour
-## Streptococcus mutans GtfB Macrocyclic Inhibitor Campaign
+## Streptococcus mutans GTF-SI Macrocyclic Inhibitor Campaign
 **Standard Operating Procedure ID:** SOP-00  
 **Principal Investigator:** Dr. Roi Castrellon, DDS  
 **Affiliation:** DrNemo Oral Biophysics Research, Miami, FL, USA (roisasha@gmail.com)  
 **Audience:** Dentists, Clinicians, Students, Recruiters, and Executive Reviewers  
-**Target Receptor:** RCSB PDB 3AIC (2.10 A Resolution) | Counter-Screen: Human Salivary Amylase 1SMD (1.60 A)  
+**Target Receptor:** RCSB PDB 3AIC, GTF-SI / gtfC (3.11 A Resolution) | Counter-Screen: Human Salivary Amylase 1SMD (1.60 A)  
 **Live WebGL Studio:** https://drcirosmith.github.io/DrNemo-Caries-Foundry/  
 **Local Streamlit Dashboard:** http://localhost:8501/  
 
 ---
 
 ### Plain-English "Why This Matters"
-Dental caries (cavities) is the single most common chronic disease on Earth, affecting over two billion people worldwide. Cavities are not caused by simple sugar contact. They are driven by an oral bacterium called *Streptococcus mutans*. When this bacterium encounters dietary sugar (sucrose), it uses a specialized enzyme on its surface called Glucosyltransferase-B (GtfB, PDB 3AIC) to manufacture sticky, water-insoluble glucan polymers. 
+Dental caries (cavities) is the single most common chronic disease on Earth, affecting over two billion people worldwide. Cavities are not caused by simple sugar contact. They are driven by an oral bacterium called *Streptococcus mutans*. When this bacterium encounters dietary sugar (sucrose), it uses a specialized enzyme on its surface called Glucosyltransferase-SI (GTF-SI, gtfC gene product, PDB 3AIC) to manufacture sticky, water-insoluble glucan polymers. 
 
-In plain terms, GtfB acts like a molecular glue factory. The glue sticks bacterial colonies to tooth enamel, building dense plaque biofilms. Inside this sheltered fortress, bacteria pump out lactic acid that dissolves enamel minerals. 
+In plain terms, GTF-SI acts like a molecular glue factory. The glue sticks bacterial colonies to tooth enamel, building dense plaque biofilms. Inside this sheltered fortress, bacteria pump out lactic acid that dissolves enamel minerals. 
 
-Traditional antibiotics cannot solve this problem because broad-spectrum antibiotics kill beneficial mouth bacteria, causing oral thrush and antibiotic resistance. The strategy here is precision biophysics: designing a circular peptide (a macrocyclic "molecular key") called `CAHWRPWHC`. This key slips directly into the catalytic cleft of GtfB, jamming the glue factory without killing harmless microbes or harming human saliva enzymes."""
+Traditional antibiotics cannot solve this problem because broad-spectrum antibiotics kill beneficial mouth bacteria, causing oral thrush and antibiotic resistance. The strategy here is precision biophysics: designing a circular peptide (a macrocyclic "molecular key") called `CAHWRPWHC`. This key slips directly into the catalytic cleft of GTF-SI, jamming the glue factory without killing harmless microbes or harming human saliva enzymes."""
     cells.append(make_cell("markdown", m1))
 
     m_capacity = r"""### Sequence Length vs Database Capacity: An Essential Distinction
 A critical distinction in this computational campaign governs molecular size versus repository scalability:
-1. **Structural Length (9 Amino Acids per Molecule):** Every macrocycle candidate in this primary series is constrained to 9 residues (`Cys1` through `Cys9`). This physical span (approximately 12 to 14 Angstroms in cyclic diameter) is geometrically tuned to span the catalytic cleft of GtfB without steric clashing or excessive entropic flexibility.
+1. **Structural Length (9 Amino Acids per Molecule):** Every macrocycle candidate in this primary series is constrained to 9 residues (`Cys1` through `Cys9`). This physical span (approximately 12 to 14 Angstroms in cyclic diameter) is geometrically tuned to span the catalytic cleft of GTF-SI without steric clashing or excessive entropic flexibility.
 2. **Limitless Candidate Volume (Unlimited Peptides in SQLite Vault):** In contrast to the 9-residue molecular length, the number of candidate peptides that can be generated, screened, and stored in the SQLite database (`data/foundry_contenders.sqlite`) is completely limitless. Indexed by sequence hash (`CREATE INDEX IF NOT EXISTS idx_sequence ON contenders(sequence);`), the vault performs constant-time O(1) lookups and scales to millions of unique macrocycle contenders without memory bottlenecks."""
     cells.append(make_cell("markdown", m_capacity))
 
@@ -109,9 +109,9 @@ A critical distinction in this computational campaign governs molecular size ver
 The public WebGL 3D Studio allows anyone with a modern web browser to inspect candidate molecules docked directly into the bacterial enzyme cleft without installing specialized molecular modeling software.
 
 ### What You See on the Screen
-- **Chain A (The Giant Machinery):** The bacterial enzyme GtfB (PDB `3AIC`). It contains 260 amino acid residues in its catalytic core and over 2,100 atoms.
+- **Chain A (The Giant Machinery):** The bacterial enzyme GTF-SI (PDB `3AIC`). It contains 260 amino acid residues in its catalytic core and over 2,100 atoms.
 - **Chain B (The Molecular Key):** The circular peptide inhibitor `CAHWRPWHC`. It contains 9 amino acid residues locked in a ring by a disulfide bridge, totaling 102 atoms.
-- **The Catalytic Triad:** Three specific amino acids inside GtfB (`Asp477`, `Glu515`, `Asp588`). These act as the chemical scissors and glue-assemblers of the bacterium. The inhibitor positions itself directly across these three residues.
+- **The Catalytic Triad:** Three specific amino acids inside GTF-SI (`Asp477`, `Glu515`, `Asp588`). These act as the chemical scissors and glue-assemblers of the bacterium. The inhibitor positions itself directly across these three residues.
 
 ### 3D Control Buttons Explained
 1. **Lead Selector Chips (Top Bar):**
@@ -122,7 +122,7 @@ The public WebGL 3D Studio allows anyone with a modern web browser to inspect ca
 3. **Recenter Button:** Returns camera focus to the catalytic triad cleft.
 4. **Representation Toggles:**
    - `Interaction Complex`: Shows both the bacterial enzyme and peptide key together.
-   - `GtfB Pocket Only`: Shows only the bacterial cleft cavity, revealing the binding groove.
+   - `GTF-SI Pocket Only`: Shows only the bacterial cleft cavity, revealing the binding groove.
    - `Cyclic Peptide Only`: Isolates the 9-residue circular peptide to inspect its ring geometry."""
     cells.append(make_cell("markdown", m2))
 
@@ -146,14 +146,14 @@ When running the local workstation dashboard (`streamlit run dashboard.py` on po
 - **Amylase Selectivity (`Delta-Delta G = -0.85 kcal/mol`):** Compares bacterial binding against human saliva binding. Negative values confirm the drug prefers bacteria over human saliva.
 - **Stephan Charge Surge (`Delta Q = +1.62`):** Electric charge increase when plaque acid drops after meals, driving the drug into biofilm.
 - **Protease Cleavage Sites:** Number of places saliva digestive enzymes can cut the drug. Trypsin is shielded (Arg5-Pro6), while chymotrypsin targets Trp4/Trp7.
-- **Pareto Rank (`Rank 1`):** Indicates the molecule is non-dominated across evaluated biophysical trade-offs."""
+- **Pareto Rank (`Rank 1`):** Despite the name, this column is **not** a dominance rank. It is a status tier: 1 means the candidate survived every gate, 2 means it failed a soft gate, 3 means a hard failure. It never tests dominance, and `CAHWRPWHC` is in fact dominated by 87 of the 260 recorded candidates. Run `scripts/compute_pareto_front.py` for the real Pareto front."""
     cells.append(make_cell("markdown", m3))
 
     m4 = r"""## 3. Three-Minute Live Presentation Script
 Use this exact script when presenting DrNemo to clinical colleagues, recruiters, or executive teams:
 
 - **Minute 1 (0:00 - 1:00) | The Cavity Problem and The Precision Mission:**  
-  *"Over two billion people suffer from tooth decay. The culprit is Streptococcus mutans, which uses an enzyme called GtfB to manufacture sticky glue from sugar. This glue creates dental plaque. Standard antibiotics cannot fix this because they destroy healthy mouth flora. The mission was to design a precision molecular key that blocks this single bacterial glue enzyme without harming friendly bacteria or human saliva."*
+  *"Over two billion people suffer from tooth decay. The culprit is Streptococcus mutans, which uses an enzyme called GTF-SI to manufacture sticky glue from sugar. This glue creates dental plaque. Standard antibiotics cannot fix this because they destroy healthy mouth flora. The mission was to design a precision molecular key that blocks this single bacterial glue enzyme without harming friendly bacteria or human saliva."*
 
 - **Minute 2 (1:00 - 2:00) | The 3D Studio and The Molecular Key:**  
   *"Here in the WebGL studio, you can see the bacterial enzyme in grey (Chain A) and the cyclic peptide in green (Chain B). Notice how the peptide docks squarely inside the catalytic pocket. It sits within 3.7 angstroms of all three catalytic amino acids (Asp477, Glu515, Asp588). By physically blocking this pocket, the bacterium cannot assemble glucan glue from sucrose."*
@@ -189,7 +189,7 @@ chain_b = [l for l in atom_lines if l[21] == "B"]
 res_a = sorted(set((int(l[22:26]), l[17:20].strip()) for l in chain_a))
 res_b = sorted(set((int(l[22:26]), l[17:20].strip()) for l in chain_b))
 
-print(f"Chain A (Bacterial GtfB Enzyme): {len(chain_a)} atoms across {len(res_a)} residues")
+print(f"Chain A (Bacterial GTF-SI Enzyme): {len(chain_a)} atoms across {len(res_a)} residues")
 print(f"Chain B (Cyclic Peptide Lead):   {len(chain_b)} atoms across {len(res_b)} residues")
 print(f"Peptide Sequence: {'-'.join([r[1] for r in res_b])} (CAHWRPWHC)")
 
@@ -218,7 +218,7 @@ bars = ax.bar(list(distances.keys()), list(distances.values()), color=colors, ed
 
 ax.axhline(4.0, color="#dc2626", linestyle="--", linewidth=1.5, label="Direct Contact Threshold (4.0 A)")
 ax.set_ylabel("Closest Atomic Distance (Angstroms)")
-ax.set_title("Proximity of Inhibitor CAHWRPWHC to GtfB Catalytic Triad Residues")
+ax.set_title("Proximity of Inhibitor CAHWRPWHC to GTF-SI Catalytic Triad Residues")
 ax.set_ylim(0, 5.5)
 
 for bar in bars:
@@ -252,15 +252,16 @@ for i, v in enumerate(status_counts.values):
     ax1.text(v + 1, i, str(v), va="center", fontweight="bold")
 
 # Panel 2: Binding affinity vs selectivity scatter
-corroborated = df[df['falsification_status'] == 'CORROBORATED']
-falsified = df[df['falsification_status'] != 'CORROBORATED']
+SURVIVED = ['SURVIVED_ALL_GATES', 'CORROBORATED', 'NOT_CORROBORATED']  # the vault still holds legacy labels
+survivors = df[df['falsification_status'].isin(SURVIVED)]
+falsified = df[~df['falsification_status'].isin(SURVIVED)]
 
 ax2.scatter(falsified['vina_3aic_kcal'], falsified['selectivity_ddg'], color="#94a3b8", alpha=0.5, label="Falsified / Subthreshold")
-ax2.scatter(corroborated['vina_3aic_kcal'], corroborated['selectivity_ddg'], color="#10b981", s=80, edgecolor="black", label="Corroborated Survivors")
+ax2.scatter(survivors['vina_3aic_kcal'], survivors['selectivity_ddg'], color="#10b981", s=80, edgecolor="black", label="Survived all gates (not corroborated)")
 ax2.axvline(-8.0, color="#ef4444", linestyle="--", label="Target Affinity Gate (-8.0 kcal/mol)")
 ax2.axhline(-0.80, color="#f59e0b", linestyle="--", label="Amylase Selectivity Gate (-0.80 kcal/mol)")
 
-ax2.set_xlabel("GtfB Binding Affinity (kcal/mol)")
+ax2.set_xlabel("GTF-SI Binding Affinity (kcal/mol)")
 ax2.set_ylabel("Amylase Selectivity Delta-Delta G (kcal/mol)")
 ax2.set_title("Biophysical Safety and Potency Landscape")
 ax2.legend(loc="lower left", fontsize=8)
@@ -299,7 +300,7 @@ def build_sop_01():
     cells = []
 
     m1 = r"""# SOP-01: Philosophy of Science in Plain English: Why I Try to Break My Own AI Discoveries
-## Streptococcus mutans GtfB Macrocyclic Inhibitor Campaign
+## Streptococcus mutans GTF-SI Macrocyclic Inhibitor Campaign
 **Standard Operating Procedure ID:** SOP-01  
 **Principal Investigator:** Dr. Roi Castrellon, DDS  
 **Affiliation:** DrNemo Oral Biophysics Research, Miami, FL, USA (roisasha@gmail.com)  
@@ -333,21 +334,21 @@ Every candidate generated by this foundry is challenged across twelve computatio
 
 | Angle | Evaluation Angle | Quantitative Result | Honest Classification | Popperian Interpretation |
 | :--- | :--- | :--- | :--- | :--- |
-| **1** | Co-Crystal Redocking Calibration (3AIC) | RMSD 4.51 A, -7.915 kcal/mol | `INCONCLUSIVE_WITHIN_NOISE` | Cleft localized, but 4.51 A RMSD exceeds 2.0-4.0 A rigid redocking standard due to wide 28 A cleft & glycosidic flexibility |
-| **2** | Multi-Seed Reproducibility (N=5) | Mean -8.10 +/- 0.37 kcal/mol, centroid SD 0.46 A | `PASSED_IN_SILICO` | Robust binding localization across independent seeds |
-| **3** | Pose Mode Clustering & Energy Gap | Mode 1-2 Delta E = +0.10 kcal/mol, shift 1.74 A | `INCONCLUSIVE_WITHIN_NOISE` | Small energy gap to secondary pose mode |
-| **4** | Force-Field Error Margin on 1SMD Selectivity | DeltaDeltaG = -0.85 kcal/mol vs Vina SE ~2.85 kcal/mol | `INCONCLUSIVE_WITHIN_NOISE` | Observed selectivity is within Vina force-field uncertainty boundary |
-| **5** | Charge-Matched Scrambled Null (N=39) | Lead -8.191 vs Null -8.343 +/- 0.470 (Z = +0.32, p = 0.5897) | `INCONCLUSIVE_WITHIN_NOISE` | Static docking fails to reject H0; sequence specificity requires dynamic confirmation |
-| **6** | In-Silico Alanine Hotspot Scanning | Hotspots at His3, Trp7, His8 | `PASSED_IN_SILICO` | Identifies catalytic anchor residues in GtfB triad |
+| **1** | Co-Crystal Redocking Calibration (3AIC) | RMSD 4.51 A against the 2.0 A convention, -7.915 kcal/mol | `CALIBRATION_FAILED` | Cleft localized, but 4.51 A RMSD exceeds 2.0-4.0 A rigid redocking standard due to wide 28 A cleft & glycosidic flexibility |
+| **2** | Multi-Seed Reproducibility (4 independent seeds) | Score mean -8.08 +/- 0.41 kcal/mol (population SD), but mean pairwise pose RMSD 9.11 A over the 84 real heavy atoms | `SCORE_REPRODUCIBLE_POSE_NOT` | Published earlier as N=5 at -8.10 +/- 0.37. Seed 42 is excluded: its docked pose is byte-identical to the campaign pose across all nine modes, so it is not an independent replicate. The score reproduces and the centroid does, the pose does not, so no contact-level claim is supported |
+| **3** | Pose Mode Clustering & Energy Gap | Mode 1-2 Delta E = +0.10 kcal/mol, centroid shift 1.78 A, heavy-atom RMSD 5.63 A | `INCONCLUSIVE_WITHIN_NOISE` | Small energy gap to secondary pose mode |
+| **4** | Force-Field Error Margin on 1SMD Selectivity | DeltaDeltaG = -0.848 kcal/mol against an assumed 2.85 kcal/mol scoring error | `INCONCLUSIVE_WITHIN_NOISE` | Selectivity is inside the assumed error band, and that error figure is itself uncited in this work |
+| **5** | Charge-Matched Scrambled Null (N=39) | Lead -8.191 vs Null -8.343 +/- 0.470 (Z = +0.32, p = 0.600) | `INCONCLUSIVE_WITHIN_NOISE` | Static docking fails to reject H0; sequence specificity requires dynamic confirmation |
+| **6** | In-Silico Alanine Hotspot Scanning | No hotspot: largest loss W7A at +0.257 kcal/mol against a +0.70 threshold | `NO_HOTSPOT_IDENTIFIED` | No residue in the scaffold behaves as an energetic anchor |
 | **7** | Explicit pH 5.2 Histidine Diprotonation | Acidic 3AIC DG = -7.71 vs 1SMD -7.89 kcal/mol | `INCONCLUSIVE_WITHIN_NOISE` | Explicit diprotonation weakens 3AIC score by 0.49 kcal/mol and slightly inverts raw ranking within noise |
 | **8** | Broad Oral Protease & Peptidase Check | Trypsin shielded (Arg5-Pro6); Trp4/Trp7 chymotryptic sites | `AT_RISK` | Susceptible to salivary chymotrypsin/cathepsin G; requires whole-saliva half-life assay |
-| **9** | Additional Host Screen (RCSB 1LZ1 Lysozyme) | Human lysozyme DG = -6.67 kcal/mol (DeltaDeltaG = -1.52) | `PASSED_IN_SILICO` | Low off-target affinity against innate mucosal defense enzyme |
+| **9** | Additional Host Screen (RCSB 1LZ1 Lysozyme) | Human lysozyme DG = -6.67 kcal/mol (DeltaDeltaG = -1.52) | `INCONCLUSIVE_WITHIN_NOISE` | The margin is 0.53 of the assumed 2.85 kcal/mol scoring error, so it does not resolve. Angle 4 judges a smaller margin the same way |
 | **10** | Linear Control vs Cyclic Macrocycle | Linear AHWRPWH (-9.25 kcal/mol) vs cyclic (-8.19 kcal/mol) | `INCONCLUSIVE_WITHIN_NOISE` | Flexible linear peptide scores stronger due to Vina under-penalizing unfolded entropy |
-| **11** | OpenMM Implicit-Solvent Relaxation Drift | Amber14/GBn2 310.15 K heavy-atom drift RMSD = 0.92 A | `PASSED_IN_SILICO` | Local geometric stability confirmed without ring collapse |
-| **12** | Chitosan Donnan & Stephan Acid Switch | Saliva Q = +2.05 <= +4.0; Stephan Delta Q = +1.62 | `PASSED_IN_SILICO` | Clears Donnan ceiling and delivers acidogenic charge surge |
+| **11** | OpenMM Implicit-Solvent Relaxation Drift | Not computed: rdkit, openmm and pdbfixer are not installed, so no relaxation was run | `NOT_COMPUTED` | No drift figure exists; install the dependencies and rerun |
+| **12** | Chitosan Donnan & Stephan Acid Switch | Saliva Q = +2.05 <= +4.0; Stephan Delta Q = +1.62 | `COMPOSITION_ARITHMETIC_ONLY` | Henderson-Hasselbalch arithmetic on the sequence, no structure and no docking; Delta Q is +0.809 per histidine, so that criterion is a histidine count |
 
 ### Disproof Summary Tally
-**5 PASSED_IN_SILICO | 6 INCONCLUSIVE_WITHIN_NOISE | 1 AT_RISK | 0 FALSIFIED**  
+**0 PASSED_IN_SILICO | 6 INCONCLUSIVE_WITHIN_NOISE | 1 AT_RISK | 1 CALIBRATION_FAILED | 1 SCORE_REPRODUCIBLE_POSE_NOT | 1 NO_HOTSPOT_IDENTIFIED | 1 COMPOSITION_ARITHMETIC_ONLY | 1 NOT_COMPUTED**  
 All findings are strictly *in silico* computational hypotheses requiring wet-lab enzymatic, whole human saliva, and cellular biofilm falsification."""
     cells.append(make_cell("markdown", m3))
 
@@ -382,7 +383,7 @@ print(f"\nTotal Evaluated Angles: {len(angles)}")
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
 # Panel 1: Classification Counts
-categories = ["PASSED_IN_SILICO", "INCONCLUSIVE_WITHIN_NOISE", "AT_RISK", "FALSIFIED"]
+categories = ["COMPOSITION_ARITHMETIC_ONLY", "INCONCLUSIVE_WITHIN_NOISE", "AT_RISK", "FALSIFIED"]
 counts = [summary.get(c, 0) for c in categories]
 colors = ["#10b981", "#f59e0b", "#ef4444", "#6b7280"]
 clean_cats = ["Passed In Silico", "Inconclusive (Noise)", "At Risk (Protease)", "Falsified"]
@@ -395,7 +396,7 @@ for bar in bars:
     y = bar.get_height()
     ax1.text(bar.get_x() + bar.get_width()/2, y + 0.2, str(y), ha="center", fontweight="bold")
 
-# Panel 2: Attrition Funnel from 82 candidates to Corroborated Leads
+# Panel 2: Attrition funnel from 82 candidates to the ones that survived every gate
 benchmark_path = repo_root / "demo_data/results/falsification_benchmark.json"
 with open(benchmark_path, "r", encoding="utf-8") as f:
     bm = json.load(f)
@@ -403,11 +404,11 @@ with open(benchmark_path, "r", encoding="utf-8") as f:
 funnel_stages = [
     ("Total Designs", 82),
     ("Viability & Size", 82),
-    ("GtfB Docking", 48),
+    ("GTF-SI Docking", 48),
     ("Vinardo Dual-Engine", 35),
     ("Amylase Selectivity", 14),
     ("Protease Survival", 4),
-    ("Corroborated Leads", 2)
+    ("Survived all gates", 2)
 ]
 
 stage_names = [s[0] for s in funnel_stages]
@@ -464,15 +465,15 @@ print(comp_df.to_string(index=False))"""
 *Answer:* A drug that scores well on a computer but fails in clinical trials wastes hundreds of millions of dollars and delays patient care. By testing candidates against severe biological filters early, only molecules with plausible clinical survival potential move forward.
 
 **Q2: Why is CAHWRPWHC classified as an in silico hypothesis rather than a proven drug?**  
-*Answer:* Strict Popperian skepticism recognizes that the measured host selectivity (-0.85 kcal/mol) falls within AutoDock Vina's published error margin (+/-2.85 kcal/mol), the scrambled null fails to reject H0 (p=0.5897), and aromatic residues Trp4/Trp7 carry chymotryptic risk. Confirmation requires wet-lab enzymatic, whole saliva, and biofilm testing.
+*Answer:* Strict Popperian skepticism recognizes that the measured host selectivity (-0.85 kcal/mol) falls within an assumed scoring error of +/-2.85 kcal/mol, a figure widely quoted for AutoDock Vina but not sourced in this work, the scrambled null fails to reject H0 (p=0.600), and aromatic residues Trp4/Trp7 carry chymotryptic risk. Confirmation requires wet-lab enzymatic, whole saliva, and biofilm testing.
 
 ### Data Analysis Key Findings
 - **High Attrition:** 80 out of 82 initial designs failed biophysical stress tests, demonstrating that naive scoring creates massive false positive rates.
-- **Honest Tally:** The 12-angle battery reveals 5 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, and 0 Falsified.
+- **Honest Tally:** The 12-angle battery reveals 1 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 1 Calibration Failed, 1 Score Reproducible but Pose Not, 1 No Hotspot Identified, and 1 Not Computed. Nothing was corroborated.
 - **Physical Viability:** Candidate `CAHWRPWHC` satisfies Donnan mucosal boundaries (+2.05) and delivers Stephan acid-switch activation (+1.62) while avoiding tryptic lysis.
 
 ### Insights or Next Steps
-- **Experimental Verification:** Synthesize `CAHWRPWHC` via solid-phase peptide synthesis (SPPS) for in vitro GtfB enzymatic IC50 assays and pooled saliva stability testing.
+- **Experimental Verification:** Synthesize `CAHWRPWHC` via solid-phase peptide synthesis (SPPS) for in vitro GTF-SI enzymatic IC50 assays and pooled saliva stability testing.
 
 > [!NOTE]
 > **Key Takeaway Box:** Confirmation bias creates fragile drug designs; Popperian falsification builds resilient candidates. By demanding that molecules survive twelve severe computational angles, this platform filters out dangerous false positives while reporting force-field uncertainty boundaries with complete transparency."""
@@ -488,7 +489,7 @@ def build_sop_02():
     cells = []
 
     m1 = r"""# SOP-02: Molecular Docking and Amylase Selectivity: Fitting the Lock Without Friendly Fire
-## Streptococcus mutans GtfB Macrocyclic Inhibitor Campaign
+## Streptococcus mutans GTF-SI Macrocyclic Inhibitor Campaign
 **Standard Operating Procedure ID:** SOP-02  
 **Principal Investigator:** Dr. Roi Castrellon, DDS  
 **Affiliation:** DrNemo Oral Biophysics Research, Miami, FL, USA (roisasha@gmail.com)  
@@ -498,7 +499,7 @@ def build_sop_02():
 ---
 
 ### Plain-English "Why This Matters"
-In structural biology, drug action is commonly described by Emil Fischer's **lock-and-key model**. The bacterial enzyme GtfB has an active-site pocket (the keyhole). The circular peptide is a precision-cut molecular key designed to slide into that keyhole and block it.
+In structural biology, drug action is commonly described by Emil Fischer's **lock-and-key model**. The bacterial enzyme GTF-SI has an active-site pocket (the keyhole). The circular peptide is a precision-cut molecular key designed to slide into that keyhole and block it.
 
 However, the human mouth produces essential protective digestive enzymes. The most abundant is **human salivary alpha-amylase** (PDB `1SMD`). Amylase breaks down dietary starches into digestible sugars. If an oral mouthwash peptide accidentally jams the human amylase lock instead of the bacterial lock, that constitutes off-target toxicity or friendly fire.
 
@@ -519,13 +520,13 @@ When both independent physics engines agree (`-8.191 kcal/mol` Vina and `-4.990 
     cells.append(make_cell("markdown", m2))
 
     m3 = r"""## 2. Force-Field Error Margins: The +/-2.85 kcal/mol Reality Check
-To evaluate selectivity, the difference in binding affinity between bacterial GtfB and human amylase is calculated:
+To evaluate selectivity, the difference in binding affinity between bacterial GTF-SI and human amylase is calculated:
 $$\Delta\Delta G = \Delta G_{\text{3AIC}} - \Delta G_{\text{1SMD}}$$
 Negative $\Delta\Delta G$ indicates preferential binding to the bacterial target. For `CAHWRPWHC`:
 $$\Delta\Delta G = -8.191 - (-7.343) = -0.848\text{ kcal/mol}$$
 
 ### The Critical Popperian Caveat
-AutoDock Vina's published standard error is approximately $\pm 2.85\text{ kcal/mol}$ on blind benchmark datasets. 
+A scoring error of approximately $\pm 2.85\text{ kcal/mol}$ is widely quoted for AutoDock Vina on blind benchmark sets. It is treated here as an assumption: no citation for it is recorded in this repository and nothing in this work measures it. Any use of this number should be checked against a paper you have read. 
 Therefore, an observed selectivity difference of $\Delta\Delta G = -0.85\text{ kcal/mol}$ falls squarely **within the intrinsic force-field uncertainty margin**!
 
 Claiming definitive proof of selectivity based solely on a $-0.85\text{ kcal/mol}$ computational difference is scientific confirmation bias. In accordance with Karl Popper's demarcation principle, this angle is classified as **`INCONCLUSIVE_WITHIN_NOISE`**. True selectivity must be confirmed experimentally via surface plasmon resonance (SPR) or isothermal titration calorimetry (ITC)."""
@@ -577,12 +578,12 @@ x_vals = np.linspace(-10, -5, 100)
 ax.plot(x_vals, x_vals, color="#64748b", linestyle=":", linewidth=1.5, label="Zero Selectivity (DDG = 0)")
 
 # +/-2.85 kcal/mol Force-Field Error Band
-ax.fill_between(x_vals, x_vals - 2.85, x_vals + 2.85, color="#cbd5e1", alpha=0.3, label="Vina Force-Field Noise Band (+/-2.85 kcal/mol)")
+ax.fill_between(x_vals, x_vals - 2.85, x_vals + 2.85, color="#cbd5e1", alpha=0.3, label="Assumed scoring-error band (+/-2.85 kcal/mol, uncited)")
 
 # Threshold lines
-ax.axvline(-8.0, color="#dc2626", linestyle="--", linewidth=1.2, label="GtfB Potency Gate (-8.0 kcal/mol)")
+ax.axvline(-8.0, color="#dc2626", linestyle="--", linewidth=1.2, label="GTF-SI Potency Gate (-8.0 kcal/mol)")
 
-ax.set_xlabel("Bacterial GtfB Affinity (3AIC, kcal/mol)")
+ax.set_xlabel("Bacterial GTF-SI Affinity (3AIC, kcal/mol)")
 ax.set_ylabel("Human Amylase Affinity (1SMD, kcal/mol)")
 ax.set_title("Target vs Off-Target Affinity with Vina Force-Field Noise Band")
 ax.legend(loc="upper left", fontsize=8)
@@ -593,7 +594,7 @@ plt.show()"""
     s2_code = r"""# Bar plot of selectivity margins with error bars
 names = ["CAHWRPWHC", "CPHWRPWHC", "CRRRWWRRRRC"]
 ddg_vals = [cahwrpwhc['selectivity_ddg'], cphwrpwhc['selectivity_ddg'], crrrwwrrrrc['selectivity_ddg']]
-errors = [2.85, 2.85, 2.85] # Vina published standard error
+errors = [2.85, 2.85, 2.85] # assumed scoring error, uncited in this work
 
 fig, ax = plt.subplots(figsize=(7, 4.5))
 colors = ["#10b981", "#f59e0b", "#ef4444"]
@@ -602,7 +603,7 @@ bars = ax.bar(names, ddg_vals, yerr=errors, capsize=8, color=colors, edgecolor="
 ax.axhline(0, color="black", linewidth=1)
 ax.axhline(-0.80, color="#dc2626", linestyle="--", label="Selectivity Threshold Gate (-0.80 kcal/mol)")
 ax.set_ylabel("Selectivity Delta-Delta G (kcal/mol)")
-ax.set_title("Observed Selectivity vs Vina Force-Field Error Margin (+/-2.85 kcal/mol)")
+ax.set_title("Observed selectivity vs an assumed +/-2.85 kcal/mol scoring error")
 ax.legend(loc="upper left")
 
 for bar in bars:
@@ -616,18 +617,18 @@ plt.show()"""
 
     sum_md = r"""### Q&A
 **Q1: What does a binding score of -8.191 kcal/mol mean in simple terms?**  
-*Answer:* It means the circular peptide fits snugly into the catalytic groove of GtfB, releasing free energy upon binding. In aqueous solution, this corresponds to low-micromolar to sub-micromolar theoretical affinity.
+*Answer:* It means the circular peptide fits snugly into the catalytic groove of GTF-SI, releasing free energy upon binding. In aqueous solution, this corresponds to low-micromolar to sub-micromolar theoretical affinity.
 
 **Q2: If CAHWRPWHC has DDG = -0.85 kcal/mol, why cannot a researcher declare it 100% selective?**  
-*Answer:* Because AutoDock Vina has a published standard error of +/-2.85 kcal/mol. A difference of -0.85 kcal/mol is within the computational noise band. Honest science labels this `INCONCLUSIVE_WITHIN_NOISE` and requires wet-lab SPR verification.
+*Answer:* Because the scoring function's error is assumed to be around +/-2.85 kcal/mol, and a difference of -0.848 kcal/mol sits inside that band. Note that this error figure is an assumption in this work, not a sourced measurement, so the honest reading is that the selectivity is unresolved rather than that it is exactly within a known error. Honest science labels this `INCONCLUSIVE_WITHIN_NOISE` and requires wet-lab SPR verification.
 
 ### Data Analysis Key Findings
 - **Dual-Engine Corroboration:** Vina (-8.191 kcal/mol) and Vinardo (-4.990 kcal/mol) both confirm cleft localization for `CAHWRPWHC`.
 - **Hinge Relaxation:** The Pro2 to Ala mutation relaxes the peptide hinge, shifting amylase affinity from -7.902 to -7.343 kcal/mol.
-- **Noise Transparency:** The selectivity margin is reported alongside Vina's +/-2.85 kcal/mol standard error rather than claimed as definitive proof.
+- **Noise Transparency:** the selectivity margin is reported alongside an assumed +/-2.85 kcal/mol scoring error rather than claimed as proof. That error figure is uncited in this work and is flagged as an assumption wherever it appears.
 
 ### Insights or Next Steps
-- **Experimental Kinetics:** Surface plasmon resonance (SPR) should measure dissociation constants (KD) against both recombinant GtfB and human salivary amylase to confirm real selectivity.
+- **Experimental Kinetics:** Surface plasmon resonance (SPR) should measure dissociation constants (KD) against both recombinant GTF-SI and human salivary amylase to confirm real selectivity.
 
 > [!NOTE]
 > **Key Takeaway Box:** Molecular docking models the physical fit of the inhibitor into the bacterial catalytic groove. Candidate `CAHWRPWHC` demonstrates strong dual-engine binding, but scientific honesty requires acknowledging that its -0.85 kcal/mol selectivity margin is within force-field noise, requiring wet-lab confirmation."""
@@ -643,7 +644,7 @@ def build_sop_03():
     cells = []
 
     m1 = r"""# SOP-03: The Scrambled Null Trap and Alanine Scan: Why High Computer Scores Can Lie
-## Streptococcus mutans GtfB Macrocyclic Inhibitor Campaign
+## Streptococcus mutans GTF-SI Macrocyclic Inhibitor Campaign
 **Standard Operating Procedure ID:** SOP-03  
 **Principal Investigator:** Dr. Roi Castrellon, DDS  
 **Affiliation:** DrNemo Oral Biophysics Research, Miami, FL, USA (roisasha@gmail.com)  
@@ -657,7 +658,7 @@ A dangerous pitfall in computational drug discovery is the **false positive trap
 
 To prevent fooling ourselves, I executed two statistical and genetic sanity checks:
 1. **The 39 Scrambled Sequence Null Test:** Taking the exact same amino acids from the candidate, shuffling them like an anagram into 39 random cyclic permutations, and docking every single one. If scrambled sequences score just as well, static docking alone cannot prove sequence specificity.
-2. **The 7-Site Alanine Scan:** Replacing each amino acid one by one with Alanine (`A`). This reveals which residues serve as catalytic anchors and exposes traps where higher docking scores actually destroy saliva survival."""
+2. **The 7-Site Alanine Scan:** Replacing each amino acid one by one with Alanine (`A`). In principle this reveals which residues serve as catalytic anchors and exposes traps where higher docking scores actually destroy saliva survival."""
     cells.append(make_cell("markdown", m1))
 
     m2 = r"""## 1. The Scrambled Null Test: Failing to Reject H0
@@ -667,26 +668,30 @@ To construct the statistical null distribution, the two outer Cysteine residues 
 - **Null Mean ($\mu$):** $-8.343 \pm 0.470\text{ kcal/mol}$
 - **Lead Candidate (`CAHWRPWHC`):** $-8.191\text{ kcal/mol}$
 - **Z-Score:** $+0.32\sigma$
-- **p-Value:** $p = 0.5897$
+- **p-Value:** $p = 0.600$
 
 ### Scientific Conclusion
 Because $p = 0.59 \gg 0.05$, the lead candidate **fails to reject the null hypothesis ($H_0$)**! 
-Random scrambled permutations of the exact same composition bind with comparable static docking energy. This proves that static rigid-receptor docking cannot establish sequence-specific binding in the wide 28 A cleft of GtfB. In accordance with Karl Popper's demarcation principle, this angle is classified as **`INCONCLUSIVE_WITHIN_NOISE`**."""
+Random scrambled permutations of the exact same composition bind with comparable static docking energy. This proves that static rigid-receptor docking cannot establish sequence-specific binding in the wide 28 A cleft of GTF-SI. In accordance with Karl Popper's demarcation principle, this angle is classified as **`INCONCLUSIVE_WITHIN_NOISE`**."""
     cells.append(make_cell("markdown", m2))
 
     m3 = r"""## 2. In-Silico Alanine Hotspot Scanning
 In an alanine scan, every non-alanine position is systematically mutated to alanine (`A`). 
 Alanine has a minimal methyl side chain (`-CH3`), effectively removing side-chain functional groups:
 
-| Mutant | Sequence | Vina Score | $\Delta\Delta G$ vs Lead | Role in Binding |
-| :--- | :--- | :--- | :--- | :--- |
-| **P2A (Lead)** | `CAHWRPWHC` | $-8.191\text{ kcal/mol}$ | $0.000$ | Baseline Lead (relaxed hinge) |
-| **H3A** | `CAAWRPWHC` | $-7.869\text{ kcal/mol}$ | $+0.322$ | Catalytic triad anchor |
-| **W4A** | `CAHARPWHC` | $-8.214\text{ kcal/mol}$ | $-0.023$ | Aromatic core packing |
-| **R5A** | `CAHWAPWHC` | $-8.105\text{ kcal/mol}$ | $+0.086$ | Electrostatic salt-bridge partner |
-| **P6A** | `CAHWRAWHC` | $-8.890\text{ kcal/mol}$ | $-0.699$ | **Affinity Trap: tryptic lysis site!** |
-| **W7A** | `CAHWRPARC` | $-7.805\text{ kcal/mol}$ | $+0.386$ | Catalytic triad anchor |
-| **H8A** | `CAHWRPWAC` | $-7.978\text{ kcal/mol}$ | $+0.213$ | Catalytic triad anchor |
+The scan is parented on the **wild type** `CPHWRPWHC` ($-8.062\text{ kcal/mol}$), of which the lead `CAHWRPWHC` is itself the `P2A` mutant. Deltas below are against that wild type. A positive delta is a loss of affinity; the hotspot threshold set in advance is $+0.70\text{ kcal/mol}$.
+
+| Mutant | Sequence | Vina Score | $\Delta\Delta G$ vs wild type | Hotspot? | Role in Binding |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **P2A (the lead)** | `CAHWRPWHC` | $-8.191\text{ kcal/mol}$ | $-0.129$ | No | Conformational hinge; gains affinity |
+| **H3A** | `CPAWRPWHC` | $-7.869\text{ kcal/mol}$ | $+0.193$ | No | Acid-switch histidine |
+| **W4A** | `CPHARPWHC` | $-8.269\text{ kcal/mol}$ | $-0.207$ | No | Pi-stacking platform; gains affinity |
+| **R5A** | `CPHWAPWHC` | $-8.531\text{ kcal/mol}$ | $-0.469$ | No | Salt-bridge partner; gains affinity |
+| **P6A** | `CPHWRAWHC` | $-8.890\text{ kcal/mol}$ | $-0.828$ | No | **Affinity trap: opens a tryptic site at Arg5** |
+| **W7A** | `CPHWRPAHC` | $-7.805\text{ kcal/mol}$ | $+0.257$ | No | Lipophilic cleft wall; largest loss in the scan |
+| **H8A** | `CPHWRPWAC` | $-7.978\text{ kcal/mol}$ | $+0.084$ | No | Second acid-switch histidine |
+
+**No position is a hotspot.** The largest affinity loss anywhere in the scan is `W7A` at $+0.257\text{ kcal/mol}$, about a third of the threshold, so the scan identifies no energetic anchor. Three substitutions (`W4A`, `R5A`, `P6A`) *improve* the docking score, which is itself evidence that the score is not reading sequence-specific contacts: deleting a tryptophan, an arginine or a proline from a nonapeptide should not improve a specific interaction.
 
 ### The P6A Affinity Trap
 Mutant `P6A` achieves a stronger docking score ($-8.890\text{ kcal/mol}$). 
@@ -739,9 +744,9 @@ ax.plot(x, norm.pdf(x, null_mean, null_std), color="#3b82f6", linewidth=2, label
 ax.axvline(lead_score, color="#10b981", linewidth=2.5, linestyle="-", label=f"Lead CAHWRPWHC (-8.19 kcal/mol, Z={z_score:+.2f})")
 ax.axvline(null_mean, color="#3b82f6", linewidth=1.5, linestyle="--", label="Null Mean (-8.34 kcal/mol)")
 
-ax.set_xlabel("Vina GtfB Binding Free Energy (3AIC, kcal/mol)")
+ax.set_xlabel("Vina GTF-SI Binding Free Energy (3AIC, kcal/mol)")
 ax.set_ylabel("Probability Density")
-ax.set_title("Karl Popper Statistical Null Distribution: H0 Not Rejected (p = 0.5897)")
+ax.set_title("Karl Popper Statistical Null Distribution: H0 Not Rejected (p = 0.600)")
 ax.legend(loc="upper left", fontsize=8)
 plt.tight_layout()
 plt.show()"""
@@ -749,9 +754,18 @@ plt.show()"""
 
     s2_code = r"""# Plot Alanine Scan Energetic Shifts
 ala_data = bm["alanine_scan"]
+ala_meta = bm["alanine_scan_meta"]
+# Parent the scan where the data is parented: on the wild type, not on the lead.
+parent_score = ala_meta["parent_affinity_kcal"]
 mutants = list(ala_data.keys())
 scores = [ala_data[m]["vina_3aic_kcal"] for m in mutants]
-deltas = [s - lead_score for s in scores]
+deltas = [ala_data[m]["delta_binding_affinity_kcal"] for m in mutants]
+assert all(abs((s - parent_score) - d) < 1e-6 for s, d in zip(scores, deltas)), \
+    "stored deltas do not match the stored parent affinity"
+print(f"Alanine scan parent: {ala_meta['parent_sequence']} ({parent_score:+.3f} kcal/mol)")
+print(f"Largest affinity loss: {ala_meta['largest_affinity_loss_kcal']:+.3f} kcal/mol "
+      f"against a {ala_meta['hotspot_threshold_kcal']:+.2f} threshold; "
+      f"hotspots identified: {ala_meta['identified_hotspots'] or 'none'}")
 
 fig, ax = plt.subplots(figsize=(8, 4.5))
 colors = ["#10b981" if d > 0.15 else ("#ef4444" if d < -0.5 else "#3b82f6") for d in deltas]
@@ -759,20 +773,21 @@ colors = ["#10b981" if d > 0.15 else ("#ef4444" if d < -0.5 else "#3b82f6") for 
 bars = ax.bar(mutants, deltas, color=colors, edgecolor="black", width=0.5, alpha=0.85)
 ax.axhline(0, color="black", linewidth=1)
 ax.set_ylabel("Delta-Delta G vs Lead (kcal/mol)")
-ax.set_title("In-Silico Alanine Hotspot Scan: Key Anchors vs Affinity Traps")
+ax.set_title("Alanine Scan vs Wild Type: No Hotspot Reaches the +0.70 Threshold")
 
 for bar in bars:
     y = bar.get_height()
     offset = 0.05 if y >= 0 else -0.08
     ax.text(bar.get_x() + bar.get_width()/2, y + offset, f"{y:+.2f}", ha="center", fontsize=9, fontweight="bold")
 
-# Annotate anchors and trap
-ax.text(0, 0.45, "H3 Anchor", ha="center", color="#059669", fontweight="bold", fontsize=9)
-ax.text(3, -0.85, "P6A Trap\n(Trypsin cut!)", ha="center", color="#dc2626", fontweight="bold", fontsize=9)
-ax.text(4, 0.50, "W7 Anchor", ha="center", color="#059669", fontweight="bold", fontsize=9)
-ax.text(5, 0.35, "H8 Anchor", ha="center", color="#059669", fontweight="bold", fontsize=9)
+# Mark the hotspot threshold the scan is judged against, and the one real liability.
+ax.axhline(0.70, color="#059669", linestyle="--", linewidth=1.5, label="Hotspot threshold +0.70 kcal/mol")
+ax.text(len(mutants) - 1, 0.72, "no bar reaches this line: no hotspot", ha="right",
+        color="#059669", fontweight="bold", fontsize=9)
+ax.text(4, -0.85, "P6A trap\n(opens a trypsin site)", ha="center", color="#dc2626", fontweight="bold", fontsize=9)
+ax.legend(loc="upper left", fontsize=8)
 
-ax.set_ylim(-1.0, 0.7)
+ax.set_ylim(-1.0, 0.95)
 plt.tight_layout()
 plt.show()"""
     cells.append(make_cell("code", s2_code))
@@ -785,15 +800,15 @@ plt.show()"""
 *Answer:* Selecting P6A is the quintessential single-objective blunder. While docking score improves, Proline-6 is required to shield Arginine-5 from salivary trypsin. In saliva, P6A is cleaved and inactivated.
 
 ### Data Analysis Key Findings
-- **Static Docking Limitation:** The scrambled null distribution demonstrates that rigid-receptor docking alone cannot verify sequence specificity in GtfB (Z = +0.32, p = 0.5897).
-- **Catalytic Anchors:** Alanine scanning confirms His3, Trp7, and His8 as energetic anchors interacting with GtfB catalytic triad residues.
+- **Static Docking Limitation:** The scrambled null distribution demonstrates that rigid-receptor docking alone cannot verify sequence specificity in GTF-SI (Z = +0.32, p = 0.600).
+- **No Catalytic Anchors:** alanine scanning of the wild type `CPHWRPWHC` finds no energetic anchor. Only three of seven substitutions lose any affinity (H3A +0.193, W7A +0.257, H8A +0.084 kcal/mol), none reaching the +0.70 kcal/mol hotspot threshold. Three substitutions improve the score, which is itself a sign the score is not reading sequence-specific contacts.
 - **Steric Shield Requirement:** Proline-6 is essential for trypsin resistance, proving that biological viability overrides raw docking affinity.
 
 ### Insights or Next Steps
 - **Dynamic Falsification:** Molecular dynamics (MD) simulations in explicit solvent should evaluate whether CAHWRPWHC exhibits longer cleft residence times than scrambled controls.
 
 > [!NOTE]
-> **Key Takeaway Box:** High computer docking scores can mislead. The scrambled null test confirms that static docking fails to reject H0 (p=0.5897), while the alanine scan identifies genuine catalytic anchors (His3, Trp7, His8) and unmasks affinity traps like P6A."""
+> **Key Takeaway Box:** High computer docking scores can mislead. The scrambled null test confirms that static docking fails to reject H0 (p=0.600), and the alanine scan finds no energetic anchor at all, while still unmasking P6A as an affinity trap that opens a trypsin site."""
     cells.append(make_cell("markdown", sum_md))
 
     return save_notebook("SOP_03_Scrambled_Null_Trap_and_Alanine_Scan.ipynb", cells)
@@ -806,7 +821,7 @@ def build_sop_04():
     cells = []
 
     m1 = r"""# SOP-04: Saliva Survival, Stephan pH Switch, and Oral Protease Vulnerability
-## Streptococcus mutans GtfB Macrocyclic Inhibitor Campaign
+## Streptococcus mutans GTF-SI Macrocyclic Inhibitor Campaign
 **Standard Operating Procedure ID:** SOP-04  
 **Principal Investigator:** Dr. Roi Castrellon, DDS  
 **Affiliation:** DrNemo Oral Biophysics Research, Miami, FL, USA (roisasha@gmail.com)  
@@ -961,7 +976,7 @@ def build_sop_05():
     cells = []
 
     m1 = r"""# SOP-05: In Silico Limitations and Wet-Lab Falsification Roadmap
-## Streptococcus mutans GtfB Macrocyclic Inhibitor Campaign
+## Streptococcus mutans GTF-SI Macrocyclic Inhibitor Campaign
 **Standard Operating Procedure ID:** SOP-05  
 **Principal Investigator:** Dr. Roi Castrellon, DDS  
 **Affiliation:** DrNemo Oral Biophysics Research, Miami, FL, USA (roisasha@gmail.com)  
@@ -982,9 +997,9 @@ In this capstone SOP, I synthesize the complete 12-angle biophysical disproof ba
 In multi-objective optimization, a candidate is called **Pareto Optimal (Rank 1)** if no other molecule exists that improves one objective without worsening another.
 
 Every candidate in this campaign was evaluated across competing physical criteria:
-1. GtfB Binding Affinity (AutoDock Vina $\le -8.0\text{ kcal/mol}$).
+1. GTF-SI Binding Affinity (AutoDock Vina $\le -8.0\text{ kcal/mol}$).
 2. Dual-Engine Corroboration (Vinardo $\le -4.8\text{ kcal/mol}$).
-3. Amylase Selectivity ($\Delta\Delta G \le -0.80\text{ kcal/mol}$, evaluated against $\pm 2.85$ force-field noise).
+3. Amylase Selectivity ($\Delta\Delta G \le -0.80\text{ kcal/mol}$, evaluated against an assumed $\pm 2.85$ scoring error that is uncited in this work).
 4. Protease Resistance (Trypsin shielding verified; chymotryptic risk mapped).
 5. Stephan Acid-Switch Activation ($\Delta Q_{\text{Stephan}} \ge +1.0$).
 6. Nanoparticle Carrier Compatibility ($Q_{\text{pH } 6.0} \le +4.0$).
@@ -992,18 +1007,18 @@ Every candidate in this campaign was evaluated across competing physical criteri
 ### Candidate Profile Summary
 - **Naive Baseline `CRRRWWRRRRC`:** Fails amylase selectivity ($\Delta\Delta G = -0.006$), fails Donnan charge ($+7.00$), and suffers 7 protease cuts.
 - **Parent Lead `CPHWRPWHC`:** Fails amylase selectivity ($\Delta\Delta G = -0.16\text{ kcal/mol}$).
-- **Evaluated Candidate `CAHWRPWHC`:** Achieves Pareto Rank 1 by balancing bacterial binding, hinge relaxation, Donnan clearance, and Stephan activation."""
+- **Evaluated Candidate `CAHWRPWHC`:** Reaches the top status tier (`pareto_rank` 1, which is a tier and not a dominance rank) by clearing every gate on bacterial binding, hinge relaxation, Donnan clearance and Stephan activation. It is not on the Pareto front: 87 of the 260 recorded candidates dominate it on the recorded objectives."""
     cells.append(make_cell("markdown", m2))
 
     m3 = r"""## 2. In Silico Limitations and Rejection of Clinical Guarantees
 Responsible translational science requires stating clearly what computational models **cannot** do:
 - **No 5% Varnish Guarantees:** A computer simulation cannot guarantee that a peptide will remain chemically stable in a commercial dental varnish, resist oxidation in clinical tubes, or survive chairside application.
 - **No Direct Clinical Claims:** Docking free energies do not equal clinical efficacy. All findings in this repository are strictly *in silico* hypotheses.
-- **Force-Field Boundaries:** Measured selectivity (-0.85 kcal/mol) falls within Vina's published error margin (+/-2.85 kcal/mol).
+- **Force-Field Boundaries:** measured selectivity (-0.848 kcal/mol) falls within an assumed +/-2.85 kcal/mol scoring error, a figure this work quotes without a source.
 - **Enzymatic Vulnerability:** Tryptophan residues (Trp4, Trp7) carry chymotryptic risk requiring empirical saliva half-life measurements.
 
 ### 12-Angle Disproof Battery Final Verdict
-**5 PASSED_IN_SILICO | 6 INCONCLUSIVE_WITHIN_NOISE | 1 AT_RISK | 0 FALSIFIED**"""
+**0 PASSED_IN_SILICO | 6 INCONCLUSIVE_WITHIN_NOISE | 1 AT_RISK | 1 CALIBRATION_FAILED | 1 SCORE_REPRODUCIBLE_POSE_NOT | 1 NO_HOTSPOT_IDENTIFIED | 1 COMPOSITION_ARITHMETIC_ONLY | 1 NOT_COMPUTED**"""
     cells.append(make_cell("markdown", m3))
 
     m4 = r"""## 3. Five-Stage Wet-Lab Experimental Falsification Protocol
@@ -1021,10 +1036,10 @@ To transition from computational hypothesis to empirical evidence, the following
    - Cyclization: Air oxidation or iodine-mediated disulfide bridge formation (`Cys1-Cys9`).
    - Quality Gate: $\ge 98\%$ purity by analytical RP-HPLC; molecular mass ($1,224.4\text{ g/mol}$) confirmed by MALDI-TOF MS.
 2. **Stage 2 | Surface Plasmon Resonance (SPR) Direct Binding Kinetics:**
-   - Method: Immobilize recombinant GtfB catalytic core and human salivary alpha-amylase on Biacore CM5 sensor chips.
+   - Method: Immobilize recombinant GTF-SI catalytic core and human salivary alpha-amylase on Biacore CM5 sensor chips.
    - Quality Gate: Measure real association rates ($k_{\text{on}}$), dissociation rates ($k_{\text{off}}$), and equilibrium constants ($K_D$) to test whether selectivity exceeds force-field noise.
 3. **Stage 3 | Enzymatic Glucan Synthesis Inhibition Assay ($IC_{50}$):**
-   - Method: Incubate GtfB with $[^{14}\text{C}]\text{sucrose}$ substrate in the presence of serial dilutions of `CAHWRPWHC` ($0.1\text{ nM}$ to $100\text{ }\mu\text{M}$).
+   - Method: Incubate GTF-SI with $[^{14}\text{C}]\text{sucrose}$ substrate in the presence of serial dilutions of `CAHWRPWHC` ($0.1\text{ nM}$ to $100\text{ }\mu\text{M}$).
    - Quality Gate: Scintillation counting of insoluble glucans to determine true enzymatic $IC_{50}$.
 4. **Stage 4 | Pooled Whole Human Saliva Degradation Half-Life ($t_{1/2}$):**
    - Method: Incubate peptide in fresh human saliva at $37^\circ\text{C}$ over time points ($0, 15, 30, 60, 120, 240\text{ min}$).
@@ -1051,7 +1066,7 @@ repo_root = Path("..").resolve() if Path("../data").exists() else Path(".").reso
 
 # 6-Axis Radar Chart comparing candidates across all dimensions
 categories = [
-    "GtfB Affinity\n(Target)",
+    "GTF-SI Affinity\n(Target)",
     "Amylase Safety\n(Selectivity)",
     "Saliva Survival\n(Protease)",
     "Stephan Switch\n(Acid Activation)",
@@ -1074,7 +1089,7 @@ naive_scores += naive_scores[:1]
 
 fig, ax = plt.subplots(figsize=(7, 7), subplot_kw=dict(polar=True))
 
-ax.plot(angles, cahwrpwhc_scores, color="#10b981", linewidth=2.5, label="CAHWRPWHC (Pareto Rank 1)")
+ax.plot(angles, cahwrpwhc_scores, color="#10b981", linewidth=2.5, label="CAHWRPWHC (top status tier, not non-dominated)")
 ax.fill(angles, cahwrpwhc_scores, color="#10b981", alpha=0.2)
 
 ax.plot(angles, cphwrpwhc_scores, color="#f59e0b", linewidth=1.8, linestyle="--", label="CPHWRPWHC (Amylase Fail)")
@@ -1096,7 +1111,7 @@ plt.show()"""
     s2_code = r"""# 5-Stage Experimental Validation Roadmap Flowchart
 stages = [
     "Stage 1: SPPS Peptide Synthesis\n(HPLC purity >= 98%, MALDI mass)",
-    "Stage 2: SPR Binding Kinetics\n(Biacore KD on GtfB & Amylase)",
+    "Stage 2: SPR Binding Kinetics\n(Biacore KD on GTF-SI & Amylase)",
     "Stage 3: Enzymatic IC50 Assay\n([14C]sucrose glucan inhibition)",
     "Stage 4: Saliva Stability\n(Pooled saliva degradation t1/2)",
     "Stage 5: Artificial Mouth Model\n(Drip-flow biofilm & enamel loss)"
@@ -1125,7 +1140,7 @@ plt.show()"""
 *Answer:* Premature clinical claims undermine scientific credibility. A molecule that has only been tested computationally must not be promoted as a clinical treatment or dental varnish until it has been synthesized and validated across rigorous wet-lab assays.
 
 **Q2: What is the most critical wet-lab experiment to run first?**  
-*Answer:* Surface plasmon resonance (SPR) binding kinetics against both GtfB and human salivary amylase. This determines whether real physical binding and selectivity exist beyond AutoDock Vina force-field noise.
+*Answer:* Surface plasmon resonance (SPR) binding kinetics against both GTF-SI and human salivary amylase. This determines whether real physical binding and selectivity exist beyond AutoDock Vina force-field noise.
 
 ### Data Analysis Key Findings
 - **Pareto Optimality:** `CAHWRPWHC` balances competing biophysical demands, outperforming both naive baselines and single-gate designs.
@@ -1147,10 +1162,10 @@ plt.show()"""
 # =========================================================================
 def build_readme():
     content = r"""# DrNemo Non-Technical Standard Operating Procedures (SOP) Curriculum
-## Streptococcus mutans GtfB Macrocyclic Inhibitor Campaign
+## Streptococcus mutans GTF-SI Macrocyclic Inhibitor Campaign
 **Principal Investigator:** Dr. Roi Castrellon, DDS  
 **Affiliation:** DrNemo Oral Biophysics Research, Miami, FL, USA (`roisasha@gmail.com`)  
-**Target Receptor:** RCSB PDB 3AIC (2.10 A Resolution) | Counter-Screen: Human Salivary Amylase 1SMD (1.60 A Resolution)  
+**Target Receptor:** RCSB PDB 3AIC, GTF-SI / gtfC (3.11 A Resolution) | Counter-Screen: Human Salivary Amylase 1SMD (1.60 A Resolution)  
 **Live WebGL 3D Studio:** [Interactive WebGL Viewer](https://drcirosmith.github.io/DrNemo-Caries-Foundry/)  
 **Workstation Dashboard:** `streamlit run dashboard.py` (Local Port 8501)  
 
@@ -1169,7 +1184,7 @@ All notebooks adhere strictly to:
 
 ## Sequence Length vs Database Capacity: An Essential Distinction
 A critical distinction in this computational campaign governs molecular size versus repository scalability:
-1. **Structural Length (9 Amino Acids per Molecule):** Every macrocycle candidate in this primary series is constrained to 9 residues (`Cys1` through `Cys9`). This physical span (approximately 12 to 14 Angstroms in cyclic diameter) is geometrically tuned to span the catalytic cleft of GtfB without steric clashing or excessive entropic flexibility.
+1. **Structural Length (9 Amino Acids per Molecule):** Every macrocycle candidate in this primary series is constrained to 9 residues (`Cys1` through `Cys9`). This physical span (approximately 12 to 14 Angstroms in cyclic diameter) is geometrically tuned to span the catalytic cleft of GTF-SI without steric clashing or excessive entropic flexibility.
 2. **Limitless Candidate Volume (Unlimited Peptides in SQLite Vault):** In contrast to the 9-residue molecular length, the number of candidate peptides that can be generated, screened, and stored in the SQLite database (`data/foundry_contenders.sqlite`) is completely limitless. Indexed by sequence hash (`CREATE INDEX IF NOT EXISTS idx_sequence ON contenders(sequence);`), the vault performs constant-time O(1) lookups and scales to millions of unique macrocycle contenders without memory bottlenecks.
 
 ---
@@ -1180,8 +1195,8 @@ A critical distinction in this computational campaign governs molecular size ver
 | :--- | :--- | :--- | :--- | :--- |
 | **SOP-00** | [`SOP_00_Interactive_Page_and_Platform_Tour.ipynb`](./SOP_00_Interactive_Page_and_Platform_Tour.ipynb) | Interactive Page & Platform Tour | Step-by-step tour of the WebGL 3D Studio and local 9-tab dashboard with live 3-minute presentation script. | Corroborated & Executed |
 | **SOP-01** | [`SOP_01_Guide_What_Is_Karl_Popper_Falsification.ipynb`](./SOP_01_Guide_What_Is_Karl_Popper_Falsification.ipynb) | Philosophy of Science: Karl Popper Falsification | Why I try to break my own AI designs and how the 12-angle battery identifies physical failure modes. | Corroborated & Executed |
-| **SOP-02** | [`SOP_02_Molecular_Docking_and_Amylase_Selectivity.ipynb`](./SOP_02_Molecular_Docking_and_Amylase_Selectivity.ipynb) | Lock-and-Key Physics & Amylase Selectivity | Understanding 28 A docking boxes, negative kcal/mol, and evaluating the +/-2.85 kcal/mol Vina noise margin. | Corroborated & Executed |
-| **SOP-03** | [`SOP_03_Scrambled_Null_Trap_and_Alanine_Scan.ipynb`](./SOP_03_Scrambled_Null_Trap_and_Alanine_Scan.ipynb) | Scrambled Null Trap & Alanine Hotspot Scan | Catching false positives with 39 scrambled letters and identifying catalytic anchors in the GtfB cleft. | Corroborated & Executed |
+| **SOP-02** | [`SOP_02_Molecular_Docking_and_Amylase_Selectivity.ipynb`](./SOP_02_Molecular_Docking_and_Amylase_Selectivity.ipynb) | Lock-and-Key Physics & Amylase Selectivity | Understanding 28 A docking boxes, negative kcal/mol, and judging a result against an assumed +/-2.85 kcal/mol scoring error. | Corroborated & Executed |
+| **SOP-03** | [`SOP_03_Scrambled_Null_Trap_and_Alanine_Scan.ipynb`](./SOP_03_Scrambled_Null_Trap_and_Alanine_Scan.ipynb) | Scrambled Null Trap & Alanine Hotspot Scan | Catching false positives with 39 scrambled isomers, and an alanine scan that finds no energetic anchor. | Corroborated & Executed |
 | **SOP-04** | [`SOP_04_Saliva_Survival_Stephan_pH_Switch_and_Proteases.ipynb`](./SOP_04_Saliva_Survival_Stephan_pH_Switch_and_Proteases.ipynb) | Saliva Survival: Stephan Curve & Proteases | Plaque acid dynamics, Henderson-Hasselbalch charge surge, and trypsin shielding vs chymotrypsin vulnerability. | Corroborated & Executed |
 | **SOP-05** | [`SOP_05_In_Silico_Limitations_and_Wet_Lab_Falsification_Roadmap.ipynb`](./SOP_05_In_Silico_Limitations_and_Wet_Lab_Falsification_Roadmap.ipynb) | In Silico Limitations & Wet-Lab Roadmap | Multi-objective Pareto optimization, honest disproof tally (5/6/1/0), and 5-stage wet-lab experimental protocol. | Corroborated & Executed |
 

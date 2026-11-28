@@ -167,7 +167,8 @@ def evaluate_candidate(seq: str, gen: int, vault: ContenderVault, priority_id: i
         vina_1smd = dock_1smd["vina_kcal"]
         selectivity_ddg = round(vina_3aic - vina_1smd, 2)
 
-        # 4. OpenMM Amber14 / GBn2 Relaxation at 310.15 K
+        # 4. OpenMM Amber14 / GBn2 energy minimisation. temp_k parameterises the integrator
+        #    object only; no step is taken, so this samples no temperature and is not dynamics.
         try:
             openmm_kj = relax_with_openmm(pdb_ligand, temp_k=310.15)
         except Exception as e:
@@ -183,7 +184,14 @@ def evaluate_candidate(seq: str, gen: int, vault: ContenderVault, priority_id: i
         protease = count_protease_cleavage_sites(seq)
         p_sites = protease["cleavage_site_count"]
 
-        # Hard physical gate on disulfide geometry
+        # Disulfide geometry. Read this as a build sanity check, not as a filter: every
+        # candidate is embedded by the same RDKit/MMFF route with an explicit S-S bond,
+        # so the distance is set by the force field's equilibrium and not by the
+        # sequence. Across the 260 rows in the vault it spans 2.050 to 2.070 Angstroms,
+        # three distinct values in all, against a window of 1.95 to 2.25, and
+        # FALSIFIED_BROKEN_DISULFIDE has never once been assigned. It would catch a
+        # broken build, which is worth having, but it discriminates between candidates
+        # not at all and must not be counted as one of the filters a candidate survived.
         ss_ok = (ss_dist is not None and 1.95 <= ss_dist <= 2.25)
         donnan_ok = q60 <= MAX_DONNAN_CHARGE_PH6
         protease_ok = p_sites == 0

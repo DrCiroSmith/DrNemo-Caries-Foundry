@@ -1,0 +1,33 @@
+{
+  "_README": "Coordinate-digest groups that existed before deterministic result naming and in-file provenance were introduced. The checker at scripts/check_result_provenance.py reports these as known and fails on anything else. Add an entry only with a written explanation, and never to silence a duplicate in new output.",
+  "accepted_coordinate_digests": {
+    "03e488d7f03038bc1a19cfdea597a700": {
+      "classification": "unprovenanced",
+      "files": [
+        "data/poses/contender_mutant_P2A_CAHWRPWHC_1smd.pdbqt",
+        "data/poses/disproof_explicit_pH72_1SMD_docked.pdbqt"
+      ],
+      "note": "The same pattern at the second target: the pH 7.2 arm against alpha-amylase is identical in every byte to the campaign's own alpha-amylase pose, created four days later. Both neutral arms of the acid-switch comparison therefore rest on files of unestablished origin. Kept as evidence."
+    },
+    "6a0e063e5477ce251dca74ab7a53cdbc": {
+      "classification": "unprovenanced",
+      "files": [
+        "data/poses/contender_mutant_P2A_CAHWRPWHC_3aic.pdbqt",
+        "data/poses/disproof_explicit_pH72_3AIC_docked.pdbqt",
+        "data/poses/disproof_seed_42_CAHWRPWHC_3AIC_docked.pdbqt"
+      ],
+      "note": "Known before this convention existed and kept as evidence. One docked result against GTF-SI under three names, identical in every byte. The campaign path was added 2026-11-16 16:35 and its content replaced the same day at 18:34; both audit paths were created 2026-11-20 10:53 already holding the replaced bytes and have never held anything else. How the content reached those paths is not recorded anywhere and the author does not recall. Documented in paper/negative_result_GTF-SI.md. Do not regenerate or rename these files."
+    },
+    "fba97d8689957f0d77571c4675987a9f": {
+      "classification": "unprovenanced",
+      "files": [
+        "data/poses/contender_mutant_P2A_CAHWRPWHC.pdbqt",
+        "data/poses/disproof_explicit_pH72_neutral_CAHWRPWHC.pdbqt",
+        "data/poses/disproof_seed_42_CAHWRPWHC.pdbqt"
+      ],
+      "note": "Benign and expected. These are input conformers, not docking results. All three builders embed the same sequence with the same ETKDG seed of 42, so identical geometry is the correct outcome. Listed so the checker does not report it, and so the distinction from the two groups above is on record."
+    }
+  },
+  "provenance_version": 1,
+  "recorded_on": "2026-11-27"
+}

@@ -37,16 +37,16 @@ def generate_notebook():
 
     # Title & Overview
     title_md = r"""# SOP-01: Biophysical Falsification and Contender Characterization Protocol
-## Streptococcus mutans Glucosyltransferase-SI (GtfB) Macrocyclic Inhibitor Campaign
+## Streptococcus mutans Glucosyltransferase-SI (GTF-SI, gtfC gene product) Macrocyclic Inhibitor Campaign
 **Principal Investigator:** Dr. Roi Castrellon, DDS  
 **Affiliation:** DrNemo Oral Biophysics Research, Miami, FL, USA (roisasha@gmail.com)  
-**Target Structure:** RCSB PDB 3AIC (2.10 Å Resolution) | Counter-Screen: Human Salivary Amylase 1SMD (1.60 Å)  
+**Target Structure:** RCSB PDB 3AIC, GTF-SI / *gtfC* (3.11 Å Resolution) | Counter-Screen: Human Salivary Amylase 1SMD (1.60 Å)  
 
 ---
 ### Objective & Epistemological Framework
-This Standard Operating Procedure (SOP) executes the formal biophysical characterization and Popperian falsification protocol for candidate cyclic peptide inhibitors of *Streptococcus mutans* Glucosyltransferase-SI (GtfB). Following Karl Popper's criterion of demarcation, candidate scaffolds are subjected to severe, falsifiable biophysical barriers:
+This Standard Operating Procedure (SOP) executes the formal biophysical characterization and Popperian falsification protocol for candidate cyclic peptide inhibitors of *Streptococcus mutans* Glucosyltransferase-SI (GTF-SI, gtfC gene product). Following Karl Popper's criterion of demarcation, candidate scaffolds are subjected to severe, falsifiable biophysical barriers:
 1. **Uncompressed 28 Å Grid Docking:** Dual AutoDock Vina and Vinardo scoring centered on catalytic triad oxygens (`Asp477`, `Glu515`, `Asp588`).
-2. **All-Atom Molecular Mechanics:** OpenMM Amber14/GBn2 implicit solvent energy minimization at oral body temperature ($310.15\text{ K}$).
+2. **All-Atom Molecular Mechanics:** OpenMM Amber14/GBn2 implicit-solvent energy minimisation of the isolated macrocycle. No integrator is stepped, so no temperature is sampled and this is not molecular dynamics.
 3. **Oral Microenvironment Barriers:** Stephan-curve protonation shift ($\Delta Q_{\text{Stephan}} \ge +1.0$) and Donnan exclusion ceiling ($Q_{\text{pH } 6.0} \le +3.0$).
 4. **Host Counter-Screening:** Selectivity against human salivary $\alpha$-amylase (PDB `1SMD`) with $\Delta\Delta G \le -0.80\text{ kcal/mol}$.
 5. **Statistical Null Controls:** Empirical $N=39$ scrambled sequence permutation testing and alanine-scanning mutagenesis."""
@@ -79,9 +79,15 @@ plt.rcParams['figure.titlesize'] = 13
 plt.rcParams['figure.dpi'] = 120
 
 # Create figures output dir
-figs_dir = Path("../manuscript/figures")
-if not figs_dir.exists():
-    figs_dir = Path("manuscript/figures")
+# This notebook writes to notebooks/output/, not to manuscript/figures/. The
+# manuscript figure set has one source, scripts/render_figures_svg.py, which is
+# generated from the committed ledger and checked against it by
+# tests/test_figures.py. A second writer into the same directory is how a
+# figure drawn from one state of the data ends up beside a caption written
+# against another.
+figs_dir = Path("../notebooks/output")
+if not Path("../notebooks").exists():
+    figs_dir = Path("notebooks/output")
 figs_dir.mkdir(parents=True, exist_ok=True)
 
 # Connect to Contender Vault
@@ -108,7 +114,7 @@ display(df[['contender_id', 'sequence', 'generation', 'vina_3aic_kcal', 'vinardo
 
     # Section 2 Markdown
     s2_md = """## 2. Dual-Scoring Biophysical Affinity Distribution (Vina vs Vinardo)
-We analyze the distribution of binding free energies against GtfB (`3AIC`) across all evaluated contenders. Dual scoring (AutoDock Vina and Vinardo) guards against single-scoring-function artifacts by evaluating complementary steric and desolvation terms."""
+We analyze the distribution of binding free energies against GTF-SI (`3AIC`) across all evaluated contenders. Dual scoring (AutoDock Vina and Vinardo) guards against single-scoring-function artifacts by evaluating complementary steric and desolvation terms."""
     cells.append(make_cell("markdown", s2_md))
 
     # Section 2 Code
@@ -116,7 +122,7 @@ We analyze the distribution of binding free energies against GtfB (`3AIC`) acros
 
 # Panel A: Vina 3AIC Distribution
 sns.histplot(data=df, x='vina_3aic_kcal', hue='falsification_status', kde=True, ax=axes[0], palette='Set1', bins=12)
-axes[0].set_title('A: GtfB Affinity (AutoDock Vina Scoring)')
+axes[0].set_title('A: GTF-SI Affinity (AutoDock Vina Scoring)')
 axes[0].set_xlabel('Vina Binding Energy (kcal/mol)')
 axes[0].set_ylabel('Candidate Count')
 axes[0].axvline(-7.5, color='crimson', linestyle='--', label='Affinity Gate (-7.5 kcal)')
@@ -124,7 +130,7 @@ axes[0].legend(loc='upper left', frameon=True)
 
 # Panel B: Vinardo 3AIC Distribution
 sns.histplot(data=df, x='vinardo_3aic_kcal', hue='falsification_status', kde=True, ax=axes[1], palette='Set1', bins=12)
-axes[1].set_title('B: GtfB Affinity (Vinardo Empirical Scoring)')
+axes[1].set_title('B: GTF-SI Affinity (Vinardo Empirical Scoring)')
 axes[1].set_xlabel('Vinardo Binding Energy (kcal/mol)')
 axes[1].set_ylabel('Candidate Count')
 axes[1].axvline(-4.8, color='crimson', linestyle='--', label='Vinardo Gate (-4.8 kcal)')
@@ -140,55 +146,32 @@ Cariogenic microcolonies create localized acidogenesis ($\text{pH} < 5.5$). We m
     cells.append(make_cell("markdown", s3_md))
 
     # Section 3 Code
-    s3_code = """fig, ax = plt.subplots(figsize=(8, 5))
+    # The acid-switch panel is withdrawn rather than redrawn. Its neutral arm
+    # is a result file of unestablished origin, so the cell that plotted it is
+    # replaced by the reason, which is the part a reader needs.
+    s3_withdrawn = r"""### This panel is withdrawn
 
-scatter = ax.scatter(
-    df['delta_q_stephan'],
-    df['vina_3aic_kcal'],
-    c=df['q_ph60'],
-    cmap='coolwarm',
-    s=df['heavy_atoms'] * 1.8,
-    alpha=0.85,
-    edgecolors='black',
-    linewidth=0.8
-)
-cbar = plt.colorbar(scatter, ax=ax)
-cbar.set_label('Net Charge at pH 6.0 (Donnan Partitioning)', rotation=270, labelpad=15)
+The Stephan acid-switch figure that stood here is not drawn, and
+`manuscript/figures/fig4_stephan_acid_switch.png` has been removed.
 
-# Falsification boundary zones
-ax.axvline(1.0, color='orange', linestyle='--', linewidth=1.5, label='Stephan Switch Threshold (+1.0 e)')
-ax.axhline(-7.5, color='crimson', linestyle='--', linewidth=1.5, label='Affinity Threshold (-7.5 kcal)')
+The comparison needs a neutral arm and an acidic arm. Both neutral arms are
+result files whose coordinates are byte-identical to another result's:
+`disproof_explicit_pH72_3AIC_docked.pdbqt` at -8.191 kcal/mol is identical to
+the campaign's pose for the lead, and `disproof_explicit_pH72_1SMD_docked.pdbqt`
+at -7.343 kcal/mol is identical to the campaign's alpha-amylase pose. Nothing in
+this repository records what produced those files, so I cannot attest that the
+neutral arm is an independent calculation, and a difference taken across it is
+not a measurement.
 
-# Annotate Pareto Champion CAHWRPWHC
-champ = df[df['sequence'] == 'CAHWRPWHC']
-if not champ.empty:
-    r = champ.iloc[0]
-    ax.annotate(
-        f"Pareto Champion: {r['sequence']}\\n(Vina: {r['vina_3aic_kcal']:.2f} kcal, ΔQ: +{r['delta_q_stephan']:.2f})",
-        xy=(r['delta_q_stephan'], r['vina_3aic_kcal']),
-        xytext=(r['delta_q_stephan'] + 0.15, r['vina_3aic_kcal'] - 0.8),
-        arrowprops=dict(facecolor='black', shrink=0.05, width=1, headwidth=6),
-        fontweight='bold',
-        fontsize=9,
-        bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.6)
-    )
-
-ax.set_title('Stephan-Switch Activation vs Target Affinity')
-ax.set_xlabel('Stephan Charge Shift ΔQ (pH 5.2 - pH 7.2)')
-ax.set_ylabel('GtfB 3AIC Affinity (kcal/mol)')
-ax.legend(loc='upper right', frameon=True)
-plt.tight_layout()
-
-# Save 300-DPI Figure for Manuscript
-fig_path = figs_dir / "fig4_stephan_acid_switch.png"
-plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-print(f"Saved 300-DPI figure: {fig_path}")
-plt.show()"""
-    cells.append(make_cell("code", s3_code))
+Angle 7 of the disproof battery, which does carry its own run, moves the GTF-SI
+score from -8.191 to -7.706 kcal/mol on explicit diprotonation. That is the
+opposite direction to acid activation, and it is small enough to be unresolved
+against the scoring error this repository quotes."""
+    cells.append(make_cell("markdown", s3_withdrawn))
 
     # Section 4 Markdown
-    s4_md = r"""## 4. Host Counter-Screening: GtfB vs Human Salivary Amylase Selectivity (Pareto Frontier)
-Off-target inhibition of human salivary $\alpha$-amylase (`1SMD`) disrupts physiologic oral carbohydrate digestion. We quantify selectivity via $\Delta\Delta G = \Delta G_{\text{3AIC}} - \Delta G_{\text{1SMD}}$, where $\Delta\Delta G \le -0.80\text{ kcal/mol}$ confirms selective GtfB inhibition."""
+    s4_md = r"""## 4. Host Counter-Screening: GTF-SI vs Human Salivary Amylase Selectivity (Pareto Frontier)
+Off-target inhibition of human salivary $\alpha$-amylase (`1SMD`) disrupts physiologic oral carbohydrate digestion. We quantify selectivity via $\Delta\Delta G = \Delta G_{\text{3AIC}} - \Delta G_{\text{1SMD}}$, where $\Delta\Delta G \le -0.80\text{ kcal/mol}$ confirms selective GTF-SI inhibition."""
     cells.append(make_cell("markdown", s4_md))
 
     # Section 4 Code
@@ -211,9 +194,9 @@ ax.plot(lims, [x - 0.8 for x in lims], color='green', linestyle='--', label='Sel
 
 ax.set_xlim(-10.5, -5.5)
 ax.set_ylim(-10.5, -5.5)
-ax.set_title('Host Counter-Screen: Salivary Amylase (1SMD) vs GtfB (3AIC)')
+ax.set_title('Host Counter-Screen: Salivary Amylase (1SMD) vs GTF-SI (3AIC)')
 ax.set_xlabel('Salivary Amylase 1SMD Affinity (kcal/mol) [Host Off-Target]')
-ax.set_ylabel('GtfB 3AIC Affinity (kcal/mol) [Cariogenic Target]')
+ax.set_ylabel('GTF-SI 3AIC Affinity (kcal/mol) [Cariogenic Target]')
 ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', frameon=True)
 
 plt.tight_layout()
@@ -224,15 +207,16 @@ plt.savefig(fig_path, dpi=300, bbox_inches='tight')
 print(f"Saved 300-DPI figure: {fig_path}")
 plt.show()
 
-print("Top Pareto Contenders Ranked by Selectivity:")
-display(df[df['falsification_status'] == 'CORROBORATED'][['sequence', 'vina_3aic_kcal', 'vina_1smd_kcal', 'selectivity_ddg', 'delta_q_stephan', 'ss_bond_angstrom']].head(5))"""
+print("Candidates that survived every gate, ordered by selectivity (surviving is not corroboration):")
+SURVIVED = ['SURVIVED_ALL_GATES', 'CORROBORATED', 'NOT_CORROBORATED']  # the vault still holds legacy labels
+display(df[df['falsification_status'].isin(SURVIVED)][['sequence', 'vina_3aic_kcal', 'vina_1smd_kcal', 'selectivity_ddg', 'delta_q_stephan', 'ss_bond_angstrom']].head(5))"""
     cells.append(make_cell("code", s4_code))
 
     # Section 5 Markdown
     s5_md = """## 5. Karl Popper Falsification Battery
 To prevent confirmation bias, we apply three rigorous negative controls loaded 100% from our empirical physics runs:
 1. **Scrambled-Sequence Null Permutation ($N=39$):** Validates that observed binding is sequence-specific rather than an artifact of amino acid composition.
-2. **Comprehensive Alanine Scanning:** Quantifies catalytic cleft anchoring contributions per residue.
+2. **Comprehensive Alanine Scanning:** Tests each residue for an energetic contribution against a +0.70 kcal/mol hotspot threshold. On this scaffold it found none.
 3. **Linear vs Cyclic Constraint Penalty:** Verifies entropic stabilization by the disulfide macrocycle."""
     cells.append(make_cell("markdown", s5_md))
 
@@ -312,17 +296,17 @@ plt.show()"""
 
     # Final Summary Markdown Cell
     summary_md = r"""### Q&A
-**Q1: Does cyclic peptide macrocyclization confer true biophysical affinity over linear peptides in the GtfB catalytic cleft?**  
-*Answer:* Yes. Enforced disulfide cyclization between terminal cysteines (`Cys1-Cys9`, $S-S = 2.06\text{ \AA}$) pre-organizes the nonapeptide into a solvent-stable conformation, establishing an empirical conformational advantage over the unconstrained linear sequence.
+**Q1: Does cyclic peptide macrocyclization confer true biophysical affinity over linear peptides in the GTF-SI catalytic cleft?**  
+*Answer:* Not on this evidence, and the recorded numbers point the other way. Enforced disulfide cyclization between terminal cysteines (`Cys1-Cys9`, $S-S = 2.06\text{ \AA}$) pre-organizes the nonapeptide, but the linear analogue `AHWRPWH` scores **better** in the same cleft ($-9.25$ vs $-8.19\text{ kcal/mol}$, Angle 10). A rigid-receptor docking score does not charge the linear peptide for the conformational entropy it loses on binding, so the comparison is uninformative rather than favourable. Cyclization is justified here by protease resistance, not by affinity.
 
-**Q2: How does Pareto champion CAHWRPWHC overcome host salivary amylase cross-reactivity and mucosal entrapment?**  
-*Answer:* `CAHWRPWHC` satisfies both the Donnan mucosal partition ceiling ($Q_{\text{pH } 6.0} = +2.05 \le +3.0$) and host counter-screening ($\Delta\Delta G = -0.85\text{ kcal/mol} \le -0.80\text{ kcal/mol}$ preference for GtfB over human salivary $\alpha$-amylase `1SMD`). It activates dynamically via histidine protonation during cariogenic acidogenesis ($\Delta Q_{\text{Stephan}} = +1.62 \ge +1.0$).
+**Q2: How does the lead CAHWRPWHC clear the amylase counter-screen and the mucosal partition ceiling?**  
+*Answer:* `CAHWRPWHC` satisfies both the Donnan mucosal partition ceiling ($Q_{\text{pH } 6.0} = +2.05 \le +3.0$) and host counter-screening ($\Delta\Delta G = -0.85\text{ kcal/mol} \le -0.80\text{ kcal/mol}$ preference for GTF-SI over human salivary $\alpha$-amylase `1SMD`). It activates dynamically via histidine protonation during cariogenic acidogenesis ($\Delta Q_{\text{Stephan}} = +1.62 \ge +1.0$).
 
 ### Data Analysis Key Findings
-- **Pareto Champion Corroboration:** `CAHWRPWHC` achieved top-ranked multi-objective optimization with 3AIC Vina affinity of $-8.191\text{ kcal/mol}$, 1SMD affinity of $-7.343\text{ kcal/mol}$ ($\Delta\Delta G = -0.85\text{ kcal/mol}$), intact disulfide distance ($2.06\text{ \AA}$), zero protease cleavage sites, and Stephan charge shift of $+1.62$.
-- **Statistical Null Distribution:** Empirical scrambled sequence null permutations ($N=39$) established an empirical mean of $-8.343 \pm 0.470\text{ kcal/mol}$ ($Z = +0.32$, $p = 0.5897$ vs Pareto champion -8.191 kcal/mol). Rigid-receptor static docking under-penalizes unfolded entropy in water, underscoring why multi-angle biological filtering (Donnan, Protease, Stephan switch, 1SMD counter-screen) is mandatory.
-- **Alanine Mutagenesis Drop-off:** Computational alanine scanning revealed key residues contributing to catalytic cleft anchoring within the catalytic triad cleft (`Asp477`, `Glu515`, `Asp588`), identifying `His3`, `Trp7`, and `His8` as primary energetic anchors.
-- **OpenMM Force-Field Stability:** Amber14/GBn2 all-atom implicit solvent minimization at oral body temperature ($310.15\text{ K}$) confirmed conformational stability ($-1234.68\text{ kJ/mol}$).
+- **What the lead cleared, and what that is not:** `CAHWRPWHC` cleared every gate, which is not corroboration: it is dominated by 9 of the 17 other candidates that survived every gate and by 87 of all 260, so it is on neither Pareto front, and it does not separate from its charge-matched scrambled nulls. Its recorded values are a 3AIC Vina affinity of $-8.191\text{ kcal/mol}$, 1SMD affinity of $-7.343\text{ kcal/mol}$ ($\Delta\Delta G = -0.85\text{ kcal/mol}$), intact disulfide distance ($2.06\text{ \AA}$), zero protease cleavage sites, and Stephan charge shift of $+1.62$.
+- **Statistical Null Distribution:** Empirical scrambled sequence null permutations ($N=39$) established an empirical mean of $-8.343 \pm 0.470\text{ kcal/mol}$ ($Z = +0.32$, $p = 0.600$ vs the lead at -8.191 kcal/mol, which fails to reject the null). Rigid-receptor static docking under-penalizes unfolded entropy in water, underscoring why multi-angle biological filtering (Donnan, Protease, Stephan switch, 1SMD counter-screen) is mandatory.
+- **Alanine Mutagenesis Drop-off:** computational alanine scanning of the wild type `CPHWRPWHC` found **no energetic anchor**. The largest affinity loss across all seven positions is `W7A` at `+0.257 kcal/mol`, well under the `+0.70 kcal/mol` hotspot threshold, so no residue can be called a primary anchor on this evidence.
+- **OpenMM minimisation, not dynamics:** Amber14/GBn2 all-atom implicit-solvent energy minimisation returned $-1234.68\text{ kJ/mol}$ for the isolated macrocycle. No integrator was stepped and no trajectory was produced, so this is a relaxed potential energy and says nothing about stability at $310.15\text{ K}$ or at any other temperature.
 
 ### Insights or Next Steps
 - **Wet-Lab Biochemical Validation:** In silico rigid-receptor grid docking and implicit-solvent minimization serve as candidate triage and falsification filters. Surface plasmon resonance (SPR) equilibrium dissociation assays ($K_D$) and radiolabeled glucan synthesis assays ($IC_{50}$) are mandatory to confirm binding kinetics before in vivo translation.

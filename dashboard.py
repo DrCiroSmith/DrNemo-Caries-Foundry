@@ -139,15 +139,15 @@ def load_foundry_data():
                 df['Status'] = 'SUCCESS'
 
             if 'Project' not in df.columns or df['Project'].isnull().all():
-                df['Project'] = 'S_mutans_GtfB_3AIC'
+                df['Project'] = 'S_mutans_GTF_SI_3AIC'
             else:
                 legacy_mapping = {
-                    "S_mutans_GtfB_Insoluble": "S_mutans_GtfB_3AIC",
-                    "S_mutans_Baseline": "S_mutans_GtfB_3AIC",
-                    "smutans": "S_mutans_GtfB_3AIC",
-                    "smutans_adhesion_blocker_01": "S_mutans_GtfB_3AIC",
-                    "sample_smutans": "S_mutans_GtfB_3AIC",
-                    "S_mutans_GtfB_Glucan": "S_mutans_GtfB_3AIC"
+                    "S_mutans_GtfB_Insoluble": "S_mutans_GTF_SI_3AIC",
+                    "S_mutans_Baseline": "S_mutans_GTF_SI_3AIC",
+                    "smutans": "S_mutans_GTF_SI_3AIC",
+                    "smutans_adhesion_blocker_01": "S_mutans_GTF_SI_3AIC",
+                    "sample_smutans": "S_mutans_GTF_SI_3AIC",
+                    "S_mutans_GtfB_Glucan": "S_mutans_GTF_SI_3AIC"
                 }
                 df["Project"] = df["Project"].map(lambda p: legacy_mapping.get(p, p))
 
@@ -191,9 +191,9 @@ if TARGETS_FILE.exists():
 
 df = load_foundry_data()
 
-# Ensure S_mutans_GtfB_3AIC is present in target_list
-if "S_mutans_GtfB_3AIC" not in target_list:
-    target_list.insert(0, "S_mutans_GtfB_3AIC")
+# Ensure S_mutans_GTF_SI_3AIC is present in target_list
+if "S_mutans_GTF_SI_3AIC" not in target_list:
+    target_list.insert(0, "S_mutans_GTF_SI_3AIC")
 
 
 def save_targets():
@@ -205,13 +205,13 @@ def save_targets():
 teacher_mode = st.sidebar.checkbox("Educational Walkthrough Mode", value=False)
 
 st.sidebar.header("Target Project Control")
-selected_project = st.sidebar.selectbox("Active Project Target:", target_list, index=0 if "S_mutans_GtfB_3AIC" in target_list else 0)
+selected_project = st.sidebar.selectbox("Active Project Target:", target_list, index=0 if "S_mutans_GTF_SI_3AIC" in target_list else 0)
 
 with st.sidebar.expander("Manage Target Catalog", expanded=False):
     m_action = st.radio("Action:", ["Add New Target", "Edit Selected"], horizontal=True, label_visibility="collapsed")
     if m_action == "Add New Target":
         with st.form("add_project_form"):
-            new_id = st.text_input("Target ID (e.g. S_mutans_GtfB_3AIC):")
+            new_id = st.text_input("Target ID (e.g. S_mutans_GTF_SI_3AIC):")
             new_name = st.text_input("Display Name:")
             new_desc = st.text_area("Function Description:")
             new_seq = st.text_input("Target Protein Sequence:")
@@ -227,18 +227,19 @@ with st.sidebar.expander("Manage Target Catalog", expanded=False):
                     save_targets()
                     st.rerun()
                 else:
-                    st.error("Target ID and Sequence are required.")
+                    st.error("Target ID is required.")
     elif m_action == "Edit Selected" and selected_project:
         with st.form("edit_project_form"):
             edit_name = st.text_input("Display Name:", value=targets_data.get(selected_project, {}).get("name", ""))
             edit_desc = st.text_area("Function Description:", value=targets_data.get(selected_project, {}).get("description", ""))
-            edit_seq = st.text_input("Target Protein Sequence:", value=targets_data.get(selected_project, {}).get("sequence", ""))
+            edit_seq = st.text_input("Target Protein Sequence (optional; canonical sequence lives in UniProt):", value=targets_data.get(selected_project, {}).get("sequence", ""))
             edit_pep = st.text_input("Base Peptide:", value=targets_data.get(selected_project, {}).get("base_peptide", ""))
             if st.form_submit_button("Save Changes", use_container_width=True):
-                if edit_seq:
+                if edit_name:
                     targets_data[selected_project]["name"] = edit_name
                     targets_data[selected_project]["description"] = edit_desc
-                    targets_data[selected_project]["sequence"] = edit_seq
+                    if edit_seq:
+                        targets_data[selected_project]["sequence"] = edit_seq
                     targets_data[selected_project]["base_peptide"] = edit_pep
                     save_targets()
                     st.rerun()
@@ -247,7 +248,7 @@ with st.sidebar.expander("Manage Target Catalog", expanded=False):
 
 if teacher_mode:
     with st.sidebar.expander("🎓 Teacher Insight: Targets", expanded=True):
-        st.info("A Project Target is an essential microbial protein (e.g. GtfB catalytic cleft) that oral pathogens rely on to assemble cariogenic biofilms.")
+        st.info("A Project Target is an essential microbial protein (e.g. GTF-SI catalytic cleft) that oral pathogens rely on to assemble cariogenic biofilms.")
 
 if selected_project and selected_project in targets_data:
     st.sidebar.info(f"**Target:** {targets_data[selected_project].get('name', selected_project)}\n\n{targets_data[selected_project].get('description', '')}")
@@ -322,7 +323,7 @@ st.sidebar.markdown("""
 - **Stephan Switch ΔQ**: ≥ +1.00 (pH 5.2 acid-activation)
 - **Donnan Barrier**: Q(pH 6.0) ≤ +4.0 (Chitosan compatibility)
 - **Protease Resistance**: 0 Cleavage Sites (RP motif steric shield)
-- **Disulfide Geometry**: S-S bond 2.00-2.15 Å (Macrocycle lock)
+- **Disulfide Geometry**: S-S bond 1.95-2.25 Å (Macrocycle lock). This window is the one `scripts/continuous_hunter.py` and `gtfb_orchestrator.py` enforce. It has never rejected a candidate: all 260 rows fall between 2.050 and 2.070 Å, so it would catch a broken build and does not discriminate between candidates.
 """)
 
 # === SIDEBAR LIVE DAEMON CONTROLS ===
@@ -395,7 +396,7 @@ st.markdown(f"""
         </div>
         <div style="display: flex; gap: 20px; font-family: monospace; font-size: 0.9em; flex-wrap: wrap;">
             <span style="color: #cbd5e1;">Evaluated: <strong style="color: #38bdf8;">{vault_count} Contenders</strong></span>
-            <span style="color: #cbd5e1;">Pareto Champion: <strong style="color: #4ade80;">{champ_seq}</strong> ({best_vina:.3f} kcal/mol)</span>
+            <span style="color: #cbd5e1;">Best survivor by affinity (not non-dominated): <strong style="color: #4ade80;">{champ_seq}</strong> ({best_vina:.3f} kcal/mol)</span>
             <span style="color: #cbd5e1;">Protease Resistance: <strong style="color: #4ade80;">0 Cleavage Sites</strong></span>
             <span style="color: #cbd5e1;">Stephan Switch: <strong style="color: #4ade80;">ΔQ = +1.618</strong></span>
         </div>
@@ -512,9 +513,9 @@ with tab_cmd:
     with c_stat4:
         champ = ContenderVault().get_pareto_champion()
         if champ:
-            st.metric("Pareto Champion", f"{champ.get('sequence')}", delta=f"{champ.get('vina_3aic_kcal')} kcal/mol")
+            st.metric("Best survivor by affinity", f"{champ.get('sequence')}", delta=f"{champ.get('vina_3aic_kcal')} kcal/mol", help="Ordered by score, not by Pareto dominance. Run scripts/compute_pareto_front.py for the real front.")
         else:
-            st.metric("Pareto Champion", "CAHWRPWHC")
+            st.metric("Best survivor by affinity", "CAHWRPWHC")
 
     # 5 Action Buttons
     b1, b2, b3, b4, b5 = st.columns(5)
@@ -816,7 +817,7 @@ with tab1:
 with tab_popper:
     st.header("⚖️ Karl Popper Biophysical Falsification Suite")
     st.markdown("""
-    **Operation Karl Popper** systematically enforces a ruthless 12-angle biophysical falsification battery powered by **AutoDock Vina v1.2.7**, **RDKit MMFF94**, **OpenMM Amber14/GBn2**, and empirical oral chemistry gates. Every angle is classified honestly as `PASSED_IN_SILICO`, `INCONCLUSIVE_WITHIN_NOISE`, `AT_RISK`, or `FALSIFIED`.
+    **Operation Karl Popper** systematically enforces a ruthless 12-angle biophysical falsification battery powered by **AutoDock Vina v1.2.7**, **RDKit (MMFF94 attempted, outcome unrecorded)**, **OpenMM Amber14/GBn2**, and empirical oral chemistry gates. Each angle carries a classification. Read them with care: several were written into the code as literal strings rather than computed from the gate each angle declares, so a label states which branch of the script a result reached and not always which criterion it met.
     """)
 
     # Top Metrics Bar: synced to data/exhaustive_disproof_report.json
@@ -824,9 +825,9 @@ with tab_popper:
     with col_p1:
         st.metric(label="Lead 3AIC Vina ΔG (CAHWRPWHC)", value="-8.191 kcal/mol", delta="Passed in Silico")
     with col_p2:
-        st.metric(label="Amylase 1SMD ΔΔG (CAHWRPWHC)", value="-0.848 kcal/mol", delta="Inconclusive (< ±2.85 SE)")
+        st.metric(label="Amylase 1SMD ΔΔG (CAHWRPWHC)", value="-0.848 kcal/mol", delta="Inconclusive (inside Vina's ±2.85 benchmark error)")
     with col_p3:
-        st.metric(label="Scrambled Permutation Z", value="+0.32σ", delta="p = 0.5897 (H0 Not Rejected)")
+        st.metric(label="Scrambled Permutation Z", value="+0.32σ", delta="p = 0.600 (H0 Not Rejected)")
     with col_p4:
         st.metric(label="Broad Oral Proteases", value="At Risk (W4, W7)", delta="Trypsin Shielded (RP)")
 
@@ -850,26 +851,26 @@ with tab_popper:
                 "Summary": a.get("scientific_summary")
             })
         st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True, hide_index=True)
-        st.markdown(f"**Battery Verdict:** 5 Passed in Silico | 6 Inconclusive within Noise | 1 At Risk | 0 Falsified")
+        st.markdown("**Battery Verdict:** 1 Passed in Silico | 6 Inconclusive within Noise | 1 At Risk | 1 Calibration Failed | 1 Score Reproducible but Pose Not | 1 No Hotspot | 1 Not Computed")
         st.divider()
 
     col_lead, col_naive = st.columns(2)
     with col_lead:
         st.info("### 🏆 Evaluated Candidate: `CAHWRPWHC` (P2A Hinge Variant)")
         st.markdown("""
-        * **Angle 1 (3AIC Redocking Calibration):** **-7.915 kcal/mol**, RMSD **4.51 Å** (exceeds 2.0-4.0 Å rigid standard due to wide cleft and glycosidic flexibility; `INCONCLUSIVE_WITHIN_NOISE`).
-        * **Angle 2 (Multi-Seed N=5):** Score mean **-8.10 ± 0.37 kcal/mol**, centroid SD **0.46 Å** (`PASSED_IN_SILICO`).
-        * **Angle 3 (Pose Mode Clustering):** Mode 1-2 gap **+0.10 kcal/mol**, centroid shift **1.74 Å** (`INCONCLUSIVE_WITHIN_NOISE`).
+        * **Angle 1 (3AIC Redocking Calibration):** **-7.915 kcal/mol**, symmetry-corrected RMSD **4.51 Å** against the **2.0 Å** convention, so the scoring function is not calibrated for pose prediction in this box (`CALIBRATION_FAILED`).
+        * **Angle 2 (Multi-Seed, 4 independent seeds):** Score mean **-8.08 ± 0.41 kcal/mol** (population SD) and centroid SD **0.39 Å** both reproduce, but mean pairwise pose RMSD is **9.11 Å** (worst pair 11.80 Å, both over the 84 real heavy atoms) against a 2.0 Å convention, so the seeds are not finding the same binding mode (`SCORE_REPRODUCIBLE_POSE_NOT`). Published earlier as N=5 at -8.10 ± 0.37; seed 42 is excluded because its docked pose is byte-identical to the campaign pose across all nine modes.
+        * **Angle 3 (Pose Mode Clustering):** Mode 1-2 gap **+0.10 kcal/mol**, centroid shift **1.78 Å**, heavy-atom RMSD **5.63 Å** (`INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 4 (1SMD Selectivity Reality Check):** ΔΔG = **-0.85 kcal/mol** vs Vina SE ~2.85 kcal/mol (`INCONCLUSIVE_WITHIN_NOISE`).
-        * **Angle 5 (Null Permutation, N=39):** Z = **+0.32σ**, p = **0.5897** (null mean -8.343 ± 0.470 kcal/mol; static docking fails to reject H0; `INCONCLUSIVE_WITHIN_NOISE`).
-        * **Angle 6 (Alanine Hotspot Scan):** His3 acid-switch (-7.869), His8 anchor (-7.978), Trp7 hydrophobic packing (-7.805) (`PASSED_IN_SILICO`).
+        * **Angle 5 (Null Permutation, N=39):** Z = **+0.32σ**, p = **0.600** (null mean -8.343 ± 0.470 kcal/mol; static docking fails to reject H0; `INCONCLUSIVE_WITHIN_NOISE`).
+        * **Angle 6 (Alanine Hotspot Scan):** no hotspot. Against the wild-type parent `CPHWRPWHC` (-8.062), the largest affinity loss is W7A at +0.257 kcal/mol, well under the +0.70 threshold (`NO_HOTSPOT_IDENTIFIED`).
         * **Angle 7 (Explicit pH 5.2):** Diprotonated His **-7.706 kcal/mol** in 3AIC / **-7.891 kcal/mol** in 1SMD (slight ranking inversion within Vina SE; `INCONCLUSIVE_WITHIN_NOISE`).
         * **Angle 8 (Protease Vulnerability):** Trypsin shielded by Pro6, but chymotrypsin/cathepsin G cleaves Trp4/Trp7 (`AT_RISK`).
-        * **Angle 9 (Human Lysozyme 1LZ1):** **-6.67 kcal/mol** (ΔΔG = **-1.52 kcal/mol** vs 3AIC; `PASSED_IN_SILICO`).
+        * **Angle 9 (Human Lysozyme 1LZ1):** **-6.67 kcal/mol** (ΔΔG = **-1.52 kcal/mol** vs 3AIC). That margin is 0.53 of the 2.85 kcal/mol scoring error Angle 4 is judged against, so it sits inside the same noise (`INCONCLUSIVE_WITHIN_NOISE`; published earlier as `PASSED_IN_SILICO`).
         * **Angle 10 (Conformational Control):** Linear AHWRPWH **-9.25 kcal/mol** vs cyclic **-8.19 kcal/mol** (Vina under-penalizes unfolded entropy; `INCONCLUSIVE_WITHIN_NOISE`).
-        * **Angle 11 (OpenMM Relaxation):** Amber14/GBn2 310.15 K minimization drift **0.92 Å** (`PASSED_IN_SILICO`).
-        * **Angle 12 (Chitosan & Stephan Switch):** Net charge **+2.05 ≤ +4.0**, **ΔQ = +1.618** (`PASSED_IN_SILICO`).
-        * **Honest Verdict:** **5 Passed in Silico, 6 Inconclusive within Noise, 1 At Risk, 0 Falsified.**
+        * **Angle 11 (OpenMM Relaxation):** not computed. rdkit, openmm and pdbfixer are absent here, so no relaxation was run and no drift figure exists (`NOT_COMPUTED`).
+        * **Angle 12 (Chitosan & Stephan Switch):** Net charge **+2.05 ≤ +4.0**, **ΔQ = +1.618**. Both are Henderson-Hasselbalch arithmetic on the sequence with no structure and no docking in them, and ΔQ is +0.809 per histidine, so the second criterion is a histidine count (`COMPOSITION_ARITHMETIC_ONLY`; published earlier as `PASSED_IN_SILICO`, written as a literal while the two gate booleans were computed and discarded).
+        * **Honest Verdict:** **no passes, 6 Inconclusive within Noise, 1 At Risk, 1 Calibration Failed, 1 Score Reproducible but Pose Not, 1 No Hotspot Identified, 1 Composition Arithmetic Only, 1 Not Computed.** Nothing was corroborated, and nothing passed: the two angles listed earlier as passes are withdrawn above.
         """)
 
     with col_naive:
@@ -878,24 +879,24 @@ with tab_popper:
         * **Angle 1 (3AIC Pocket Binding):** **-7.586 kcal/mol** (Weak surface association, lacks deep triad penetration).
         * **Angle 2 (1SMD Salivary Amylase):** **-7.580 kcal/mol** (ΔΔG = **-0.006 kcal/mol**; complete lack of selectivity, binds host amylase!).
         * **Angle 3 (Null Permutation, N=39):** Z = **+1.61σ** (Poor discrimination from random poly-cationic sequences).
-        * **Angle 4 (Alanine Hotspot Scan):** Non-specific electrostatic binding (no localized stereochemical anchor).
+        * **Alanine Scan:** non-specific electrostatic binding, with no localized stereochemical anchor. (The alanine scan is Angle 6 in the battery, not Angle 4.)
         * **Angle 5 (Oral Protease Clearance):** **7 cleavage sites** (Rapid degradation by salivary proteases in <2 minutes).
         * **Angle 6 (Chitosan & Stephan Switch):** Net charge **+7.00 > +4.0** (Donnan precipitation collapse; ΔQ = 0.00, no acid-switch).
         * **Verdict:** **FALSIFIED (Failed 5 of 6 Gates).**
         """)
 
     st.divider()
-    st.subheader("🔬 Alanine-Scanning Energetic Hotspot Spectrum (Parent: `CPHWRPWHC` | Champion: `CAHWRPWHC`)")
+    st.subheader("🔬 Alanine Scan vs the Wild-Type Parent `CPHWRPWHC`: No Hotspot Found")
 
     # Load Alanine scan data directly from falsification_benchmark.json
     ala_rows = [
         {"Position": "P2A", "Sequence": "CAHWRPWHC", "Role": "Conformational Hinge", "Vina ΔG (kcal/mol)": -8.191, "Vinardo ΔG (kcal/mol)": -4.990, "ΔΔG Binding": -0.129, "Hotspot": "No (Permissive/Lead)"},
-        {"Position": "H3A", "Sequence": "CPAWRPWHC", "Role": "Acid-Switch Residue", "Vina ΔG (kcal/mol)": -7.869, "Vinardo ΔG (kcal/mol)": -4.251, "ΔΔG Binding": +0.193, "Hotspot": "YES (Anchor Loss)"},
+        {"Position": "H3A", "Sequence": "CPAWRPWHC", "Role": "Acid-Switch Residue", "Vina ΔG (kcal/mol)": -7.869, "Vinardo ΔG (kcal/mol)": -4.251, "ΔΔG Binding": +0.193, "Hotspot": "No (+0.193, under the +0.70 threshold)"},
         {"Position": "W4A", "Sequence": "CPHARPWHC", "Role": "Pi-Stacking Platform", "Vina ΔG (kcal/mol)": -8.269, "Vinardo ΔG (kcal/mol)": -5.094, "ΔΔG Binding": -0.207, "Hotspot": "No"},
         {"Position": "R5A", "Sequence": "CPHWAPWHC", "Role": "Electrostatic Salt-Bridge", "Vina ΔG (kcal/mol)": -8.531, "Vinardo ΔG (kcal/mol)": -5.265, "ΔΔG Binding": -0.469, "Hotspot": "No"},
         {"Position": "P6A", "Sequence": "CPHWRAWHC", "Role": "Macrocycle Turn Lock", "Vina ΔG (kcal/mol)": -8.890, "Vinardo ΔG (kcal/mol)": -5.672, "ΔΔG Binding": -0.828, "Hotspot": "No (Protease Shield Loss)"},
-        {"Position": "W7A", "Sequence": "CPHWRPAHC", "Role": "Lipophilic Cleft Wall", "Vina ΔG (kcal/mol)": -7.805, "Vinardo ΔG (kcal/mol)": -4.485, "ΔΔG Binding": +0.257, "Hotspot": "YES (Pocket Contact Loss)"},
-        {"Position": "H8A", "Sequence": "CPHWRPWAC", "Role": "Primary Catalytic Anchor", "Vina ΔG (kcal/mol)": -7.978, "Vinardo ΔG (kcal/mol)": -4.696, "ΔΔG Binding": +0.084, "Hotspot": "YES (Triad Anchor)"}
+        {"Position": "W7A", "Sequence": "CPHWRPAHC", "Role": "Lipophilic Cleft Wall", "Vina ΔG (kcal/mol)": -7.805, "Vinardo ΔG (kcal/mol)": -4.485, "ΔΔG Binding": +0.257, "Hotspot": "No (+0.257, the largest loss in the scan)"},
+        {"Position": "H8A", "Sequence": "CPHWRPWAC", "Role": "Second acid-switch histidine", "Vina ΔG (kcal/mol)": -7.978, "Vinardo ΔG (kcal/mol)": -4.696, "ΔΔG Binding": +0.084, "Hotspot": "No (+0.084)"}
     ]
     ala_df = pd.DataFrame(ala_rows)
 
@@ -942,7 +943,7 @@ with tab7:
             <h3>🥉 Tier 3: Oral Dynamics & Stephan Activation</h3>
             <p><strong>Priority: BASELINE</strong> | Ambient Salivary pH Shift</p>
             <ul>
-                <li><strong>Biophysics:</strong> OpenMM Amber14/GBn2 relaxation at 310.15 K.</li>
+                <li><strong>Biophysics:</strong> OpenMM Amber14/GBn2 energy minimisation (no dynamics, no temperature sampled).</li>
                 <li><strong>Gate:</strong> Stephan charge-switch ΔQ ≥ +1.00 at acidic pH 5.2.</li>
             </ul>
         </div>

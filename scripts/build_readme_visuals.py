@@ -242,7 +242,7 @@ h1 {{
 <div class="left">
   <div class="badge-top">AUTODOCK VINA + OPENMM AMBER14 + POPPERIAN FALSIFICATION</div>
   <h1>DrNemo Caries Foundry</h1>
-  <div class="subtitle">Targeted GtfB Macrocycle Inhibitor Design</div>
+  <div class="subtitle">Targeted GTF-SI Macrocycle Inhibitor Design</div>
   <div class="subline">Selective cleft blockade · Oral commensal preservation</div>
   <div class="pills">
     <div class="pill">
@@ -389,7 +389,7 @@ body {{ width:1200px; height:360px; overflow:hidden; display:flex; gap:18px; pad
     <div class="arrow-down">↓</div>
     <div class="step bad-border">
       <div class="step-num bad-num">3</div>
-      <span>GtfB Synthesizes Insoluble Glucan (Mutan) Scaffolding</span>
+      <span>GTF-SI Synthesizes Insoluble Glucan (Mutan) Scaffolding</span>
     </div>
     <div class="arrow-down">↓</div>
     <div class="step bad-border">
@@ -418,7 +418,7 @@ body {{ width:1200px; height:360px; overflow:hidden; display:flex; gap:18px; pad
     <div class="step good-border">
       <div class="step-num good-num">3</div>
       <span>CAHWRPWHC Cleft Blockade (-8.191 kcal/mol)</span>
-      <span class="tag-blocked">GtfB INHIBITED</span>
+      <span class="tag-blocked">GTF-SI INHIBITED</span>
     </div>
     <div class="arrow-down">↓</div>
     <div class="step good-border">
@@ -444,8 +444,8 @@ def build_pipeline_architecture(theme: str = "dark"):
     stages = [
         ("1", "Evolutionary Generator", "C-X7-C cyclic scaffold<br>P2A hinge mutant pool", t['cyan']),
         ("2", "Oral Shield Gate", "Donnan Q ≤ +4.0<br>Stephan ΔQ ≥ +1.0<br>Protease assessment", t['emerald']),
-        ("3", "28.0 Å Dual Docking", "3AIC target (GtfB)<br>1SMD host counter (amylase)<br>Vina + Vinardo", t['amber']),
-        ("4", "OpenMM Relaxation", "Amber14/GBn2 at 310.15 K<br>All-atom minimization<br>S-S 2.06 Å check", t['coral']),
+        ("3", "28.0 Å Dual Docking", "3AIC target (GTF-SI)<br>1SMD host counter (amylase)<br>Vina + Vinardo", t['amber']),
+        ("4", "OpenMM Relaxation", "Amber14/GBn2 minimisation<br>No dynamics, no temperature<br>S-S 2.06 Å check", t['coral']),
         ("5", "Popper Falsification", "12-angle exhaustive battery<br>N=39 scrambled nulls<br>Alanine scanning", t['cyan']),
         ("6", "Contender Vault", "SQLite registry<br>Limitless O(1) sequence scale<br>Fmoc SPPS protocol", t['emerald']),
     ]
@@ -631,7 +631,7 @@ body {{ width:1200px; height:480px; overflow:hidden; display:flex; gap:20px; pad
 <!-- Left: Active Site 3D Viewport -->
 <div class="panel">
   <div class="panel-title">
-    <span>GtfB Catalytic Triad Engagement</span>
+    <span>GTF-SI Catalytic Triad Engagement</span>
     <span class="panel-tag">CAHWRPWHC · -8.191 kcal/mol</span>
   </div>
   <div class="pocket-container">
@@ -759,14 +759,14 @@ def build_falsification_plate(theme: str = "dark"):
         scatter_svg += f'<circle cx="{px:.1f}" cy="{py:.1f}" r="8.5" fill="{t["cyan"]}" stroke="#ffffff" stroke-width="2"/>'
         scatter_svg += f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px-15:.1f}" y2="{py-22:.1f}" stroke="{t["cyan"]}" stroke-width="1.5"/>'
         scatter_svg += f'<rect x="{px-175:.1f}" y="{py-38:.1f}" width="180" height="24" rx="4" fill="{t["card"]}" stroke="{t["cyan"]}" stroke-width="1"/>'
-        scatter_svg += f'<text x="{px-85:.1f}" y="{py-22:.1f}" text-anchor="middle" fill="{t["cyan"]}" font-family="{MONO}" font-size="12" font-weight="700">#1 CAHWRPWHC (-8.191, -0.85)</text>'
+        scatter_svg += f'<text x="{px-85:.1f}" y="{py-22:.1f}" text-anchor="middle" fill="{t["cyan"]}" font-family="{MONO}" font-size="12" font-weight="700">Lead CAHWRPWHC (-8.191, -0.85)</text>'
 
     if cphw_coords:
         px, py = cphw_coords
         scatter_svg += f'<circle cx="{px:.1f}" cy="{py:.1f}" r="7.5" fill="{t["emerald"]}" stroke="#ffffff" stroke-width="1.5"/>'
         scatter_svg += f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{px-10:.1f}" y2="{py+22:.1f}" stroke="{t["emerald"]}" stroke-width="1.5"/>'
         scatter_svg += f'<rect x="{px-95:.1f}" y="{py+22:.1f}" width="170" height="24" rx="4" fill="{t["card"]}" stroke="{t["emerald"]}" stroke-width="1"/>'
-        scatter_svg += f'<text x="{px-10:.1f}" y="{py+38:.1f}" text-anchor="middle" fill="{t["emerald"]}" font-family="{MONO}" font-size="12" font-weight="700">#2 CPHWRPAHC (-7.805, -0.96)</text>'
+        scatter_svg += f'<text x="{px-10:.1f}" y="{py+38:.1f}" text-anchor="middle" fill="{t["emerald"]}" font-family="{MONO}" font-size="12" font-weight="700">W7A CPHWRPAHC (-7.805, -0.96)</text>'
 
     # (B) Histogram data for scrambled nulls
     perm_vals = [p["vina_3aic_kcal"] for p in scrambled["permutations"]]
@@ -814,7 +814,7 @@ def build_falsification_plate(theme: str = "dark"):
         if k == "P6A":
             ala_svg += f'<text x="510" y="{y_pos+15}" text-anchor="end" fill="{t["coral"]}" font-family="{MONO}" font-size="12" font-weight="700">Trypsin Lysis (Arg5)</text>'
         elif is_hot:
-            ala_svg += f'<text x="510" y="{y_pos+15}" text-anchor="end" fill="{t["amber"]}" font-family="{MONO}" font-size="12" font-weight="600">Catalytic Anchor</text>'
+            ala_svg += f'<text x="510" y="{y_pos+15}" text-anchor="end" fill="{t["amber"]}" font-family="{MONO}" font-size="12" font-weight="600">Loss ≥ +0.70 (none)</text>'
 
     # (D) Stephan Charge Curve
     def map_stephan(ph, q):
@@ -887,7 +887,7 @@ body {{ width:1200px; height:760px; overflow:hidden; padding:18px; }}
         <line x1="55" y1="99" x2="505" y2="99" stroke="{t['coral']}" stroke-width="1" stroke-dasharray="4,4" opacity="0.5"/>
         <text x="500" y="93" fill="{t['coral']}" font-family="{MONO}" font-size="11" text-anchor="end">Amylase Threshold ΔΔG ≤ -0.80</text>
         {scatter_svg}
-        <text x="280" y="225" text-anchor="middle" fill="{t['text2']}" font-family="{MONO}" font-size="12">GtfB 3AIC Affinity (kcal/mol)</text>
+        <text x="280" y="225" text-anchor="middle" fill="{t['text2']}" font-family="{MONO}" font-size="12">GTF-SI 3AIC Affinity (kcal/mol)</text>
         <text x="18" y="115" text-anchor="middle" fill="{t['text2']}" font-family="{MONO}" font-size="12" transform="rotate(-90 18 115)">Selectivity ΔΔG</text>
       </svg>
     </div>
@@ -905,7 +905,7 @@ body {{ width:1200px; height:760px; overflow:hidden; padding:18px; }}
         <div class="badge-letter">B</div>
         <div class="cell-title">N=39 Scrambled Null Isomer Distribution</div>
       </div>
-      <div class="cell-meta">Z = +0.32σ · p = 0.5897 (H0 Not Rejected)</div>
+      <div class="cell-meta">Z = +0.32σ · p = 0.600 (H0 Not Rejected)</div>
     </div>
     <div class="chart-box">
       <svg width="530" height="235" viewBox="0 0 530 235">
@@ -944,7 +944,7 @@ body {{ width:1200px; height:760px; overflow:hidden; padding:18px; }}
       </svg>
     </div>
     <div class="legend-bar">
-      <span style="display:flex;align-items:center;gap:6px;"><span class="legend-dot" style="background:{t['amber']}"></span>Hotspot Anchor</span>
+      <span style="display:flex;align-items:center;gap:6px;"><span class="legend-dot" style="background:{t['amber']}"></span>Hotspot, loss ≥ +0.70 (none found)</span>
       <span style="display:flex;align-items:center;gap:6px;"><span class="legend-dot" style="background:{t['coral']}"></span>Trypsin Lysis</span>
       <span style="display:flex;align-items:center;gap:6px;"><span class="legend-dot" style="background:{t['cyan']}"></span>Hinge / Permissive</span>
     </div>
@@ -1035,7 +1035,7 @@ h1 {{
 
 <div class="badge">AUTODOCK VINA · OPENMM AMBER14 · POPPERIAN FALSIFICATION</div>
 <h1>DrNemo Caries Foundry</h1>
-<div class="subtitle">Targeted GtfB Macrocycle Inhibitor Discovery</div>
+<div class="subtitle">Targeted GTF-SI Macrocycle Inhibitor Discovery</div>
 <div class="subline">Systematic computational falsification of cyclic peptide therapeutics against dental caries virulence</div>
 
 <div class="metrics-row">

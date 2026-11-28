@@ -1,3 +1,12 @@
+% Bibliography for paper/paper.md.
+%
+% Every entry here is copied verbatim from manuscript/references.bib, which
+% carries the full set and records how each was checked. Do not edit an entry
+% here: edit it there and copy it across. tests/test_bibliography.py fails if
+% the two files disagree on any entry they share, because the previous version
+% of these two files disagreed and both were wrong.
+
+% PMID 19499576
 @article{Trott2010,
   author    = {Trott, Oleg and Olson, Arthur J.},
   title     = {AutoDock Vina: Improving the speed and accuracy of docking with a new scoring function, efficient optimization, and multithreading},
@@ -9,6 +18,7 @@
   doi       = {10.1002/jcc.21334}
 }
 
+% PMID 34278794
 @article{Eberhardt2021,
   author    = {Eberhardt, Jerome and Santos-Martins, Diogo and Tillack, Andreas F. and Forli, Stefano},
   title     = {AutoDock Vina 1.2.0: New Docking Methods, Expanded Force Field, and Python Bindings},
@@ -20,8 +30,10 @@
   doi       = {10.1021/acs.jcim.1c00203}
 }
 
+% PMID 21354427. The previous version of this entry named the first two authors
+% Kazuo Ito and Shingo Ito.
 @article{Ito2011,
-  author    = {Ito, Kazuo and Ito, Shingo and Shimamura, Tatsuro and Weyand, Simone and Kawarasaki, Yasuaki and Misaka, Takumi and Abe, Keiko and Kobayashi, Takuya and Cameron, Alexander D. and Iwata, So},
+  author    = {Ito, Keisuke and Ito, Sohei and Shimamura, Tatsuro and Weyand, Simone and Kawarasaki, Yasuaki and Misaka, Takumi and Abe, Keiko and Kobayashi, Takuya and Cameron, Alexander D. and Iwata, So},
   title     = {Crystal Structure of Glucansucrase from the Dental Caries Pathogen \textit{Streptococcus mutans}},
   journal   = {Journal of Molecular Biology},
   volume    = {408},
@@ -31,20 +43,28 @@
   doi       = {10.1016/j.jmb.2011.02.028}
 }
 
+% PMID 15299664. This is the primary citation for PDB 1SMD, the structure the
+% host counter-screen docks against. The previous version of this entry gave the
+% journal as Journal of Molecular Biology 263(4):617-630, with a DOI in that
+% journal's range, a record that matches no paper that could be located, and
+% named two co-authors who are not on this paper.
 @article{Ramasubbu1996,
-  author    = {Ramasubbu, Narayanan and Ragunath, Chandran and Bhandary, K. Krishna},
-  title     = {Structural studies on human salivary $\alpha$-amylase: The 1.6 \AA\ structure and functional implications of the carbohydrate binding sites},
-  journal   = {Journal of Molecular Biology},
-  volume    = {263},
-  number    = {4},
-  pages     = {617--630},
+  author    = {Ramasubbu, N. and Paloth, V. and Luo, Y. and Brayer, G. D. and Levine, M. J.},
+  title     = {Structure of human salivary $\alpha$-amylase at 1.6 \AA\ resolution: implications for its role in the oral cavity},
+  journal   = {Acta Crystallographica Section D: Biological Crystallography},
+  volume    = {52},
+  number    = {3},
+  pages     = {435--446},
   year      = {1996},
-  doi       = {10.1006/jmbi.1996.0603}
+  doi       = {10.1107/S0907444995014119}
 }
 
+% Not in PubMed: coverage of this journal does not reach 1944. Title, journal,
+% volume, issue, page range and DOI confirmed against a third-party
+% bibliographic index. No consulted source states the author's forename.
 @article{Stephan1944,
   author    = {Stephan, Robert M.},
-  title     = {Intra-Oral Hydrogen-Ion Concentrations Associated with Dental Caries Activity},
+  title     = {Intra-Oral Hydrogen-Ion Concentrations Associated With Dental Caries Activity},
   journal   = {Journal of Dental Research},
   volume    = {23},
   number    = {4},
@@ -53,6 +73,8 @@
   doi       = {10.1177/00220345440230040401}
 }
 
+% A book, so outside PubMed. This is the English edition of Logik der
+% Forschung (1934).
 @book{Popper1959,
   author    = {Popper, Karl R.},
   title     = {The Logic of Scientific Discovery},
@@ -61,13 +83,23 @@
   year      = {1959}
 }
 
-@misc{Landrum2020,
-  author    = {Landrum, Greg and Tosco, Paolo and Kelley, Brian and others},
-  title     = {RDKit: Open-source cheminformatics software},
-  year      = {2020},
-  url       = {https://github.com/rdkit/rdkit}
+% PMID 29097091. The previous version of this entry gave the journal as Current
+% Oral Health Reports 5(1):47-58, with a DOI in that publisher's range, a
+% record that matches no paper that could be located; it also ended the title
+% "in Dental Caries" and named the third author Henny Wu.
+@article{Bowen2018,
+  author    = {Bowen, William H. and Burne, Robert A. and Wu, Hui and Koo, Hyun},
+  title     = {Oral Biofilms: Pathogens, Matrix, and Polymicrobial Interactions in Microenvironments},
+  journal   = {Trends in Microbiology},
+  volume    = {26},
+  number    = {3},
+  pages     = {229--242},
+  year      = {2018},
+  doi       = {10.1016/j.tim.2017.09.008}
 }
 
+% Not in PubMed. Author, title, journal, volume, issue, page range and DOI
+% confirmed against a third-party bibliographic index.
 @article{Halgren1996,
   author    = {Halgren, Thomas A.},
   title     = {Merck molecular force field. I. Basis, form, scope, parameterization, and performance of MMFF94},
@@ -79,13 +111,10 @@
   doi       = {10.1002/(SICI)1096-987X(199604)17:5/6<490::AID-JCC1>3.0.CO;2-P}
 }
 
-@article{Bowen2018,
-  author    = {Bowen, William H. and Burne, Robert A. and Wu, Henny and Koo, Hyun},
-  title     = {Oral Biofilms: Pathogens, Matrix, and Polymicrobial Interactions in Dental Caries},
-  journal   = {Current Oral Health Reports},
-  volume    = {5},
-  number    = {1},
-  pages     = {47--58},
-  year      = {2018},
-  doi       = {10.1007/s40496-018-0168-3}
+% A software release, so outside PubMed.
+@misc{Landrum2020,
+  author    = {Landrum, Greg and Tosco, Paolo and Kelley, Brian and others},
+  title     = {RDKit: Open-source cheminformatics software},
+  year      = {2020},
+  url       = {https://github.com/rdkit/rdkit}
 }

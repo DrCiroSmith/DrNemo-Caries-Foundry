@@ -8,7 +8,7 @@ Zero synthetic formulas, zero mock shortcuts:
 - Dual scoring: AutoDock Vina (--scoring vina) + Vinardo (--scoring vinardo)
 - Ligand Efficiency: LE = -E_vina / heavy_atoms
 - Disulfide S-S geometry verification in output pose (2.00 - 2.15 A)
-- OpenMM all-atom Amber14 (amber14-all.xml + implicit/gbn2.xml) isolated ligand-only steric minimization (200 steps)
+- OpenMM all-atom Amber14 (amber14-all.xml + implicit/gbn2.xml) isolated ligand-only steric minimization, capped at 200 iterations
 - Solubility Shield: Donnan equilibrium (Q_pH6 <= +4.0) & Stephan acid-switch (Delta Q >= +1.0)
 """
 import os
@@ -20,6 +20,8 @@ import math
 import numpy as np
 from pathlib import Path
 from typing import Dict, Any, Tuple, Optional
+
+import provenance as prov
 
 try:
     from rdkit import Chem
@@ -83,7 +85,15 @@ def build_macrocycle_3d(
     target_center: Optional[Tuple[float, float, float]] = None
 ) -> int:
     """
-    Builds an all-atom 3D structure for a cyclic disulfide peptide with RDKit MMFF94 force field.
+    Builds an all-atom 3D structure for a cyclic disulfide peptide with RDKit.
+
+    MMFF94 minimisation is ATTEMPTED, not guaranteed. MMFFOptimizeMolecule reports
+    "forcefield could not be set up" by returning -1 and a hit iteration cap by
+    returning 1, per RDKit's documentation, so the try/except below reaches its UFF
+    fallback only on an exception. The return value is now read and a non-zero value
+    is reported on standard error, but nothing persists it, so a past run's outcome
+    cannot be recovered. Do not describe output of this function as MMFF94-minimised
+    without checking the warnings from the run that produced it.
     If target_center is provided, translates the conformer centroid to target_center.
     Returns the count of heavy atoms.
     """
@@ -133,19 +143,41 @@ def build_macrocycle_3d(
 
     Chem.SanitizeMol(mol)
 
-    # 3D Distance Geometry embedding + MMFF94 energy minimization
+    # 3D Distance Geometry embedding, then an ATTEMPT at MMFF94 minimisation.
     params = AllChem.ETKDGv3()
     params.randomSeed = 42
     embed_res = AllChem.EmbedMolecule(mol, params)
     if embed_res != 0:
         embed_res = AllChem.EmbedMolecule(mol, useRandomCoords=True, maxAttempts=5000, randomSeed=42)
+    if embed_res != 0:
+        # Both embeddings failed, so the molecule carries no conformer. Previously this
+        # fell through to the writers with nothing to write. Fail here instead of
+        # handing a conformer-less molecule onward.
+        raise RuntimeError(
+            f"ETKDGv3 embedding failed for {seq} on both the seeded and the random-coordinate "
+            f"attempt, so no conformer exists and no pose can be written.")
+
+    # The force field selection below is deliberately left as it was: changing which
+    # field runs would change the geometry, and these are the geometries the published
+    # campaign docked. What is added is disclosure, not a different calculation.
+    # MMFFOptimizeMolecule returns 0 on convergence, -1 if the force field could not be
+    # set up for this molecule, and 1 if more iterations were needed. Failure is a return
+    # code, not an exception, so the UFF fallback below is unreachable for the -1 case.
     try:
-        AllChem.MMFFOptimizeMolecule(mol, maxIters=500)
-    except Exception:
+        mmff_res = AllChem.MMFFOptimizeMolecule(mol, maxIters=500)
+        if mmff_res != 0:
+            reason = ("MMFF94 could not be set up for this molecule"
+                      if mmff_res == -1 else "the 500-iteration cap was reached")
+            print(f"WARNING: MMFF94 minimisation of {seq} returned {mmff_res}: {reason}. "
+                  f"The conformer is not a converged MMFF94 minimum.", file=sys.stderr)
+    except Exception as exc:
+        print(f"WARNING: MMFF94 minimisation of {seq} raised {exc!r}, falling back to UFF.",
+              file=sys.stderr)
         try:
             AllChem.UFFOptimizeMolecule(mol, maxIters=500)
-        except Exception:
-            pass
+        except Exception as exc2:
+            print(f"WARNING: UFF minimisation of {seq} also raised {exc2!r}. The conformer "
+                  f"is raw ETKDG output with no force field applied.", file=sys.stderr)
 
     if target_center is not None:
         conf = mol.GetConformer()
@@ -230,22 +262,67 @@ def run_docking_vina_and_vinardo(
     target: str = "3AIC",
     exhaustiveness: int = 16,
     cpu: int = 8,
-    out_pdbqt: Optional[str] = None
+    out_pdbqt: Optional[str] = None,
+    seed: Optional[int] = None,
+    ligand_id: Optional[str] = None,
+    protonation: str = "neutral",
+    resume: bool = False
 ) -> Dict[str, Any]:
     """
     Executes AutoDock Vina with uncompressed 28A grid, extracts Vina affinity,
     then re-scores with --score_only --scoring vinardo to get Vinardo affinity.
+
+    Naming and provenance. When out_pdbqt is not given, the output path is
+    derived from the run's own parameters by provenance.RunSpec: target,
+    ligand, protonation, seed, exhaustiveness, box, and the content of the
+    receptor and ligand files. The result carries the full command line, the
+    seed, the box, the engine version, both input digests, a run identifier
+    and a UTC timestamp, written as REMARK PROVENANCE records that PDBQT
+    readers ignore. A caller-supplied out_pdbqt is honoured, and the record
+    then names both the path written and the canonical path, so a hand-chosen
+    name is detectable by scripts/check_result_provenance.py.
+
+    Resuming. An existing file at the output path is no longer adopted
+    silently. Pass resume=True to reuse one, and it is accepted only if its
+    own provenance record shows it came from these exact parameters. That
+    check is the reason this argument exists: adopting a file written under a
+    different protocol is how a result ends up reported as something it is not.
     """
     cfg = TARGET_COORDS[target]
+    spec = prov.RunSpec.for_run(
+        target=target,
+        ligand_id=ligand_id or Path(ligand_pdbqt).stem,
+        receptor=cfg["receptor"],
+        ligand=ligand_pdbqt,
+        box_center=cfg["center"],
+        box_size=cfg["size"],
+        exhaustiveness=exhaustiveness,
+        seed=seed,
+        protonation=protonation,
+    )
+    caller_chose_path = out_pdbqt is not None
     if out_pdbqt is None:
-        out_pdbqt = ligand_pdbqt.replace(".pdbqt", f"_{target}_docked.pdbqt")
+        out_pdbqt = str(spec.result_path(Path(ligand_pdbqt).parent))
 
     cx, cy, cz = cfg["center"]
     sx, sy, sz = cfg["size"]
 
-    # Check if pose already exists and is valid (Resume-capable / Idempotent)
+    # Reuse an existing pose only on request, and only if it says it is this run
     vina_score = None
-    if os.path.exists(out_pdbqt) and os.path.getsize(out_pdbqt) > 100:
+    if resume and os.path.exists(out_pdbqt) and os.path.getsize(out_pdbqt) > 100:
+        record = prov.read_record(out_pdbqt)
+        if record is None:
+            raise RuntimeError(
+                f"{out_pdbqt} exists but carries no provenance record, so it "
+                f"cannot be shown to be the output of this run. Delete it, or "
+                f"dock to a path derived from the parameters you mean."
+            )
+        if record.get("spec_id") != spec.spec_id():
+            raise RuntimeError(
+                f"{out_pdbqt} was produced by a different run: its record says "
+                f"spec {record.get('spec_id')}, these parameters are "
+                f"{spec.spec_id()}. Refusing to report it as this one."
+            )
         with open(out_pdbqt, "r", encoding="utf-8") as f:
             for line in f:
                 if line.startswith("REMARK VINA RESULT:"):
@@ -254,6 +331,7 @@ def run_docking_vina_and_vinardo(
 
     # 1. Dock with Vina scoring if not already present
     if vina_score is None:
+        prov.reserve_result_path(out_pdbqt, overwrite=True)
         cmd_vina = [
             get_vina_path(),
             "--receptor", cfg["receptor"],
@@ -264,9 +342,16 @@ def run_docking_vina_and_vinardo(
             "--exhaustiveness", str(exhaustiveness),
             "--out", out_pdbqt
         ]
+        if seed is not None:
+            cmd_vina += ["--seed", str(seed)]
         res_vina = subprocess.run(cmd_vina, capture_output=True, text=True)
         if res_vina.returncode != 0:
             raise RuntimeError(f"Vina docking failed: {res_vina.stderr}")
+
+        # Record what produced this file, inside the file, before anything reads it
+        prov.stamp(out_pdbqt, prov.build_record(
+            spec, cmd_vina, engine=prov.engine_version(get_vina_path()),
+            written_path=out_pdbqt))
 
         # Parse best Vina affinity from output pose
         with open(out_pdbqt, "r", encoding="utf-8") as f:
@@ -344,14 +429,26 @@ def run_docking_vina_and_vinardo(
         "vinardo_kcal": vinardo_score,
         "out_pdbqt": out_pdbqt,
         "pose_sha256": pose_sha,
+        "spec_id": spec.spec_id(),
+        "canonical_name": spec.canonical_name(),
+        "path_chosen_by_caller": caller_chose_path,
+        "seed": seed,
         "ss_bond_angstrom": ss_dist
     }
 
 
 def relax_with_openmm(pdb_path: str, temp_k: float = 310.15) -> float:
     """
-    Runs isolated ligand-only Amber14/GBn2 energy minimization (200 steps)
-    for steric relaxation and implicit-solvation potential energy (kJ/mol) on the 3D pose.
+    Runs isolated ligand-only Amber14/GBn2 energy minimization for steric relaxation
+    and returns the implicit-solvation potential energy (kJ/mol) of the relaxed pose.
+
+    maxIterations=200 is an upper bound, not a step count. Per the OpenMM API, the
+    minimiser halts when the RMS force reaches its default tolerance or when the cap
+    is reached, whichever comes first, minimizeEnergy returns nothing, and no
+    convergence status is available afterwards. So the caller cannot tell how many
+    iterations ran or whether the result converged, and nothing here records it. Do
+    not describe the output as 200-step relaxed.
+
     Does NOT run bound receptor-ligand molecular dynamics at 310.15 K.
     """
     from pdbfixer import PDBFixer

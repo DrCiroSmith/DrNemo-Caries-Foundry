@@ -3,7 +3,7 @@ Foundry Contender Vault: SQLite Database and Ledger for Cyclic Peptide Candidate
 Author: Dr. Roi Castrellon, DDS (DrNemo Caries Foundry)
 
 Schema: 20 fields recording AutoDock Vina, Vinardo, OpenMM relaxation,
-Stephan-curve pH switches, Donnan equilibrium, and Popperian falsification status.
+Stephan-curve pH switches, Donnan equilibrium, and falsification status.
 """
 
 import os
@@ -12,6 +12,31 @@ import sqlite3
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
+
+# --- Falsification status vocabulary (single source of truth) ---------------
+# A candidate that clears every in silico gate is NOT corroborated: surviving a
+# screen is not evidence of enzyme inhibition. The pass state is therefore named
+# for what actually happened, and nothing in this project writes "CORROBORATED".
+STATUS_SURVIVED = "SURVIVED_ALL_GATES"
+
+# Values written by earlier versions of this pipeline for that same state.
+# Rows already in data/foundry_contenders.sqlite and the exported ledgers predate
+# the rename, so every reader has to accept them or the archive stops resolving.
+LEGACY_SURVIVED_STATUSES = ("CORROBORATED", "NOT_CORROBORATED")
+SURVIVED_STATUSES = (STATUS_SURVIVED,) + LEGACY_SURVIVED_STATUSES
+
+# Terminal statuses a contender can carry, with what each one means.
+STATUS_MEANINGS = {
+    STATUS_SURVIVED: "cleared every in silico gate; not evidence of inhibition",
+    "FALSIFIED_BROKEN_DISULFIDE": "disulfide distance outside the accepted range",
+    "FALSIFIED_ORAL_BARRIER": "failed at least one of three unrelated oral-barrier criteria, which share this one status: Donnan charge ceiling at pH 6.0, Stephan switch delta_q >= 1.0 (arithmetically a histidine count of two or more), or any trypsin cleavage site. The row does not say which, so check falsification_reasons where a run recorded it",
+    "FALSIFIED_AMYLASE_CROSSREACTIVITY": "failed the human salivary amylase selectivity gate",
+    "SUBTHRESHOLD_AFFINITY": "docked above the affinity gate",
+    "SCRAMBLED_NULL_CONTROL": "charge-matched sequence permutation control, not a design",
+    "EVALUATION_ERROR": "pipeline failure, no verdict",
+}
+
+_SURVIVED_SQL = "(" + ", ".join("'%s'" % s for s in SURVIVED_STATUSES) + ")"
 
 REPO_ROOT = Path(__file__).parent.resolve()
 DATA_DIR = REPO_ROOT / "data"
@@ -168,16 +193,16 @@ class ContenderVault:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        cur.execute("""
+        cur.execute(f"""
             SELECT * FROM contenders
             ORDER BY 
                 CASE
-                    WHEN falsification_status = 'CORROBORATED'
+                    WHEN falsification_status IN {_SURVIVED_SQL}
                          AND delta_q_stephan >= 1.0
                          AND protease_sites = 0
                          AND selectivity_ddg <= -0.80
                          AND q_ph60 <= 4.0 THEN 1
-                    WHEN falsification_status = 'CORROBORATED' THEN 3
+                    WHEN falsification_status IN {_SURVIVED_SQL} THEN 3
                     ELSE pareto_rank
                 END ASC,
                 vina_3aic_kcal ASC
@@ -197,13 +222,19 @@ class ContenderVault:
         return count
 
     def get_pareto_champion(self) -> Optional[Dict[str, Any]]:
-        """Returns the #1 Pareto lead (best affinity + selectivity passing all oral & amylase gates)."""
+        """Returns the best-scoring row that survived every gate.
+
+        Not a Pareto champion, despite the name: this orders by score, it does not
+        test dominance, and the row it returns is not on the Pareto front of the
+        committed database. scripts/compute_pareto_front.py computes the real front.
+        The name is kept because callers and the stored reports use it.
+        """
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        cur.execute("""
+        cur.execute(f"""
             SELECT * FROM contenders
-            WHERE falsification_status = 'CORROBORATED'
+            WHERE falsification_status IN {_SURVIVED_SQL}
               AND delta_q_stephan >= 1.0
               AND protease_sites = 0
               AND selectivity_ddg <= -0.80
@@ -217,14 +248,14 @@ class ContenderVault:
         return dict(row) if row else None
 
     def get_rank_1_contenders(self) -> List[Dict[str, Any]]:
-        """Retrieves all Rank 1 corroborated contenders ordered by affinity."""
+        """Retrieves all Rank 1 contenders that survived every gate, by affinity."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        cur.execute("""
+        cur.execute(f"""
             SELECT * FROM contenders
             WHERE pareto_rank = 1
-              AND falsification_status = 'CORROBORATED'
+              AND falsification_status IN {_SURVIVED_SQL}
               AND ss_bond_angstrom >= 1.95 AND ss_bond_angstrom <= 2.25
             ORDER BY vina_3aic_kcal ASC, selectivity_ddg ASC
         """)
@@ -248,7 +279,7 @@ class ContenderVault:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        cur.execute("""
+        cur.execute(f"""
             SELECT * FROM contenders
             ORDER BY evaluated_at_utc DESC
             LIMIT 1

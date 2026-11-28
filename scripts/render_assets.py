@@ -37,6 +37,19 @@ def load_contenders():
     return rows
 
 def create_physicochemical_benchmark():
+    """Withdrawn. The four panels this composed no longer exist, by intent.
+
+    Panel A drew a frontier claim the ledger contradicts, panel C labelled three
+    positions as hotspots that do not reach the project's own gate, and panel D
+    was the acid switch, whose neutral arm is a result file of unestablished
+    origin. The three figures that survive are generated from the ledger and
+    tested against it by scripts/render_figures_svg.py. Rebuilding this plate
+    from PNGs that are no longer generated would put a withdrawn claim back on
+    the front page, so it raises instead of failing on a missing file.
+    """
+    raise NotImplementedError(
+        "the four-panel plate is withdrawn; run scripts/render_figures_svg.py "
+        "for the current figures, and see section 5 of README.md for why")
     figs = ["fig1_pareto_frontier.png", "fig2_scrambled_null_histogram.png",
             "fig3_alanine_hotspot_scan.png", "fig4_stephan_acid_switch.png"]
     imgs = [Image.open(MANUSCRIPT / f).convert("RGB") for f in figs]
@@ -71,7 +84,7 @@ def create_nature_biotech_hero():
     draw = ImageDraw.Draw(img)
     f40 = font(40); f28 = font(28); f20 = font(20)
     draw.text((80, 90), "DrNemo Caries Foundry", fill=TEXT, font=f40)
-    draw.text((80, 150), "Targeted GtfB Macrocycle Biophysics  ·  CAHWRPWHC Rank-1 Champion", fill=ACCENT, font=f28)
+    draw.text((80, 150), "Targeted GTF-SI Macrocycle Biophysics  ·  CAHWRPWHC Rank-1 Champion", fill=ACCENT, font=f28)
     draw.text((80, 210), "AutoDock Vina · Vinardo · OpenMM Amber14/GBn2 · Popperian Falsification", fill=MUTED, font=f20)
     cards = [("Vina ΔG", "-8.191 kcal/mol"), ("Vinardo ΔG", "-4.990 kcal/mol"),
              ("1SMD ΔΔG", "-0.85 kcal/mol"), ("OpenMM", "-1234.68 kJ/mol")]
@@ -142,7 +155,7 @@ def create_evolution_demo_gif():
     print("OK evolution_demo.gif", len(frames), "frames", f"{out.stat().st_size/1e6:.2f} MB")
 
 if __name__ == "__main__":
-    create_physicochemical_benchmark()
+    # create_physicochemical_benchmark() is withdrawn; see its docstring.
     create_nature_biotech_hero()
     create_social_preview()
     create_evolution_demo_gif()

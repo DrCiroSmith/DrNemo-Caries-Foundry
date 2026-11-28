@@ -12,6 +12,8 @@ import pytest
 from pathlib import Path
 import sys
 import csv
+import sqlite3
+import importlib.util
 
 # Ensure repo root is on sys.path
 REPO_ROOT = Path(__file__).parent.parent
@@ -22,17 +24,54 @@ from solubility_shield import (
     calc_net_charge_at_ph,
     calc_stephan_switch,
     count_protease_cleavage_sites,
-    MAX_DONNAN_CHARGE_PH6
+    MAX_DONNAN_CHARGE_PH6,
+    MAX_INSTABILITY
 )
 from falsification_engine import FalsificationEngine, CO_CRYSTAL_CONTROL_DELTA_G, CO_CRYSTAL_REDOCKING_RMSD
+from vault import STATUS_SURVIVED, STATUS_MEANINGS
 
 
 def test_solubility_shield_valid_arginine_core():
+    """A linear arginine hexamer is screened, not waved through.
+
+    This test used to assert that is_viable("RRRRRR") is True. It was True only
+    because the shield replaced the Guruprasad instability index with the literal
+    25.0, a comfortable pass, for any sequence with two or more arginines and 20 or
+    fewer residues, on top of the same substitution for cyclic peptides. With that
+    second escape hatch removed, "RRRRRR" is a linear sequence inside the domain the
+    shield now declares, the gate is applied, and the measured index (about 491, from
+    five R-R pairs at a DIWV of 58.95 each) is far above the +40 ceiling. So the
+    honest answer is that the shield rejects it, and the chitosan and hydropathy
+    checks it does pass are asserted separately below.
+    """
     viable, metrics = is_viable("RRRRRR")
-    assert viable is True
     assert metrics["chitosan_native"] is True
     assert metrics["arg_count"] == 6
     assert metrics["gravy"] < 2.0
+
+    if metrics["instability_index_applicable"]:
+        # biopython present: the index is measured and the gate is applied.
+        assert viable is False
+        assert metrics["instability_index"] > MAX_INSTABILITY
+        assert "instability_index" in metrics["gates_applied"]
+    else:
+        # biopython absent: no index is computed, so no instability gate is applied
+        # and none is reported. Nothing is substituted in its place.
+        assert viable is True
+        assert metrics["instability_index"] is None
+        assert "instability_index" not in metrics["gates_applied"]
+
+
+def test_solubility_shield_cyclic_arginine_core_makes_no_stability_claim():
+    """The cyclic form, which is what this library actually screens, passes without
+    an instability number being invented for it."""
+    viable, metrics = is_viable("CRRRRC")
+    assert viable is True
+    assert metrics["chitosan_native"] is True
+    assert metrics["instability_index_applicable"] is False
+    assert metrics["instability_index"] is None
+    assert "instability_index" not in metrics["gates_applied"]
+    assert "out of domain" in metrics["instability_index_note"]
 
 
 def test_solubility_shield_rejects_invalid_amino_acids():
@@ -87,7 +126,11 @@ def test_targets_catalog_integrity():
         assert target in data, f"Missing critical target: {target}"
         info = data[target]
         assert "name" in info and len(info["name"]) > 0
-        assert "sequence" in info and len(info["sequence"]) > 20
+        assert "sequence_source" in info, (
+            "each target must name where its sequence comes from; "
+            "placeholder sequence strings were removed in favour of the UniProt accession"
+        )
+        assert "uniprot" in info and len(info["uniprot"]) > 0
         assert "base_peptide" in info and len(info["base_peptide"]) > 0
 
 
@@ -125,7 +168,9 @@ def test_gtfb_orchestrator_demo_execution():
     assert "CRRRWWRRRRC" in res.stdout
     assert "CPHWRPWHC" in res.stdout
     assert "CAHWRPWHC" in res.stdout
-    assert "NOT_CORROBORATED" in res.stdout
+    assert any(s in res.stdout for s in list(STATUS_MEANINGS) + [STATUS_SURVIVED]), (
+        "the pipeline must end on one of the documented falsification statuses"
+    )
     assert "PIPELINE EXECUTION SUMMARY" in res.stdout
 
 
@@ -163,7 +208,7 @@ def test_demo_dataset_integrity():
         assert "ATOM" in content
         assert "TER" in content
         assert "CONECT" in content
-        assert " A " in content, "Must contain Chain A (GtfB pocket)"
+        assert " A " in content, "Must contain Chain A (GTF-SI pocket)"
         assert " B " in content, "Must contain Chain B (docked cyclic peptide)"
 
     # 3. Falsification benchmark docked coordinates
@@ -173,7 +218,7 @@ def test_demo_dataset_integrity():
     assert "HEADER" in complex_content
     assert "ATOM" in complex_content
     assert "TER" in complex_content
-    assert " A " in complex_content, "Must contain Chain A (GtfB receptor)"
+    assert " A " in complex_content, "Must contain Chain A (GTF-SI receptor)"
     assert " B " in complex_content, "Must contain Chain B (docked cyclic lead)"
 
     native_docked = demo_dir / "results" / "3AIC_native_acarbose_docked.pdb"
@@ -229,7 +274,9 @@ def test_falsification_angle1_cocrystal_control():
     assert ctrl["passed_calibration"] is False
     assert ctrl["classification"] == "CALIBRATION_WARNING"
     assert ctrl["affinity_kcal_mol"] <= -7.0
-    assert ctrl["redocking_rmsd_angstrom"] == 4.51
+    # tied to the recomputed value, not to a hand-typed literal
+    assert ctrl["redocking_rmsd_angstrom"] == CO_CRYSTAL_REDOCKING_RMSD
+    assert ctrl["redocking_rmsd_angstrom"] > 2.0
     assert ctrl["centroid_displacement_angstrom"] < 3.5
 
 
@@ -259,20 +306,32 @@ def test_falsification_angle3_scrambled_null_permutation():
     assert gate3["classification"] == "INCONCLUSIVE_WITHIN_NOISE"
     # N=39 isomers evaluated empirically
     assert gate3["null_mean"] <= -8.0
-    assert gate3["p_value"] == 0.5897
+    # (k+1)/(n+1) with k=23 and n=39. The bare proportion 23/39 = 0.5897 was
+    # published as this p value; it is not the permutation estimator.
+    assert gate3["p_value"] == 0.600
     assert gate3["b_count"] >= 0
 
 
 def test_falsification_angle4_alanine_hotspot_scan():
-    """Angle 4: In-silico alanine scanning identifies energetic hotspots."""
+    """Angle 4: the alanine scan finds no energetic hotspot, and the gate says so.
+
+    This test asserted the opposite until the scan was recomputed against its real parent.
+    The scan is parented on the wild type CPHWRPWHC, and the largest affinity loss anywhere
+    in it is W7A at +0.257 kcal/mol, well under the +0.70 kcal/mol threshold the repository
+    set in advance. No residue is an energetic anchor, so this gate must not report a pass.
+    """
     engine = FalsificationEngine()
     audit = engine.run_falsification_audit("CAHWRPWHC")
     gate4 = audit["gates"]["gate4_alanine_hotspot_scan"]
-    
-    assert gate4["passed"] is True
-    assert gate4["hotspot_count"] >= 1
-    # Verify primary anchor His8 is identified
-    assert "H8A" in gate4["hotspots"]
+
+    assert gate4["passed"] is False
+    assert gate4["hotspot_count"] == 0
+    assert gate4["hotspots"] == []
+    assert gate4["classification"] == "NO_HOTSPOT_IDENTIFIED"
+    assert gate4["parent_sequence"] == "CPHWRPWHC"
+    assert abs(gate4["largest_affinity_loss_kcal"] - 0.257) < 1e-6
+    # H8A was previously named the primary anchor; it loses only +0.084 kcal/mol.
+    assert "H8A" not in gate4["hotspots"]
 
 
 def test_falsification_angle5_protease_resistance():
@@ -643,7 +702,7 @@ def test_falsification_engine_programmatic_thresholds():
     assert g1["classification"] == "CALIBRATION_WARNING"
     
     g3 = audit["gates"]["gate3_scrambled_null_permutation"]
-    assert g3["p_value"] == 0.5897
+    assert g3["p_value"] == 0.600  # (k+1)/(n+1), not the 23/39 proportion
     assert g3["z_score"] == 0.3241 or round(g3["z_score"], 2) == 0.32
     assert g3["lead_passed"] is False
     assert g3["classification"] == "INCONCLUSIVE_WITHIN_NOISE"
@@ -696,15 +755,311 @@ def test_orchestrator_nodes_and_demo_execution():
     ranked_state = falsify_and_rank_node(solub_state)
     assert len(ranked_state["contenders"]) == 1
     c_ranked = ranked_state["contenders"][0]
-    assert c_ranked["falsification_status"] in ("FALSIFIED_ORAL_BARRIER", "FALSIFIED_AMYLASE_CROSSREACTIVITY", "SUBTHRESHOLD_AFFINITY", "NOT_CORROBORATED")
+    assert c_ranked["falsification_status"] in ("FALSIFIED_ORAL_BARRIER", "FALSIFIED_AMYLASE_CROSSREACTIVITY", "SUBTHRESHOLD_AFFINITY", STATUS_SURVIVED)
     
     # 2. Test run_demo() execution
     demo_res = run_demo()
     assert isinstance(demo_res, dict)
     assert "contenders" in demo_res
     assert len(demo_res["contenders"]) == 3
-    # Check CAHWRPWHC receives NOT_CORROBORATED verdict
+    # CAHWRPWHC clears every gate, which is survival and not corroboration
     cah_record = next(c for c in demo_res["contenders"] if c["sequence"] == "CAHWRPWHC")
-    assert cah_record["falsification_status"] == "NOT_CORROBORATED"
+    assert cah_record["falsification_status"] == STATUS_SURVIVED
     assert cah_record["pareto_rank"] == 1
 
+
+
+def test_redocking_control_is_reproducible_from_committed_coordinates():
+    """Angle 1's RMSD must be produced by code, not asserted as a literal.
+
+    scripts/compute_redocking_rmsd.py pairs heavy atoms optimally within each
+    element and must agree with the constant the documents quote. It must also
+    fail the 2.0 Angstrom redocking convention, which is the honest reading of
+    this control.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    from compute_redocking_rmsd import (
+        REFERENCE,
+        REDOCKED,
+        read_atoms,
+        assignment_rmsd,
+        ordered_rmsd,
+    )
+
+    assert REFERENCE.exists(), "crystallographic reference ligand must be committed"
+    assert REDOCKED.exists(), "redocked pose must be committed"
+
+    ref, eref = read_atoms(REFERENCE)
+    dock, edock = read_atoms(REDOCKED)
+    assert len(ref) == len(dock) == 44
+
+    rmsd, paired = assignment_rmsd(ref, eref, dock, edock)
+    assert paired == 44
+    assert abs(rmsd - CO_CRYSTAL_REDOCKING_RMSD) < 0.01, (
+        f"documented redocking RMSD {CO_CRYSTAL_REDOCKING_RMSD} A does not match "
+        f"the recomputed {rmsd:.3f} A"
+    )
+    assert rmsd > 2.0, "this control fails the 2.0 A convention; do not report it as a pass"
+    # file-order pairing is much worse, which is why the naive helper must not be used here
+    assert ordered_rmsd(ref, dock) > rmsd
+
+
+def _load_disproof_module():
+    """Import scripts/run_exhaustive_disproof.py without executing the battery."""
+    spec = importlib.util.spec_from_file_location(
+        "disproof_module", str(REPO_ROOT / "scripts" / "run_exhaustive_disproof.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_alanine_scan_matches_the_vault_and_claims_no_hotspot():
+    """Angle 6's table must come from the vault, parented on the wild type.
+
+    An earlier version carried a hand-transcribed copy in which two sequences were
+    not the substitutions they were labelled with, two affinities matched no row in
+    the database, and the deltas were taken against the lead instead of the wild
+    type. Reading the vault is what stops that happening again.
+    """
+    disproof = _load_disproof_module()
+    angle = disproof.evaluate_angle6_alanine_scan()
+
+    assert angle["parent_sequence"] == "CPHWRPWHC"
+    assert angle["provenance"] == disproof.PROVENANCE_VAULT
+    assert angle["mutants_not_in_vault"] == []
+
+    conn = sqlite3.connect(str(REPO_ROOT / "data" / "foundry_contenders.sqlite"))
+    try:
+        parent = conn.execute(
+            "SELECT vina_3aic_kcal FROM contenders WHERE sequence = 'CPHWRPWHC'"
+        ).fetchone()[0]
+        assert round(parent, 3) == angle["parent_affinity_kcal"]
+
+        for label, entry in angle["mutants"].items():
+            position = int(label[1:-1])
+            wild_type, substituted = label[0], label[-1]
+            assert substituted == "A", f"{label} is not an alanine substitution"
+            assert angle["parent_sequence"][position - 1] == wild_type
+            expected = (
+                angle["parent_sequence"][: position - 1]
+                + "A"
+                + angle["parent_sequence"][position:]
+            )
+            assert entry["sequence"] == expected, (
+                f"{label} is written {entry['sequence']} but the alanine substitution "
+                f"of {angle['parent_sequence']} at position {position} is {expected}"
+            )
+
+            row = conn.execute(
+                "SELECT vina_3aic_kcal FROM contenders WHERE sequence = ?",
+                (entry["sequence"],),
+            ).fetchone()
+            assert row is not None, f"{label} {entry['sequence']} is not in the vault"
+            assert entry["vina_kcal"] == round(row[0], 3)
+            assert entry["delta_ddg"] == round(row[0] - parent, 3)
+    finally:
+        conn.close()
+
+    # No residue clears the threshold, so no anchor may be claimed anywhere.
+    assert angle["identified_hotspots"] == []
+    assert angle["classification"] == "NO_HOTSPOT_IDENTIFIED"
+    assert angle["largest_affinity_loss_kcal"] < angle["hotspot_cutoff_kcal"]
+    assert "energetic anchor" in angle["scientific_summary"]
+
+
+def test_angles_report_where_their_numbers_came_from():
+    """Angles 4, 5 and 6 must read the vault, and 5's p-value must be the rank statistic."""
+    disproof = _load_disproof_module()
+
+    angle4 = disproof.evaluate_angle4_forcefield_error_margin()
+    angle5 = disproof.evaluate_angle5_scrambled_null_test()
+    angle6 = disproof.evaluate_angle6_alanine_scan()
+    for angle in (angle4, angle5, angle6):
+        assert angle["provenance"] == disproof.PROVENANCE_VAULT, (
+            f"angle {angle['angle']} did not read the vault on this run"
+        )
+
+    # The scoring error in angle 4 has no citation anywhere in this repository and must
+    # not be presented as a published measurement.
+    assert angle4["assumed_forcefield_error_provenance"] == disproof.PROVENANCE_UNSOURCED
+    assert "assum" in angle4["scientific_summary"].lower()
+
+    # p is the empirical rank, recomputed from the null rows, not a normal-theory p.
+    assert angle5["p_value_kind"] == "one_sided_empirical_rank"
+    # And the estimator counts the lead among the exchangeable scores. The bare
+    # proportion k/n was published under this field's name; it is biased downward and
+    # can return zero from a finite control set.
+    assert angle5["p_value_estimator"] == "(k+1)/(n+1)"
+    k = angle5["scrambles_at_least_as_good_as_lead"]
+    n = angle5["n_isomers"]
+    assert angle5["p_value"] == round((k + 1) / (n + 1), 4), (
+        f"angle 5's p is not (k+1)/(n+1) for k={k}, n={n}")
+    assert angle5["raw_proportion_at_least_as_good"] == round(k / n, 4)
+    assert angle5["p_value"] > angle5["raw_proportion_at_least_as_good"]
+    assert not angle5["is_null_hypothesis_rejected"]
+
+
+def test_an_angle_that_cannot_recompute_reports_not_computed(monkeypatch):
+    """An angle whose inputs are absent must say so instead of printing a verdict."""
+    disproof = _load_disproof_module()
+
+    assert disproof._query_vault_affinity("WWWWWWWWW") is None, (
+        "a sequence absent from the vault must not resolve to an affinity"
+    )
+
+    monkeypatch.setattr(disproof, "_query_vault_affinity", lambda sequence: None)
+    angle = disproof.evaluate_angle6_alanine_scan()
+    assert angle["classification"] == "NOT_COMPUTED"
+    assert angle["provenance"] == disproof.PROVENANCE_NOT_COMPUTED
+    assert angle["identified_hotspots"] == []
+    assert "nothing here can be scored" in angle["scientific_summary"]
+
+
+def test_openmm_angle_never_claims_dynamics_or_a_temperature():
+    """Angle 11 only minimises energy, so it must not be described as a simulation."""
+    disproof = _load_disproof_module()
+    angle = disproof.evaluate_angle11_openmm_drift()
+
+    if angle["classification"] == "NOT_COMPUTED":
+        assert angle["provenance"] == disproof.PROVENANCE_NOT_COMPUTED
+        assert angle["missing_dependencies"]
+    else:
+        assert angle["dynamics_run"] is False
+        assert "310.15" not in angle["forcefield"]
+
+    text = json.dumps(angle).lower()
+    assert "310.15 k" not in text, "no reported number here is produced at a temperature"
+    for forbidden in ("molecular dynamics at", "ns molecular dynamics", "dynamics simulation of"):
+        assert forbidden not in text
+
+
+def test_no_gate_reports_a_substituted_number_as_a_measurement():
+    """The viability screen must not report a literal in place of a measurement.
+
+    The instability index was replaced by 25.0, a comfortable pass, for any sequence
+    starting and ending with cysteine, which is every cyclic candidate in this library,
+    and the isoelectric point fell back to a lookup on the arginine count when biopython
+    was absent. Both were then reported to three decimal places as if measured.
+    """
+    viable, metrics = is_viable("CAHWRPWHC")
+
+    assert metrics["instability_index"] is None, (
+        "the Guruprasad index is out of domain for a cyclic peptide and must be reported "
+        "as not applicable, never substituted with a passing literal"
+    )
+    assert metrics["instability_index_applicable"] is False
+    assert "instability_index" not in metrics["gates_applied"]
+    assert metrics["instability_index"] != 25.0
+
+    if metrics["isoelectric_point"] is not None:
+        assert metrics["isoelectric_point_source"] == "biopython_ProteinAnalysis"
+    else:
+        assert metrics["isoelectric_point_source"] == "not_computed_biopython_missing"
+
+
+def test_stephan_switch_is_a_histidine_count_and_says_so():
+    """The acid switch must not be presented as an axis independent of composition."""
+    from solubility_shield import calc_stephan_switch
+
+    per_histidine = None
+    for sequence, histidines in (("CAAWRPWAC", 0), ("CAHWRPWAC", 1), ("CAHWRPWHC", 2)):
+        switch = calc_stephan_switch(sequence)
+        assert switch["histidine_count"] == histidines
+        if histidines:
+            step = switch["delta_q_stephan"] / histidines
+            if per_histidine is None:
+                per_histidine = step
+            assert abs(step - per_histidine) < 0.01, (
+                "delta_q must be linear in histidine count; it is the same titration repeated"
+            )
+    assert abs(per_histidine - 0.809) < 0.01
+    assert "histidine count" in calc_stephan_switch("CAHWRPWHC")["gate_note"]
+
+    # The gate is satisfied by two histidines and by nothing else in this library.
+    assert calc_stephan_switch("CAHWRPWAC")["is_ph_switch_active"] is False
+    assert calc_stephan_switch("CAHWRPWHC")["is_ph_switch_active"] is True
+
+
+def test_disulfide_gate_is_documented_as_non_discriminating():
+    """Every row in the vault passes the S-S window, so it cannot be called a filter."""
+    conn = sqlite3.connect(str(REPO_ROOT / "data" / "foundry_contenders.sqlite"))
+    try:
+        distances = [
+            row[0] for row in conn.execute(
+                "SELECT ss_bond_angstrom FROM contenders WHERE ss_bond_angstrom IS NOT NULL"
+            )
+        ]
+        statuses = [
+            row[0] for row in conn.execute("SELECT falsification_status FROM contenders")
+        ]
+    finally:
+        conn.close()
+
+    assert distances, "the vault must record S-S distances"
+    assert min(distances) >= 1.95 and max(distances) <= 2.25
+    assert "FALSIFIED_BROKEN_DISULFIDE" not in statuses, (
+        "no candidate has ever failed this gate; it is a build sanity check, not a filter"
+    )
+
+    # ...and the code must say so where the gate is applied, so nobody counts it as a
+    # filter a candidate survived.
+    for source in ("gtfb_orchestrator.py", "scripts/continuous_hunter.py"):
+        text = (REPO_ROOT / source).read_text(encoding="utf-8")
+        assert "build sanity check" in text, f"{source} must document what this gate measures"
+
+
+def test_protease_gate_does_discriminate():
+    """Counterweight to the above: this gate is real, and the record should show it."""
+    conn = sqlite3.connect(str(REPO_ROOT / "data" / "foundry_contenders.sqlite"))
+    try:
+        rows = [row[0] for row in conn.execute("SELECT protease_sites FROM contenders")]
+    finally:
+        conn.close()
+    failing = [n for n in rows if n and n > 0]
+    assert len(failing) > 50, (
+        "the protease criterion rejects a large fraction of the library, so it must not be "
+        "described as a gate that cannot fail"
+    )
+
+
+def test_the_lead_is_not_on_the_pareto_front():
+    """The 'non-dominated candidate' claim was false, and must not come back.
+
+    scripts/compute_pareto_front.py is the only producer of a dominance result in
+    this repository. pareto_rank is assigned from the falsification status, so it
+    says nothing about dominance.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    from compute_pareto_front import (
+        LEAD_SEQUENCE,
+        SURVIVED_STATUSES,
+        dominates,
+        load_rows,
+        pareto_front,
+    )
+
+    rows = load_rows()
+    assert len(rows) > 200
+    lead = next(r for r in rows if r["sequence"] == LEAD_SEQUENCE)
+
+    front = pareto_front(rows)
+    assert front, "there must be a front"
+    assert lead["sequence"] not in [r["sequence"] for r in front], (
+        "the lead is dominated; do not describe it as the non-dominated candidate"
+    )
+    assert len([r for r in rows if dominates(r, lead)]) > 50
+
+    survivors = [r for r in rows if r["falsification_status"] in SURVIVED_STATUSES]
+    survivor_front = pareto_front(survivors)
+    assert lead["sequence"] not in [r["sequence"] for r in survivor_front], (
+        "the lead is dominated even among the rows that survived every gate"
+    )
+    assert len([r for r in survivors if dominates(r, lead)]) >= 9
+
+    # pareto_rank tracks the status exactly, which is the evidence that it is a tier
+    # rather than a dominance rank.
+    for row in rows:
+        assert (row["pareto_rank"] == 1) == (
+            row["falsification_status"] in SURVIVED_STATUSES
+        ), "pareto_rank is a status tier; if that ever stops holding, re-read the code"

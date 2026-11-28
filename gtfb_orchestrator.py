@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""GtfB Deterministic Biophysical Screening and Falsification Pipeline.
+"""GTF-SI Deterministic Biophysical Screening and Falsification Pipeline.
 
 Deterministic 4-stage biophysical screening and falsification pipeline wiring
 cyclic peptide generation, solubility shielding, empirical AutoDock Vina + Vinardo grid docking,
-OpenMM Amber14/GBn2 isolated ligand steric relaxation (200 steps),
+OpenMM Amber14/GBn2 isolated ligand steric relaxation, minimisation capped at 200 iterations,
 and 6-angle biophysical falsification into ContenderVault.
 Zero synthetic mock scores, zero fake fallbacks, zero unverified heuristics.
 """
@@ -32,7 +32,7 @@ from biophysics_engine import (
     relax_with_openmm,
     measure_disulfide_bond
 )
-from vault import ContenderVault
+from vault import ContenderVault, STATUS_SURVIVED, SURVIVED_STATUSES
 
 # StateGraph pipeline execution with zero-dependency fallback
 try:
@@ -197,7 +197,15 @@ def evaluate_biophysics_node(state: GtfBEvolutionState) -> Dict[str, Any]:
 
 
 def falsify_and_rank_node(state: GtfBEvolutionState) -> Dict[str, Any]:
-    """Applies Popperian falsification criteria and assigns Pareto ranks."""
+    """Applies the falsification criteria and assigns a status tier.
+
+    Note the name: pareto_rank is not a Pareto rank. It is 1 for a candidate that
+    survived every gate, 2 for one that failed a soft gate and 3 for a hard failure,
+    so it is a tier derived from falsification_status and nothing in it tests
+    dominance. On the committed database it agrees with the status on all 260 rows.
+    For the real front, run scripts/compute_pareto_front.py, which shows that the
+    lead is on neither the overall front nor the front over survivors.
+    """
     ranked = []
     winning = None
     
@@ -221,12 +229,33 @@ def falsify_and_rank_node(state: GtfBEvolutionState) -> Dict[str, Any]:
             delta_q = 0.0
         protease = cand_data.get("protease_sites", 0)
         
-        # Hard physical gate on disulfide geometry
+        # Disulfide geometry. Read this as a build sanity check, not as a filter: every
+        # candidate is embedded by the same RDKit/MMFF route with an explicit S-S bond,
+        # so the distance is set by the force field's equilibrium and not by the
+        # sequence. Across the 260 rows in the vault it spans 2.050 to 2.070 Angstroms,
+        # three distinct values in all, against a window of 1.95 to 2.25, and
+        # FALSIFIED_BROKEN_DISULFIDE has never once been assigned. It would catch a
+        # broken build, which is worth having, but it discriminates between candidates
+        # not at all and must not be counted as one of the filters a candidate survived.
         if ss_dist is None or ss_dist < 1.95 or ss_dist > 2.25:
             cand_data["falsification_status"] = "FALSIFIED_BROKEN_DISULFIDE"
             cand_data["pareto_rank"] = 3
         elif q60 > MAX_DONNAN_CHARGE_PH6 or delta_q < 1.0 or protease > 0:
+            # Compound gate: three unrelated criteria share one status, so a row marked
+            # FALSIFIED_ORAL_BARRIER does not say which of them it failed. The reasons
+            # are recorded alongside it so the next reader does not have to guess.
+            # Note what the second criterion is: delta_q >= 1.0 is arithmetically a
+            # threshold on histidine count (see calc_stephan_switch), so it is not an
+            # independent axis from charge.
+            reasons = []
+            if q60 > MAX_DONNAN_CHARGE_PH6:
+                reasons.append(f"donnan_charge({q60:+.2f} > {MAX_DONNAN_CHARGE_PH6:+.2f})")
+            if delta_q < 1.0:
+                reasons.append(f"stephan_switch(delta_q {delta_q:+.3f} < 1.0, i.e. fewer than two histidines)")
+            if protease > 0:
+                reasons.append(f"protease_sites({protease} > 0)")
             cand_data["falsification_status"] = "FALSIFIED_ORAL_BARRIER"
+            cand_data["falsification_reasons"] = reasons
             cand_data["pareto_rank"] = 2
         elif sel_ddg is not None and sel_ddg > -0.80:
             cand_data["falsification_status"] = "FALSIFIED_AMYLASE_CROSSREACTIVITY"
@@ -235,7 +264,7 @@ def falsify_and_rank_node(state: GtfBEvolutionState) -> Dict[str, Any]:
             cand_data["falsification_status"] = "SUBTHRESHOLD_AFFINITY"
             cand_data["pareto_rank"] = 2
         else:
-            cand_data["falsification_status"] = "NOT_CORROBORATED"
+            cand_data["falsification_status"] = STATUS_SURVIVED
             cand_data["pareto_rank"] = 1
             if winning is None or (vina_3aic is not None and vina_3aic < winning.get("vina_3aic_kcal", 0)):
                 winning = cand_data
@@ -284,7 +313,7 @@ def verify_vault():
         rank_counts[rk] = rank_counts.get(rk, 0) + 1
         
         ss = c.get("ss_bond_angstrom")
-        if ss is not None and (ss < 1.95 or ss > 2.25) and st in ("CORROBORATED", "NOT_CORROBORATED", "INCONCLUSIVE_UNVALIDATED"):
+        if ss is not None and (ss < 1.95 or ss > 2.25) and st in SURVIVED_STATUSES:
             broken_disulfide_count += 1
 
     print("\nFalsification Status Breakdown:")
@@ -299,9 +328,9 @@ def verify_vault():
     
     if champ:
         print("\n" + "-" * 70)
-        print("PARETO REFERENCE SCAFFOLD (Non-Dominated Candidate):")
+        print("REFERENCE SCAFFOLD (highest status tier; NOT non-dominated, see scripts/compute_pareto_front.py):")
         print(f"  Sequence:         {champ['sequence']}")
-        print(f"  GtfB (3AIC):      {champ['vina_3aic_kcal']} kcal/mol")
+        print(f"  GTF-SI (3AIC):      {champ['vina_3aic_kcal']} kcal/mol")
         print(f"  Amylase (1SMD):   {champ['vina_1smd_kcal']} kcal/mol")
         print(f"  Selectivity ddG:  {champ['selectivity_ddg']} kcal/mol")
         print(f"  Disulfide S-S:    {champ['ss_bond_angstrom']} A")
@@ -321,7 +350,7 @@ def run_demo():
     print("Evaluating baseline candidates:")
     print("  1. CRRRWWRRRRC: Naive poly-arginine heuristic control")
     print("  2. CPHWRPWHC  : Wild-type generation 1 lead")
-    print("  3. CAHWRPWHC  : P2A hinge mutant Pareto candidate")
+    print("  3. CAHWRPWHC  : the wild type's P2A mutant, the lead this campaign pursued")
     
     init_state: GtfBEvolutionState = {
         "generation": 1,
@@ -373,15 +402,15 @@ def run_demo():
     print("-" * 72)
     if winning:
         print(f"Top Candidate: {winning['sequence']} (Rank {winning.get('pareto_rank')})")
-        print(f"Final Verdict: {winning.get('falsification_status')} (Inconclusive Within Noise)")
+        print(f"Final Verdict: {winning.get('falsification_status')} (survived the screen; not corroborated)")
     else:
-        print("Final Verdict: ALL CANDIDATES FALSIFIED (NOT_CORROBORATED)")
+        print("Final Verdict: ALL CANDIDATES FALSIFIED")
     print("=" * 72 + "\n")
     return s4
 
 
 def main():
-    parser = argparse.ArgumentParser(description="GtfB Autonomous Biophysical Orchestrator")
+    parser = argparse.ArgumentParser(description="GTF-SI Autonomous Biophysical Orchestrator")
     parser.add_argument("--verify-vault", action="store_true", help="Run fast read-only audit of ContenderVault")
     parser.add_argument("--demo", action="store_true", help="Run demonstration pipeline")
     parser.add_argument("--dock-sequence", type=str, default=None, help="Live empirical Vina/Vinardo execution for a sequence")

@@ -1,3 +1,27 @@
+% Bibliography for the DrNemo-Caries-Foundry manuscript.
+%
+% Every journal entry below was checked against PubMed on 2026-11-27, field by
+% field: author list, title, journal, volume, issue, page range and DOI. The
+% PMID used for each check is recorded above the entry so the check can be
+% repeated. Twelve of the twenty-two entries in the previous version of this
+% file were wrong, and four of those named a journal, volume, issue, page range
+% and DOI that belong to no paper that could be located. Section 3.12 of
+% paper/negative_result_GTF-SI.md is the register: it records, for every entry
+% that was wrong, what this file said and what the source says, including the
+% withdrawn DOIs, which are deliberately not reprinted here.
+%
+% Author-name convention: a forename appears here only where a consulted source
+% states it. Where PubMed records initials only and no other entry in this file
+% gives the same person's forename, initials are used. Fabricated forenames that
+% happen to match the right initial are the failure mode this convention exists
+% to prevent.
+%
+% Three entries cannot be checked against PubMed: Popper1959 is a book,
+% Landrum2020 is a software release, and PubMed's coverage of the Journal of
+% Dental Research does not reach 1944, so Stephan1944 was confirmed against a
+% third-party bibliographic index instead.
+
+% PMID 19499576
 @article{Trott2010,
   author    = {Trott, Oleg and Olson, Arthur J.},
   title     = {AutoDock Vina: Improving the speed and accuracy of docking with a new scoring function, efficient optimization, and multithreading},
@@ -9,6 +33,7 @@
   doi       = {10.1002/jcc.21334}
 }
 
+% PMID 34278794
 @article{Eberhardt2021,
   author    = {Eberhardt, Jerome and Santos-Martins, Diogo and Tillack, Andreas F. and Forli, Stefano},
   title     = {AutoDock Vina 1.2.0: New Docking Methods, Expanded Force Field, and Python Bindings},
@@ -20,9 +45,11 @@
   doi       = {10.1021/acs.jcim.1c00203}
 }
 
+% PMID 27171006. The previous version of this entry gave the title as
+% "Improving Scoring, Ranking, and Pose Prediction".
 @article{Quiroga2016,
   author    = {Quiroga, Rodrigo and Villarreal, Marcos A.},
-  title     = {Vinardo: A Scoring Function Based on Autodock Vina Improving Scoring, Ranking, and Pose Prediction},
+  title     = {Vinardo: A Scoring Function Based on Autodock Vina Improves Scoring, Docking, and Virtual Screening},
   journal   = {PLOS ONE},
   volume    = {11},
   number    = {5},
@@ -31,8 +58,10 @@
   doi       = {10.1371/journal.pone.0155183}
 }
 
+% PMID 21354427. The previous version of this entry named the first two authors
+% Kazuo Ito and Shingo Ito.
 @article{Ito2011,
-  author    = {Ito, Kazuo and Ito, Shingo and Shimamura, Tatsuro and Weyand, Simone and Kawarasaki, Yasuaki and Misaka, Takumi and Abe, Keiko and Kobayashi, Takuya and Cameron, Alexander D. and Iwata, So},
+  author    = {Ito, Keisuke and Ito, Sohei and Shimamura, Tatsuro and Weyand, Simone and Kawarasaki, Yasuaki and Misaka, Takumi and Abe, Keiko and Kobayashi, Takuya and Cameron, Alexander D. and Iwata, So},
   title     = {Crystal Structure of Glucansucrase from the Dental Caries Pathogen \textit{Streptococcus mutans}},
   journal   = {Journal of Molecular Biology},
   volume    = {408},
@@ -42,20 +71,28 @@
   doi       = {10.1016/j.jmb.2011.02.028}
 }
 
+% PMID 15299664. This is the primary citation for PDB 1SMD, the structure the
+% host counter-screen docks against. The previous version of this entry gave the
+% journal as Journal of Molecular Biology 263(4):617-630, with a DOI in that
+% journal's range, a record that matches no paper that could be located, and
+% named two co-authors who are not on this paper.
 @article{Ramasubbu1996,
-  author    = {Ramasubbu, Narayanan and Ragunath, Chandran and Bhandary, K. Krishna},
-  title     = {Structural studies on human salivary $\alpha$-amylase: The 1.6 \AA\ structure and functional implications of the carbohydrate binding sites},
-  journal   = {Journal of Molecular Biology},
-  volume    = {263},
-  number    = {4},
-  pages     = {617--630},
+  author    = {Ramasubbu, N. and Paloth, V. and Luo, Y. and Brayer, G. D. and Levine, M. J.},
+  title     = {Structure of human salivary $\alpha$-amylase at 1.6 \AA\ resolution: implications for its role in the oral cavity},
+  journal   = {Acta Crystallographica Section D: Biological Crystallography},
+  volume    = {52},
+  number    = {3},
+  pages     = {435--446},
   year      = {1996},
-  doi       = {10.1006/jmbi.1996.0603}
+  doi       = {10.1107/S0907444995014119}
 }
 
+% Not in PubMed: coverage of this journal does not reach 1944. Title, journal,
+% volume, issue, page range and DOI confirmed against a third-party
+% bibliographic index. No consulted source states the author's forename.
 @article{Stephan1944,
   author    = {Stephan, Robert M.},
-  title     = {Intra-Oral Hydrogen-Ion Concentrations Associated with Dental Caries Activity},
+  title     = {Intra-Oral Hydrogen-Ion Concentrations Associated With Dental Caries Activity},
   journal   = {Journal of Dental Research},
   volume    = {23},
   number    = {4},
@@ -64,6 +101,8 @@
   doi       = {10.1177/00220345440230040401}
 }
 
+% A book, so outside PubMed. This is the English edition of Logik der
+% Forschung (1934).
 @book{Popper1959,
   author    = {Popper, Karl R.},
   title     = {The Logic of Scientific Discovery},
@@ -72,28 +111,37 @@
   year      = {1959}
 }
 
+% PMID 29097091. The previous version of this entry gave the journal as Current
+% Oral Health Reports 5(1):47-58, with a DOI in that publisher's range, a
+% record that matches no paper that could be located; it also ended the title
+% "in Dental Caries" and named the third author Henny Wu.
 @article{Bowen2018,
-  author    = {Bowen, William H. and Burne, Robert A. and Wu, Henny and Koo, Hyun},
-  title     = {Oral Biofilms: Pathogens, Matrix, and Polymicrobial Interactions in Dental Caries},
-  journal   = {Current Oral Health Reports},
-  volume    = {5},
-  number    = {1},
-  pages     = {47--58},
+  author    = {Bowen, William H. and Burne, Robert A. and Wu, Hui and Koo, Hyun},
+  title     = {Oral Biofilms: Pathogens, Matrix, and Polymicrobial Interactions in Microenvironments},
+  journal   = {Trends in Microbiology},
+  volume    = {26},
+  number    = {3},
+  pages     = {229--242},
   year      = {2018},
-  doi       = {10.1007/s40496-018-0168-3}
+  doi       = {10.1016/j.tim.2017.09.008}
 }
 
+% PMID 24045647. The previous version of this entry gave the journal as Nature
+% Reviews Microbiology 11(11):761-773, with a DOI in that journal's range, a
+% record that matches no paper that could be located. Author forenames are as given in
+% PMIDs 22496649 and 29097091, since this record carries initials only.
 @article{Koo2013,
   author    = {Koo, Hyun and Falsetta, Megan L. and Klein, Marlise I.},
   title     = {The exopolysaccharide matrix: a virulence determinant of cariogenic biofilm},
-  journal   = {Nature Reviews Microbiology},
-  volume    = {11},
-  number    = {11},
-  pages     = {761--773},
+  journal   = {Journal of Dental Research},
+  volume    = {92},
+  number    = {12},
+  pages     = {1065--1073},
   year      = {2013},
-  doi       = {10.1038/nrmicro3115}
+  doi       = {10.1177/0022034513504218}
 }
 
+% PMID 28746339
 @article{Eastman2017,
   author    = {Eastman, Peter and Swails, Jason and Chodera, John D. and McGibbon, Robert T. and Zhao, Yutong and Beauchamp, Kyle A. and Wang, Lee-Ping and Simmonett, Andrew C. and Harrigan, Matthew P. and Stern, Chaya D. and Wiewiora, Rafal P. and Brooks, Bernard R. and Pande, Vijay S.},
   title     = {OpenMM 7: Rapid development of high performance algorithms for molecular dynamics},
@@ -105,9 +153,11 @@
   doi       = {10.1371/journal.pcbi.1005659}
 }
 
+% PMID 26574453. The previous version of this entry ended the title
+% "Backbone Torsion Parameters in Amber".
 @article{Maier2015,
   author    = {Maier, James A. and Martinez, Carmenza and Kasavajhala, Koushik and Wickstrom, Lauren and Hauser, Kevin E. and Simmerling, Carlos},
-  title     = {ff14SB: Improving the Accuracy of Protein Side Chain and Backbone Torsion Parameters in Amber},
+  title     = {ff14SB: Improving the Accuracy of Protein Side Chain and Backbone Parameters from ff99SB},
   journal   = {Journal of Chemical Theory and Computation},
   volume    = {11},
   number    = {8},
@@ -116,6 +166,8 @@
   doi       = {10.1021/acs.jctc.5b00255}
 }
 
+% PMID 25788871. The previous version of this entry gave a DOI belonging to a
+% different paper.
 @article{Nguyen2013,
   author    = {Nguyen, Hai and Roe, Daniel R. and Simmerling, Carlos},
   title     = {Improved Generalized Born Solvent Model Parameters for Protein Simulations},
@@ -124,9 +176,11 @@
   number    = {4},
   pages     = {2020--2034},
   year      = {2013},
-  doi       = {10.1021/ct300962b}
+  doi       = {10.1021/ct3010485}
 }
 
+% Not in PubMed. Author, title, journal, volume, issue, page range and DOI
+% confirmed against a third-party bibliographic index.
 @article{Halgren1996,
   author    = {Halgren, Thomas A.},
   title     = {Merck molecular force field. I. Basis, form, scope, parameterization, and performance of MMFF94},
@@ -138,6 +192,7 @@
   doi       = {10.1002/(SICI)1096-987X(199604)17:5/6<490::AID-JCC1>3.0.CO;2-P}
 }
 
+% PMID 21982300
 @article{OBoyle2011,
   author    = {O'Boyle, Noel M. and Banck, Michael and James, Craig A. and Morley, Chris and Vandermeersch, Tim and Hutchison, Geoffrey R.},
   title     = {Open Babel: An open chemical toolbox},
@@ -149,17 +204,21 @@
   doi       = {10.1186/1758-2946-3-33}
 }
 
+% PMID 15109945. The previous version of this entry gave the journal as Nature
+% Reviews Drug Discovery 3(9):811, with a DOI in that journal's range, a record
+% that matches no paper that could be located. This item is a letter.
 @article{Hopkins2004,
   author    = {Hopkins, Andrew L. and Groom, Colin R. and Alex, Alexander},
   title     = {Ligand efficiency: a useful metric for lead selection},
-  journal   = {Nature Reviews Drug Discovery},
-  volume    = {3},
-  number    = {9},
-  pages     = {811--811},
+  journal   = {Drug Discovery Today},
+  volume    = {9},
+  number    = {10},
+  pages     = {430--431},
   year      = {2004},
-  doi       = {10.1038/nrd1546}
+  doi       = {10.1016/S1359-6446(04)03069-7}
 }
 
+% PMID 23253135
 @article{Craik2013,
   author    = {Craik, David J. and Fairlie, David P. and Liras, Spiros and Price, David},
   title     = {The future of peptide-based drugs},
@@ -171,30 +230,38 @@
   doi       = {10.1111/cbdd.12055}
 }
 
-@article{Marsh2006,
-  author    = {Marsh, Philip D.},
+% PMID 15153690. This paper is from 2004, not 2006, so the citation key changed
+% from Marsh2006. The previous version of this entry gave 40(4):279-287 and a
+% DOI belonging to neither. PubMed records this author with initials only.
+@article{Marsh2004,
+  author    = {Marsh, P. D.},
   title     = {Dental plaque as a microbial biofilm},
   journal   = {Caries Research},
-  volume    = {40},
-  number    = {4},
-  pages     = {279--287},
-  year      = {2006},
-  doi       = {10.1159/000095697}
+  volume    = {38},
+  number    = {3},
+  pages     = {204--211},
+  year      = {2004},
+  doi       = {10.1159/000077756}
 }
 
-@article{Zero1999,
-  author    = {Zero, Domenick T.},
-  title     = {Sugars - The Arch Criminal?},
+% PMID 15153701. This paper is from 2004, not 1999, so the citation key changed
+% from Zero1999. The previous version of this entry gave 33(Suppl. 1):11-19 and
+% a DOI belonging to neither. PubMed records this author with initials only.
+@article{Zero2004,
+  author    = {Zero, D. T.},
+  title     = {Sugars - the arch criminal?},
   journal   = {Caries Research},
-  volume    = {33},
-  number    = {Suppl. 1},
-  pages     = {11--19},
-  year      = {1999},
-  doi       = {10.1159/000016501}
+  volume    = {38},
+  number    = {3},
+  pages     = {277--285},
+  year      = {2004},
+  doi       = {10.1159/000077767}
 }
 
+% PMID 11094270. PubMed records both authors with initials only; the first
+% author's forename is as given in PMID 29097091.
 @article{Burne2000,
-  author    = {Burne, Robert A. and Marquis, Robert E.},
+  author    = {Burne, Robert A. and Marquis, R. E.},
   title     = {Alkali production by oral bacteria and protection against dental caries},
   journal   = {FEMS Microbiology Letters},
   volume    = {193},
@@ -204,9 +271,12 @@
   doi       = {10.1111/j.1574-6968.2000.tb09393.x}
 }
 
+% PMID 22496649. The previous version of this entry ended the title
+% "and the Microenvironment of a Pathogenic Biofilm" and named the fourth and
+% seventh authors Bob Lu and Christopher Hey.
 @article{Xiao2012,
-  author    = {Xiao, Jin and Klein, Marlise I. and Falsetta, Megan L. and Lu, Bob and Delahunty, Claire M. and Yates, John R. and Hey, Christopher and Koo, Hyun},
-  title     = {The Exopolysaccharide Matrix Modulates the Interaction between 3D Architecture and the Microenvironment of a Pathogenic Biofilm},
+  author    = {Xiao, Jin and Klein, Marlise I. and Falsetta, Megan L. and Lu, Bingwen and Delahunty, Claire M. and Yates, John R. and Heydorn, Arne and Koo, Hyun},
+  title     = {The exopolysaccharide matrix modulates the interaction between 3D architecture and virulence of a mixed-species oral biofilm},
   journal   = {PLOS Pathogens},
   volume    = {8},
   number    = {4},
@@ -215,8 +285,10 @@
   doi       = {10.1371/journal.ppat.1002623}
 }
 
+% PMID 31391878. The previous version of this entry named the first author
+% Anna M. Scharnow.
 @article{Scharnow2019,
-  author    = {Scharnow, Anna M. and Solinski, Amy E. and Wuest, William M.},
+  author    = {Scharnow, Amber M. and Solinski, Amy E. and Wuest, William M.},
   title     = {Targeting \textit{S. mutans} Biofilms: a Perspective on Preventing Dental Caries},
   journal   = {MedChemComm},
   volume    = {10},
@@ -226,6 +298,7 @@
   doi       = {10.1039/c9md00015a}
 }
 
+% A software release, so outside PubMed.
 @misc{Landrum2020,
   author    = {Landrum, Greg and Tosco, Paolo and Kelley, Brian and others},
   title     = {RDKit: Open-source cheminformatics software},
